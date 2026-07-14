@@ -48,6 +48,19 @@
    unchanged.
    ========================================================== */
 
+/* ==========================================================
+   Improvements Made - Duplicate search icon removed
+   ----------------------------------------------------------
+   studentSearchBar had two magnifying-glass icons sitting side
+   by side: a purely decorative, non-clickable one in the
+   input-group-prepend to the left of #search, and a second one
+   inside the real #search_icon button to the right. Removed the
+   decorative left-hand one so there is exactly one search input
+   and one (functional) search button, per the "remove duplicate
+   search control" requirement. #search_icon's click handler and
+   ID are unchanged - only the dead decorative markup is gone.
+   ========================================================== */
+
 
 // used to upload files
 var mFile = null;
@@ -239,9 +252,6 @@ var studentSearchBar = `	<!-- Search Bar-->
 	<!-- Search Input -->
 	<div class="form-group" style="margin: -8px;">
 		<div class="input-group mb-4">
-			<div class="input-group-prepend">
-				<span class="input-group-text"><i class="fas fa-search"></i></span>
-			</div>
 			<input class="form-control" placeholder="Search" id="search" type="text">
 			<!-- Search Button: sits inside the same input-group as
 			     #search, right next to the box, on the same line.
@@ -421,7 +431,7 @@ var shareMenu = `
 			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
 				<h2 class="modal-title" id="modal_share_title">Share by</h2>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-				<span aria-hidden="true" style="color: black; font-size: xx-large;">×</span>
+				<span aria-hidden="true" style="color: black; font-size: xx-large;">ï¿½</span>
 				</button>
 			</div>
 			<!-- /Modal Header -->

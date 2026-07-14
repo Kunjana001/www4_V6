@@ -406,9 +406,21 @@ function showConfirmationAlert(strMessage, fnCallback, strTitle, arrButtonLabels
     }
 }
 
+// --------------------------------------------------------
+// Improvements Made (brief item 5 - Success Messages):
+// showOperationMessage() received strType (e.g. "Success" from
+// every Add/Update/Delete call in Student/Category/Section/
+// Result.script.js) but never passed it on to
+// CommonUtils.showAlert(), which defaults to "error" styling
+// when no type is given. Every one of those success toasts was
+// therefore rendering with red/error styling instead of green.
+// Fixed by forwarding strType (normalized to lowercase, since
+// callers pass "Success" but showToast()'s CSS classes/icons
+// are lowercase "success"/"error"/"warning"/"info").
+// --------------------------------------------------------
 function showOperationMessage(strMessage, strType, fnCallback)
 {
-    CommonUtils.showAlert(strMessage);
+    CommonUtils.showAlert(strMessage, String(strType || "success").toLowerCase());
 
     if (fnCallback)
     {
@@ -461,6 +473,21 @@ function showShortBottomToast(strMessage)
    checks were not crashing anything - but they are listed here
    explicitly, defaulted to disabled, so every feature flag this
    project checks is easy to find and turn on in exactly one place.
+
+   Improvements Made - brief item 4 ("Confirmation Dialogs") asks
+   for a confirmation before Save/Edit ("Do you want to save this
+   student?" / "Save changes?"), Delete, and Logout. Delete and
+   Logout already call showConfirmationAlert()/CommonUtils.showConfirm()
+   unconditionally in every entity script and in Dashboard.script.js,
+   so those already worked. Save/Edit's confirmation, however, was
+   silently gated behind this exact ADD_EDIT_CONFIRMATION_MESSAGE
+   flag being DISABLED - so onClickSaveData() in Student/Category/
+   Section/Result.script.js was always skipping straight to
+   onConfirmSaveFormData() with no prompt at all, on every one of
+   those four pages. Flipped this one flag to FEATURE_ENABLED so
+   the confirmation that was already fully built now actually runs;
+   no other file needed to change, exactly as this comment already
+   promised above.
    ========================================================== */
 
 var FEATURE_ENABLED  = "ENABLED";
@@ -474,7 +501,7 @@ var SettingsScript = {
 
         ADD_EDIT_CLOSE_CONFIRMATION: FEATURE_DISABLED,
 
-        ADD_EDIT_CONFIRMATION_MESSAGE: FEATURE_DISABLED
+        ADD_EDIT_CONFIRMATION_MESSAGE: FEATURE_ENABLED
 
     }
 

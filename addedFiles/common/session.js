@@ -153,6 +153,13 @@ var Session = (function ()
     {
         StorageService.saveValue(AppConfig.STORAGE_KEYS.LAST_LOGOUT_TIME, CommonUtils.getCurrentTimestamp());
 
+        // Improvements Made (brief item 5): stash the success
+        // message here instead of showing a toast right before
+        // this hard navigation - see the STORAGE_KEYS.POST_REDIRECT_TOAST
+        // comment in Config.js for why. login.js shows and clears
+        // this once the Login page has actually loaded.
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Logout Successful!");
+
         StorageService.clearSession();
 
         goLogin();

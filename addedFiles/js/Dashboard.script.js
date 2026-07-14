@@ -40,7 +40,19 @@
    arrSearchableModules below for the search work, and
    btnDashboardSettings for the Settings move.
 
-   Version: 3.0
+   ----------------------------------------------------------
+   ROUND 3 IMPROVEMENTS
+   ----------------------------------------------------------
+
+   ✓ Dashboard search now also matches students by Roll Number
+     and by their Category/Section *name* (resolved from the
+     category_id/section_id already on each cached student
+     record) - so typing a Section name like "10A" surfaces the
+     students in that section, not just the Section page/entry
+     itself. Previously Students were only matched on
+     name/mobile/email.
+
+   Version: 3.1
    ========================================================== */
 
 "use strict";
@@ -182,6 +194,34 @@ function initializeDashboard()
     loadQuickStats();
 
     renderFrequentlyUsed();
+
+    showPendingPostRedirectToast();
+}
+
+
+
+/* ==========================================================
+   Improvements Made (brief item 5 - Success Messages)
+
+   Shows and clears a "Login Successful!" toast stashed by
+   login.js just before it hard-navigated here (see the
+   STORAGE_KEYS.POST_REDIRECT_TOAST comment in Config.js) - a
+   toast called immediately before window.location.href never
+   had a chance to render on the page that's navigating away.
+   No-op on a normal Dashboard visit/refresh, since the key is
+   only ever set right before a post-login redirect.
+   ========================================================== */
+
+function showPendingPostRedirectToast()
+{
+    var strPendingMessage = StorageService.getValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST);
+
+    if (strPendingMessage)
+    {
+        StorageService.removeValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST);
+
+        CommonUtils.showToast(strPendingMessage, "success");
+    }
 }
 
 
@@ -464,7 +504,11 @@ function initializeSearch()
          List, Section List, Result List, Profile, Settings,
          plus the finer-grained shortcuts like "Student
          Details" / "Student Report" / "Recent Reports")
-       - Student names/mobile/email
+       - Student names/roll number/mobile/email, plus their
+         Category and Section *names* (resolved from the IDs
+         stored on each student record) - so typing a Section
+         name like "10A" surfaces the students in it, not just
+         the Section entry itself.
        - Category names
        - Section names
        - Result exam names/subjects
@@ -498,23 +542,48 @@ function runDashboardSearch(strKeyword)
         }
     });
 
+    /* ---------- Category/Section id -> name lookups ----------
+       Student records only store category_id/section_id, so a
+       query like "10A" needs these maps to match against the
+       actual Section/Category *name*. ---------- */
+
+    var objCategoryNameById = {};
+
+    arrCachedCategories.forEach(function (objCategory)
+    {
+        objCategoryNameById[objCategory.category_id] = objCategory.name || "";
+    });
+
+    var objSectionNameById = {};
+
+    arrCachedSections.forEach(function (objSection)
+    {
+        objSectionNameById[objSection.section_id] = objSection.name || "";
+    });
+
     /* ---------- Students ---------- */
 
     arrCachedStudents.forEach(function (objStudent)
     {
         var strName = String(objStudent.name || "").toLowerCase();
+        var strRollNumber = String(objStudent.roll_number || "").toLowerCase();
         var strMobile = String(objStudent.mobile || "").toLowerCase();
         var strEmail = String(objStudent.email || "").toLowerCase();
+        var strCategoryName = String(objCategoryNameById[objStudent.category_id] || "").toLowerCase();
+        var strSectionName = String(objSectionNameById[objStudent.section_id] || "").toLowerCase();
 
         if (strName.indexOf(strLowerKeyword) > -1 ||
+            strRollNumber.indexOf(strLowerKeyword) > -1 ||
             strMobile.indexOf(strLowerKeyword) > -1 ||
-            strEmail.indexOf(strLowerKeyword) > -1)
+            strEmail.indexOf(strLowerKeyword) > -1 ||
+            strCategoryName.indexOf(strLowerKeyword) > -1 ||
+            strSectionName.indexOf(strLowerKeyword) > -1)
         {
             arrResults.push({
 
                 type: "Student",
                 label: objStudent.name || "Unnamed",
-                sublabel: objStudent.mobile || objStudent.email || "",
+                sublabel: strSectionName ? "Section " + objSectionNameById[objStudent.section_id] : (objStudent.mobile || objStudent.email || ""),
                 action: openStudentList
 
             });

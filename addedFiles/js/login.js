@@ -45,6 +45,31 @@ lblLoginSubtitle.textContent = "Welcome to " + SettingsManager.getApplicationNam
 
 
 /* ==========================================================
+   Improvements Made (brief item 5 - Success Messages)
+
+   Shows and clears a "Logout Successful!" toast stashed by
+   Session.logout() just before it hard-navigated here (see the
+   STORAGE_KEYS.POST_REDIRECT_TOAST comment in Config.js) - a
+   toast called immediately before window.location.href never
+   had a chance to render on the page that's navigating away.
+   No-op on a normal visit to this page, since the key is only
+   ever set right before a logout redirect.
+   ========================================================== */
+
+(function showPendingPostRedirectToast()
+{
+    var strPendingMessage = StorageService.getValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST);
+
+    if (strPendingMessage)
+    {
+        StorageService.removeValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST);
+
+        CommonUtils.showToast(strPendingMessage, "success");
+    }
+})();
+
+
+/* ==========================================================
    Development Only - Prefill Admin Credentials
 
    Saves re-typing admin/admin on every test run. Set
@@ -150,7 +175,17 @@ function loginUser()
 
         ActivityLog.logActivity("Login");
 
-        CommonUtils.showAlert("Login Successful!");
+        // Improvements Made (brief item 5): this used to call
+        // CommonUtils.showAlert("Login Successful!") right here,
+        // which (a) defaults to error styling since showAlert()
+        // only passes a "success" type when one is explicitly
+        // given, and (b) was destroyed by goDashboard()'s
+        // window.location.href on the very next line before the
+        // toast could ever render. Stashed instead, for
+        // Dashboard.script.js to show once the Dashboard has
+        // actually loaded - see STORAGE_KEYS.POST_REDIRECT_TOAST
+        // in Config.js.
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Login Successful!");
 
         goDashboard();
     },

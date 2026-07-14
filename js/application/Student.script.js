@@ -29,6 +29,40 @@ Changes:
    filled from the existing Name field, split into a first/
    last display only (no change to the underlying single-
    Name data model).
+7. Student List search overhaul (searchList()):
+   - Previously only read the first <li> of each rendered card
+     (the Name column) straight from the DOM, so Roll Number,
+     Mobile, Email, Parent Mobile, Parent Email, Telegram,
+     Category and Section were never actually searchable even
+     though the search box implied otherwise.
+   - Now builds a per-row searchable string straight from
+     mSelectedDataList (the same data already used to render
+     the list), covering Student ID, Name, Roll Number,
+     Mobile, Email, Parent Mobile, Parent Email and Telegram,
+     plus Category/Section *names* resolved from their IDs via
+     the CATEGORY_LIST/SECTION_LIST already cached in storage
+     (so typing "10A" now matches a Section named "10A").
+   - mSearchList (used by multi-select to map a visible row
+     back to its full data) is now reset at the start of every
+     search instead of growing forever on each keystroke, which
+     was silently corrupting that mapping the longer a user
+     kept typing.
+   - Live filter-as-you-type was already wired via oninput; no
+     change there. No new UI, no new endpoint.
+8. Export duplicate-rows safety net (exportStudentList()):
+   traced the full data pipeline feeding mSelectedDataList and
+   found no repeated-append bug in this file - every stage
+   already rebuilds the array fresh. Added a dedupe-by-
+   Student-ID pass before building the CSV anyway, matching the
+   brief's explicit "export unique rows" requirement, so a
+   duplicate Student ID reaching the export (from any future
+   upstream issue) can never produce repeated rows in the file.
+9. Student Details popup now shows the actual Category/Section
+   *name* instead of the raw numeric category_id/section_id
+   (setPreview(), new getCategoryNameById()/getSectionNameById()
+   helpers) - resolved from the same CATEGORY_LIST/SECTION_LIST
+   already cached in storage, same lookup approach searchList()
+   already uses.
 
 Architecture:
 - No architecture changes.
@@ -1904,37 +1938,80 @@ function parseListResponse(arrStudents)
 		var listItems = list.getElementsByTagName("ul");
 
 		var input = document.getElementById("search");
-		var filter = input.value.toUpperCase();
+		var filter = input.value.toUpperCase().trim();
+
+		// Category/Section are stored on each student row as IDs
+		// (SUMMARY_INDEX.CATEGORY_ID / SECTION_ID), not names, so a
+		// search for "10A" needs these id->name lookups built first.
+		// Both lists are already cached in storage by loadCategoryList()
+		// / loadSectionList() - no new data fetch needed here.
+		var categoryNameById = {};
+		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST ) || [];
+		for( var c = 0; c < categoryList.length; c++ ) {
+
+			categoryNameById[ categoryList[ c ][ CategoryScript.INDEX.CATEGORY_ID ] ] = categoryList[ c ][ CategoryScript.INDEX.NAME ] || "";
+		}
+
+		var sectionNameById = {};
+		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST ) || [];
+		for( var s = 0; s < sectionList.length; s++ ) {
+
+			sectionNameById[ sectionList[ s ][ SectionScript.INDEX.SECTION_ID ] ] = sectionList[ s ][ SectionScript.INDEX.NAME ] || "";
+		}
+
+		// Rebuilt fresh on every keystroke so it always matches exactly
+		// what's currently visible - previously this only ever grew
+		// (never cleared), which corrupted the row lookup used by
+		// multi-select (mMultiSelectedList) the longer someone typed.
+		mSearchList = [];
 
 		for( var i = 0; i < listItems.length; i++ ) {
 
-			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+			var studentData = mSelectedDataList[ i ];
 
-			if( name != null ) {
+			if( studentData == null ) {
 
-				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+				continue;
+			}
 
-					var studentData = mSelectedDataList;
+			var categoryName = categoryNameById[ studentData[ SUMMARY_INDEX.CATEGORY_ID ] ] || "";
+			var sectionName = sectionNameById[ studentData[ SUMMARY_INDEX.SECTION_ID ] ] || "";
 
-					var index = mSearchList.length;
-					mSearchList[index] = studentData[ i ];
+			// Every field the Student List should be searchable by -
+			// previously this only ever checked the Name shown in the
+			// card's first <li>, so Roll Number/Mobile/Email/Parent
+			// Mobile/Parent Email/Telegram/Category/Section/Student ID
+			// were never actually searched.
+			var searchableText = [
+				studentData[ SUMMARY_INDEX.STUDENT_ID ],
+				studentData[ SUMMARY_INDEX.NAME ],
+				studentData[ SUMMARY_INDEX.ROLL_NUMBER ],
+				studentData[ SUMMARY_INDEX.MOBILE ],
+				studentData[ SUMMARY_INDEX.EMAIL ],
+				studentData[ SUMMARY_INDEX.PARENT_MOBILE ],
+				studentData[ SUMMARY_INDEX.PARENT_EMAIL ],
+				studentData[ SUMMARY_INDEX.TELEGRAM ],
+				categoryName,
+				sectionName
+			].join( " " ).toUpperCase();
 
-					listItems[i].style.display = "";
-				} else {
+			if( searchableText.indexOf( filter ) > -1 ) {
 
-					listItems[i].style.display = "none";
-				}
+				mSearchList[ mSearchList.length ] = studentData;
+				listItems[ i ].style.display = "";
+			} else {
+
+				listItems[ i ].style.display = "none";
 			}
 		}
 
 		// Displaying No. of Records
 		var totalRecordsLength = listItems.length;
-		var searchRecordsLength = $( "ul:visible" ).length - 1;
+		var searchRecordsLength = mSearchList.length;
 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
 		var totalRecords = "Total: " + totalRecordsLength;
-		var searchInput = document.getElementById( "search" ).value;
 
-		if( searchInput == "" ) {
+		if( filter == "" ) {
 
 			document.getElementById( "records" ).innerText = totalRecords;
 		}
@@ -1968,6 +2045,21 @@ function parseListResponse(arrStudents)
 	// (both lists already list the fields in the same order, so
 	// this is just "use the right index for the right column").
 	// --------------------------------------------------
+	// --------------------------------------------------
+	// Improvements Made - "Export duplicates rows" (brief item 3)
+	// Traced the full pipeline that fills mSelectedDataList
+	// (showFilteredList() / parseListResponse() /
+	// setStorageData() / DataService.getAllRecords()) - every
+	// stage already reassigns a fresh array with "=" rather than
+	// pushing onto a stale one, so no repeated-append bug was
+	// found in this file as written. Added this dedupe-by-
+	// Student-ID pass anyway as the safety net the brief asks
+	// for ("clear export collection, rebuild it once, export
+	// unique rows"), in case a duplicate Student ID ever reaches
+	// mSelectedDataList from elsewhere (e.g. a bad backend
+	// response). Real students who simply share a name are NOT
+	// affected - only exact duplicate Student IDs are collapsed.
+	// --------------------------------------------------
 	function exportStudentList() {
 
 		var arrRows = mSelectedDataList;
@@ -1977,6 +2069,24 @@ function parseListResponse(arrStudents)
 			CommonUtils.showAlert( "There are no students to export." );
 			return;
 		}
+
+		var arrUniqueRows = [];
+		var objSeenStudentIds = {};
+
+		for( var u = 0; u < arrRows.length; u++ ) {
+
+			var studentId = arrRows[ u ][ SUMMARY_INDEX.STUDENT_ID ];
+
+			if( objSeenStudentIds[ studentId ] === true ) {
+
+				continue; // already exported this Student ID - skip the duplicate
+			}
+
+			objSeenStudentIds[ studentId ] = true;
+			arrUniqueRows.push( arrRows[ u ] );
+		}
+
+		arrRows = arrUniqueRows;
 
 		var arrColumns = [
 			JSON_KEY.STUDENT_ID,
@@ -2051,6 +2161,12 @@ function parseListResponse(arrStudents)
 		document.body.removeChild( elemLink );
 
 		window.URL.revokeObjectURL( strUrl );
+
+		// Improvements Made (brief item 5 - Success Messages):
+		// no feedback existed after a successful export - the
+		// file just silently appeared in Downloads with nothing
+		// on screen confirming it worked.
+		CommonUtils.showAlert( "Export completed successfully.", "success" );
 	}
 
 	function onClickListBackButton() {
@@ -2894,9 +3010,23 @@ function parseListResponse(arrStudents)
 		$( FORM_FIELD_INFO.LBL_FIRST_NAME ).text( strFirstName );
 		$( FORM_FIELD_INFO.LBL_LAST_NAME ).text( strLastName );
 
+		// --------------------------------------------------
+		// Improvements Made: this used to show the raw numeric
+		// category_id/section_id (e.g. "2") instead of the actual
+		// Category/Section name (e.g. "Science") - the same
+		// CATEGORY_LIST/SECTION_LIST already cached in storage by
+		// loadCategoryList()/loadSectionList() (and already used
+		// the same way by searchList()) is used here to resolve
+		// the id to its name. Falls back to the raw id if the
+		// list hasn't loaded yet or the id has no match, so
+		// nothing regresses if either list is empty.
+		// --------------------------------------------------
+		var categoryName = getCategoryNameById( data[ INDEX.CATEGORY_ID ] );
+		var sectionName = getSectionNameById( data[ INDEX.SECTION_ID ] );
+
 		$(FORM_FIELD_INFO.LBL_STUDENT_ID).text( data[INDEX.STUDENT_ID] );
-		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( data[INDEX.CATEGORY_ID] );
-		$(FORM_FIELD_INFO.LBL_SECTION_ID).text( data[INDEX.SECTION_ID] );
+		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( categoryName );
+		$(FORM_FIELD_INFO.LBL_SECTION_ID).text( sectionName );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
 		$(FORM_FIELD_INFO.LBL_ROLL_NUMBER).text( data[INDEX.ROLL_NUMBER] );
 		$(FORM_FIELD_INFO.LBL_MOBILE).text( data[INDEX.MOBILE] );
@@ -2943,6 +3073,41 @@ function parseListResponse(arrStudents)
 			$( '#preview_doc_id' ).text( '' );
 		}
 
+	}
+
+	// Looks up a Category's name from its id using the CATEGORY_LIST
+	// already cached in storage by loadCategoryList(). Falls back to
+	// the raw id itself if the list is empty or has no match, so the
+	// popup always shows something rather than a blank field.
+	function getCategoryNameById( categoryId ) {
+
+		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST ) || [];
+
+		for( var i = 0; i < categoryList.length; i++ ) {
+
+			if( categoryList[ i ][ CategoryScript.INDEX.CATEGORY_ID ] == categoryId ) {
+
+				return categoryList[ i ][ CategoryScript.INDEX.NAME ];
+			}
+		}
+
+		return categoryId;
+	}
+
+	// Same idea as getCategoryNameById(), for Sections.
+	function getSectionNameById( sectionId ) {
+
+		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST ) || [];
+
+		for( var i = 0; i < sectionList.length; i++ ) {
+
+			if( sectionList[ i ][ SectionScript.INDEX.SECTION_ID ] == sectionId ) {
+
+				return sectionList[ i ][ SectionScript.INDEX.NAME ];
+			}
+		}
+
+		return sectionId;
 	}
 
 	/**

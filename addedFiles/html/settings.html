@@ -45,7 +45,11 @@
 
     <div class="settings-topbar">
 
-        <button id="btnBack" title="Back to Profile">
+        <!-- Improvements Made: tooltip said "Back to Profile", but
+             btnBack.onclick (Settings.script.js) goes to Dashboard
+             if logged in, otherwise Login - never Profile. Fixed
+             to match actual behavior. -->
+        <button id="btnBack" title="Back">
 
             <i class="fa-solid fa-arrow-left"></i>
 
