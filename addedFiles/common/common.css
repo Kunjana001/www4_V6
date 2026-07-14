@@ -1,0 +1,2153 @@
+/* ==========================================================
+   Student Management System
+   common.css
+
+   Shared stylesheet used by:
+
+   • Login
+   • Dashboard
+   • Student
+   • Category
+   • Section
+   • Result
+   • Settings
+   • Profile
+
+   ----------------------------------------------------------
+
+   Author:
+   Kunjana Panthy
+
+   Purpose:
+
+   This file contains every common style shared by the
+   application.
+
+   Design Goals
+
+   • Beginner friendly
+   • Proper comments
+   • Maintainable
+   • Responsive
+   • No duplicated CSS
+   • Hungarian notation compatible
+   • Does NOT change application architecture
+   • Works with Bootstrap
+   • Works with existing HTML
+
+==========================================================*/
+
+
+/*==========================================================
+    RESET
+==========================================================*/
+
+*
+{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html
+{
+    scroll-behavior:smooth;
+}
+
+body
+{
+    background:#f4f6fb;
+
+    font-family:
+
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size:15px;
+
+    color:#222;
+
+    overflow-x:hidden;
+}
+
+
+/*==========================================================
+    LINKS
+==========================================================*/
+
+a
+{
+    text-decoration:none;
+}
+
+a:hover
+{
+    text-decoration:none;
+}
+
+
+/*==========================================================
+    LISTS
+==========================================================*/
+
+ul,
+ol
+{
+    list-style:none;
+}
+
+
+/*==========================================================
+    IMAGES
+==========================================================*/
+
+img
+{
+    max-width:100%;
+
+    height:auto;
+}
+
+
+/*==========================================================
+    ROOT VARIABLES
+==========================================================*/
+
+:root
+{
+
+    /* Brand */
+
+    --app-theme-color:#123b8d;
+
+    --app-theme-dark:#0f3277;
+
+    --app-accent:#3d7bfd;
+
+
+
+    /* Background */
+
+    --app-bg-color:#f4f6fb;
+
+    --app-card-bg:#ffffff;
+
+    --app-modal-bg:#ffffff;
+
+
+
+    /* Text */
+
+    --app-text-color:#222222;
+
+    --app-text-light:#666666;
+
+    --app-heading:#16336e;
+
+
+
+    /* Border */
+
+    --app-border:#d9dce5;
+
+
+
+    /* Success */
+
+    --app-success:#28a745;
+
+
+
+    /* Danger */
+
+    --app-danger:#dc3545;
+
+
+
+    /* Warning */
+
+    --app-warning:#ff9800;
+
+
+
+    /* Shadows */
+
+    --shadow-small:
+
+        0 2px 8px rgba(0,0,0,.08);
+
+    --shadow-medium:
+
+        0 6px 18px rgba(0,0,0,.12);
+
+
+
+    /* --------------------------------------------------------
+       WHY: .list-item, .page-container, .modal-body/.modal-footer,
+       .table and the whole sidebar (dashboard.css) all style
+       themselves using --color-page-background / --color-surface /
+       --color-border / --color-text-primary / --color-text-secondary
+       / --color-sidebar-* - but none of those custom properties
+       were ever actually declared anywhere in this file (or any
+       other .css file in the project). An undefined CSS variable
+       makes the property that uses it invalid, so the browser just
+       drops that property and falls back to nothing - which is why
+       list cards, the sidebar, and modals were rendering with no
+       background/border/shadow at all, flush against the page
+       background, even though the rules that were SUPPOSED to
+       style them were sitting right there in the file.
+       WHAT: alias every --color-* name that's actually referenced
+       elsewhere to the existing --app-* brand tokens above, so
+       they instantly pick up real values - and automatically
+       follow Light/Dark/Blue/Green/Purple/Orange theme switching,
+       since those tokens are exactly what the theme blocks below
+       already override.
+       -------------------------------------------------------- */
+
+    --color-page-background: var(--app-bg-color);
+
+    --color-surface: var(--app-card-bg);
+
+    --color-border: var(--app-border);
+
+    --color-text-primary: var(--app-heading);
+
+    --color-text-secondary: var(--app-text-light);
+
+    --color-sidebar-background: var(--app-theme-color);
+
+    --color-sidebar-text: #ffffff;
+
+    --color-sidebar-hover: var(--app-theme-dark);
+
+}
+
+/*==========================================================
+    DARK MODE
+==========================================================*/
+
+html[data-theme="dark"]
+{
+
+    --app-bg-color:#171a22;
+
+    --app-card-bg:#222736;
+
+    --app-modal-bg:#222736;
+
+    --app-text-color:#f5f5f5;
+
+    --app-text-light:#c4c4c4;
+
+    --app-heading:#ffffff;
+
+    --app-border:#444b5d;
+
+    /* Sidebar stays on its own slightly-darker panel tone in Dark
+       Mode instead of the brand color, so it doesn't look like a
+       stray bright-blue strip next to an otherwise dark page. */
+    --color-sidebar-background:#12141c;
+
+    --color-sidebar-hover:#1c1f2b;
+
+}
+
+/*==========================================================
+    ADDITIONAL THEMES
+
+    Six named themes as requested: Light (the :root defaults
+    above), Dark, Blue, Green, Purple, Orange. Each one only
+    needs to override --app-theme-color / --app-theme-dark /
+    --app-accent - every card, button, header, sidebar and
+    filter chip in the app already paints itself from those
+    tokens (or from --color-sidebar-background, which itself
+    reads --app-theme-color), so changing three variables here
+    re-themes the entire application at once.
+==========================================================*/
+
+/* Blue */
+html[data-theme="blue"]
+{
+    --app-theme-color:#1565c0;
+    --app-theme-dark:#0d47a1;
+    --app-accent:#42a5f5;
+}
+
+/* Green */
+html[data-theme="green"]
+{
+    --app-theme-color:#2e7d32;
+    --app-theme-dark:#1b5e20;
+    --app-accent:#66bb6a;
+}
+
+/* Purple */
+html[data-theme="purple"]
+{
+    --app-theme-color:#6a1b9a;
+    --app-theme-dark:#4a148c;
+    --app-accent:#ab47bc;
+}
+
+/* Orange */
+html[data-theme="orange"]
+{
+    --app-theme-color:#ef6c00;
+    --app-theme-dark:#d84315;
+    --app-accent:#ffa726;
+}
+
+
+/*==========================================================
+    MAIN PAGE
+==========================================================*/
+
+body
+{
+    background:var(--app-bg-color);
+
+    color:var(--app-text-color);
+
+    transition:.25s;
+}
+
+.main-container
+{
+    width:100%;
+
+    min-height:100vh;
+
+    background:var(--app-bg-color);
+
+    padding:0;
+
+    margin:0;
+}
+
+.list-container
+{
+    width:100%;
+
+    padding:
+
+        145px
+        20px
+        90px;
+
+    overflow-y:auto;
+}
+
+
+
+/*==========================================================
+    HEADER
+==========================================================*/
+
+.header
+{
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    right:0;
+
+    height:60px;
+
+    background:var(--app-theme-color);
+
+    display:flex;
+
+    align-items:center;
+
+    box-shadow:var(--shadow-small);
+
+    z-index:1000;
+}
+
+.header-items
+{
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    margin:0;
+
+    padding:0 15px;
+}
+
+.header-items li
+{
+    list-style:none;
+}
+
+.heading-text
+{
+    flex:1;
+
+    text-align:center;
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    letter-spacing:.4px;
+}
+
+.header-icons-L
+{
+    color:white;
+
+    font-size:20px;
+
+    padding:10px;
+
+    border-radius:6px;
+
+    transition:.25s;
+}
+
+.header-icons-L:hover
+{
+    color:white;
+
+    background:rgba(255,255,255,.15);
+}
+
+
+
+/*==========================================================
+    SEARCH BAR
+==========================================================*/
+
+.page-container
+{
+    position:fixed;
+
+    top:60px;
+
+    left:0;
+
+    right:0;
+
+    background:white;
+
+    padding:15px;
+
+    border-bottom:
+
+        1px solid var(--app-border);
+
+    box-shadow:0 2px 5px rgba(0,0,0,.05);
+
+    z-index:999;
+}
+
+.input-group
+{
+    margin-bottom:10px;
+}
+
+.input-group-text
+{
+    background:white;
+
+    border-right:none;
+}
+
+.input-group .form-control
+{
+    border-left:none;
+
+    box-shadow:none;
+}
+
+/* ----------------------------------------------------------
+   Student List "Export" button - larger and clearly visible,
+   per request. Only used by #btn_export on studentList.html.
+   ---------------------------------------------------------- */
+
+.btn-export
+{
+    font-size:16px;
+
+    font-weight:bold;
+
+    padding:10px 22px;
+
+    border-radius:8px;
+
+    box-shadow:var(--shadow-small);
+}
+
+.input-group .form-control:focus
+{
+    box-shadow:none;
+}
+
+
+
+/*==========================================================
+    RECORD COUNT
+==========================================================*/
+
+#records
+{
+    color:var(--app-heading);
+
+    font-size:15px;
+
+    font-weight:bold;
+}
+
+
+
+/*==========================================================
+    FILTERS
+==========================================================*/
+
+#filter_params
+{
+    display:flex;
+
+    flex-wrap:wrap;
+}
+
+.filter-items
+{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#eef3ff;
+
+    color:var(--app-theme-color);
+
+    border-radius:20px;
+
+    padding:
+
+        5px
+        14px;
+
+    margin-right:8px;
+
+    margin-top:6px;
+
+    font-size:13px;
+
+    font-weight:600;
+}
+
+.filter-items:hover
+{
+    background:var(--app-theme-color);
+
+    color:white;
+
+    transition:.25s;
+}
+
+
+
+/*==========================================================
+    FLOAT BUTTON
+==========================================================*/
+
+.float-button
+{
+    position:fixed !important;
+
+    bottom:25px;
+
+    right:25px;
+
+    width:55px !important;
+
+    height:55px !important;
+
+    max-width:55px !important;
+
+    flex:none !important;
+
+    padding:0 !important;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-radius:50%;
+
+    background:var(--app-theme-color);
+
+    color:white;
+
+    box-shadow:var(--shadow-medium);
+
+    cursor:pointer;
+
+    z-index:999;
+}
+
+.float-button:hover
+{
+    transform:translateY(-3px);
+
+    transition:.25s;
+}
+
+
+
+/*==========================================================
+    COMMON PAGE TITLE
+==========================================================*/
+
+.page-title
+{
+    font-size:28px;
+
+    font-weight:bold;
+
+    color:var(--app-heading);
+}
+
+.page-subtitle
+{
+    color:var(--app-text-light);
+
+    margin-top:5px;
+}
+
+
+/*==========================================================
+    PAGE HEADER
+    (title on the left, search + add on the right)
+==========================================================*/
+
+.page-header
+{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    flex-wrap:wrap;
+
+    gap:15px;
+
+    margin-bottom:20px;
+}
+
+.page-actions
+{
+    display:flex;
+
+    flex:1 1 320px;
+
+    max-width:520px;
+
+    gap:10px;
+}
+
+.page-actions .search-box
+{
+    flex:1;
+
+    width:auto;
+
+    min-width:0;
+}
+
+@media screen and (max-width:576px)
+{
+    .page-header
+    {
+        flex-direction:column;
+
+        align-items:stretch;
+    }
+
+    .page-actions
+    {
+        max-width:none;
+
+        flex-wrap:wrap;
+    }
+
+    .page-actions .search-box
+    {
+        flex:1 1 100%;
+    }
+}
+
+/*==========================================================
+    CRUD PAGE CARDS
+==========================================================*/
+
+.card
+{
+    background:var(--app-card-bg);
+
+    border:none;
+
+    border-radius:14px;
+
+    box-shadow:var(--shadow-small);
+
+    margin-bottom:20px;
+
+    transition:.25s;
+}
+
+.card:hover
+{
+    box-shadow:var(--shadow-medium);
+
+    transform:translateY(-2px);
+}
+
+.card-header
+{
+    background:var(--app-card-bg);
+
+    border-bottom:1px solid var(--app-border);
+
+    font-weight:700;
+
+    color:var(--app-heading);
+
+    padding:16px 20px;
+}
+
+.card-body
+{
+    padding:20px;
+}
+
+.card-footer
+{
+    background:var(--app-card-bg);
+
+    border-top:1px solid var(--app-border);
+}
+
+
+/*==========================================================
+    GENERATED LIST ITEMS
+==========================================================*/
+
+.list-item
+{
+    background:white;
+
+    border-radius:12px;
+
+    padding:18px;
+
+    margin-bottom:15px;
+
+    border:1px solid #ececec;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+
+    transition:.25s;
+}
+
+.list-item:hover
+{
+    cursor:pointer;
+
+    transform:translateY(-2px);
+
+    box-shadow:0 8px 20px rgba(0,0,0,.10);
+}
+
+
+/*==========================================================
+    FORM LABELS
+==========================================================*/
+
+.form-control-label
+{
+    font-weight:600;
+
+    color:var(--app-heading);
+
+    margin-bottom:6px;
+
+    display:block;
+}
+
+
+/*==========================================================
+    FORM GROUP
+==========================================================*/
+
+.form-group
+{
+    margin-bottom:18px;
+}
+
+
+/*==========================================================
+    INPUTS
+==========================================================*/
+
+.form-control
+{
+    border-radius:8px;
+
+    border:1px solid var(--app-border);
+
+    min-height:44px;
+
+    box-shadow:none;
+
+    transition:.25s;
+}
+
+.form-control:focus
+{
+    border-color:var(--app-theme-color);
+
+    box-shadow:0 0 0 .15rem rgba(18,59,141,.18);
+}
+
+
+/*==========================================================
+    SELECT
+==========================================================*/
+
+select.form-control
+{
+    cursor:pointer;
+}
+
+
+/*==========================================================
+    TEXTAREA
+==========================================================*/
+
+textarea.form-control
+{
+    min-height:120px;
+
+    resize:vertical;
+}
+
+
+/*==========================================================
+    BUTTONS
+==========================================================*/
+
+.btn
+{
+    border-radius:8px;
+
+    min-height:42px;
+
+    font-weight:600;
+
+    transition:.25s;
+}
+
+.btn:hover
+{
+    transform:translateY(-1px);
+}
+
+
+/*==========================================================
+    PRIMARY BUTTON
+==========================================================*/
+
+.btn-primary
+{
+    background:var(--app-theme-color);
+
+    border-color:var(--app-theme-color);
+}
+
+.btn-primary:hover
+{
+    background:var(--app-theme-dark);
+
+    border-color:var(--app-theme-dark);
+}
+
+
+/*==========================================================
+    SUCCESS BUTTON
+==========================================================*/
+
+.btn-success
+{
+    background:var(--app-success);
+
+    border-color:var(--app-success);
+}
+
+
+/*==========================================================
+    DANGER BUTTON
+==========================================================*/
+
+.btn-danger
+{
+    background:var(--app-danger);
+
+    border-color:var(--app-danger);
+}
+
+
+/*==========================================================
+    COMMON BUTTONS
+==========================================================*/
+
+button.form-control
+{
+    border-radius:8px;
+
+    font-weight:600;
+
+    min-height:44px;
+}
+
+
+/*==========================================================
+    MODAL
+==========================================================*/
+
+.modal-content
+{
+    border:none;
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.20);
+}
+
+
+/*==========================================================
+    MODAL HEADER
+==========================================================*/
+
+.modal-header
+{
+    background:var(--app-theme-color);
+
+    color:white;
+
+    border-bottom:none;
+}
+
+.modal-header .close
+{
+    color:white;
+
+    opacity:1;
+}
+
+.modal-title
+{
+    color:white;
+
+    font-weight:bold;
+}
+
+
+/*==========================================================
+    MODAL BODY
+==========================================================*/
+
+.modal-body
+{
+    background:var(--app-card-bg);
+}
+
+
+/*==========================================================
+    MODAL FOOTER
+==========================================================*/
+
+.modal-footer
+{
+    background:#fafafa;
+
+    border-top:1px solid var(--app-border);
+}
+
+
+/*==========================================================
+    POPUP CONTAINER
+==========================================================*/
+
+.popup_container
+{
+    padding:10px;
+}
+
+
+/*==========================================================
+    STUDENT INFORMATION PAGE
+==========================================================*/
+
+.box-shadow
+{
+    box-shadow:none;
+}
+
+
+/*==========================================================
+    INFORMATION LABELS
+==========================================================*/
+
+#list_details p
+{
+    margin-bottom:12px;
+
+    font-size:15px;
+
+    color:var(--app-text-color);
+}
+
+
+/*==========================================================
+    BADGES
+==========================================================*/
+
+.badge
+{
+    border-radius:30px;
+
+    padding:6px 12px;
+
+    font-size:12px;
+}
+
+
+/*==========================================================
+    TABLE
+==========================================================*/
+
+.table
+{
+    background:white;
+}
+
+.table thead
+{
+    background:var(--app-theme-color);
+
+    color:white;
+}
+
+.table td,
+.table th
+{
+    vertical-align:middle;
+}
+
+
+/*==========================================================
+    TABLE RESPONSIVE
+==========================================================*/
+
+.table-responsive
+{
+    overflow-x:auto;
+}
+
+
+/*==========================================================
+    HORIZONTAL LINE
+==========================================================*/
+
+hr
+{
+    border-color:var(--app-border);
+}
+
+
+/*==========================================================
+    COMMON SPACING
+==========================================================*/
+
+.mt-10
+{
+    margin-top:10px;
+}
+
+.mt-20
+{
+    margin-top:20px;
+}
+
+.mb-10
+{
+    margin-bottom:10px;
+}
+
+.mb-20
+{
+    margin-bottom:20px;
+}
+
+.p-10
+{
+    padding:10px;
+}
+
+.p-20
+{
+    padding:20px;
+}
+
+/* ==========================================================
+   PART 3
+   Search Bar
+   Filter
+   Forms
+   Buttons
+   Shared CRUD Cards
+   ========================================================== */
+
+
+/* ---------- Search Area ---------- */
+
+.page-container
+{
+    position: sticky;
+    top: 60px;
+
+    width: 100%;
+
+    padding: 15px 20px;
+
+    background: var(--color-surface);
+
+    border-bottom: 1px solid var(--color-border);
+
+    z-index: 900;
+}
+
+
+/* ---------- Search Box ---------- */
+
+#search,
+.search-box
+{
+    width: 100%;
+
+    height: 42px;
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 8px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    padding-left: 12px;
+
+    transition: all .2s ease;
+}
+
+/* ----------------------------------------------------------
+   CONNECTION FIX (Category/Section/Result/Student list pages):
+   #search above sits inside a Bootstrap ".input-group" together
+   with the search icon (and, on the Student page, a Search
+   button) as siblings on the same line. Bootstrap's ".input-group"
+   is a flex row that already sizes each child correctly, but the
+   "width: 100%" set on #search just above this comment fought
+   with that flex sizing and forced #search onto its own full-width
+   line underneath the icon instead of next to it - which is why
+   the search icon appeared alone in its own box with "Search"
+   showing as plain text below it, instead of one single search
+   bar. Restoring Bootstrap's own flex sizing here (flex-grow
+   instead of a fixed width) keeps the icon, the input box, and
+   the Search button all on the same line. This only applies
+   inside ".input-group" - the standalone Dashboard search box
+   (#txtSearch, further above) is a different element and is not
+   affected by this rule.
+   ---------------------------------------------------------- */
+
+.input-group #search
+{
+    width: auto;
+
+    flex: 1 1 auto;
+}
+
+#search:focus,
+.search-box:focus
+{
+    outline: none;
+
+    border-color: var(--app-theme-color);
+
+    box-shadow: 0 0 0 3px rgba(18,59,141,.15);
+}
+
+
+/* ---------- Record Count ---------- */
+
+#records
+{
+    margin: 0;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: var(--color-text-secondary);
+}
+
+
+/* ---------- Filter Icon ---------- */
+
+#filter_icon
+{
+    color: var(--app-theme-color);
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+#filter_icon:hover
+{
+    transform: scale(1.1);
+}
+
+
+/* ---------- Filter Tags ---------- */
+
+.filter-items
+{
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-right: 6px;
+
+    margin-bottom: 5px;
+
+    padding: 5px 12px;
+
+    border-radius: 30px;
+
+    background: rgba(18,59,141,.08);
+
+    color: var(--app-theme-color);
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+/* ---------- Forms ---------- */
+
+.form-group
+{
+    margin-bottom: 16px;
+}
+
+.form-control
+{
+    border-radius: 8px;
+
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    min-height: 42px;
+}
+
+.form-control:focus
+{
+    border-color: var(--app-theme-color);
+
+    box-shadow: 0 0 0 3px rgba(18,59,141,.15);
+}
+
+
+/* ---------- Labels ---------- */
+
+.form-control-label
+{
+    margin-bottom: 6px;
+
+    font-weight: 600;
+
+    color: var(--color-text-primary);
+}
+
+
+/* ---------- Buttons ---------- */
+
+.btn,
+button
+{
+    border-radius: 8px;
+
+    transition: .2s;
+}
+
+.btn:hover,
+button:hover
+{
+    transform: translateY(-1px);
+}
+
+
+/* ---------- Save Button ---------- */
+
+#save_data,
+#btn_filter
+{
+    background: var(--app-theme-color);
+
+    color: white;
+
+    border: none;
+}
+
+#save_data:hover,
+#btn_filter:hover
+{
+    opacity: .95;
+}
+
+
+/* ---------- Shared List Card ---------- */
+
+.list-item
+{
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 10px;
+
+    padding: 15px;
+
+    margin-bottom: 12px;
+
+    transition: .2s;
+
+    /* UI MODERNIZATION PASS 2 (added): subtle entrance animation
+       so a freshly rendered list doesn't just snap into place. */
+    animation: list-item-fade-in .25s ease-out;
+}
+
+.list-item:hover
+{
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+
+    cursor: pointer;
+}
+
+/* UI MODERNIZATION PASS 2 (added) */
+@keyframes list-item-fade-in
+{
+    from
+    {
+        opacity: 0;
+
+        transform: translateY(6px);
+    }
+
+    to
+    {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+/* ---------- Empty State ----------
+   UI MODERNIZATION PASS 2 (added)
+   Shown by showFilteredList() in Student/Category/Section/
+   Result scripts (via CommonUtils.getEmptyStateHtml()) when a
+   search or filter returns zero rows, instead of leaving the
+   list area blank. */
+
+.empty-state
+{
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 48px 20px;
+
+    color: var(--color-text-secondary);
+}
+
+.empty-state-icon
+{
+    width: 64px;
+
+    height: 64px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--app-theme-color-light, rgba(18,59,141,.08));
+
+    color: var(--app-theme-color);
+
+    font-size: 26px;
+
+    margin-bottom: 14px;
+}
+
+.empty-state-title
+{
+    font-size: 16px;
+
+    font-weight: 600;
+
+    color: var(--color-text-primary);
+
+    margin: 0 0 4px;
+}
+
+.empty-state-subtitle
+{
+    font-size: 13px;
+
+    color: var(--color-text-secondary);
+
+    margin: 0;
+}
+
+
+/* ---------- Bootstrap Card ---------- */
+
+.card
+{
+    border-radius: 12px;
+
+    border: none;
+
+    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+}
+
+.card-header
+{
+    background: var(--color-surface);
+
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-body
+{
+    background: var(--color-surface);
+}
+
+
+/* ---------- Helper ---------- */
+
+.popup_container
+{
+    padding: 10px;
+}
+
+/* ==========================================================
+   PART 4
+   Responsive Layout
+   Floating Button
+   Tables
+   Utilities
+   ========================================================== */
+
+
+/* ----------------------------------------------------------
+   Floating Scroll Button
+---------------------------------------------------------- */
+
+.float-button
+{
+    position: fixed !important;
+
+    right: 25px;
+
+    bottom: 25px;
+
+    width: 55px !important;
+
+    height: 55px !important;
+
+    max-width: 55px !important;
+
+    flex: none !important;
+
+    padding: 0 !important;
+
+    border-radius: 50%;
+
+    background: var(--app-theme-color);
+
+    color: #ffffff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-decoration: none;
+
+    box-shadow: 0 5px 15px rgba(0,0,0,.25);
+
+    cursor: pointer;
+
+    transition: .25s;
+
+    z-index: 999;
+}
+
+.float-button:hover
+{
+    transform: translateY(-3px);
+
+    text-decoration: none;
+
+    color: white;
+}
+
+
+/* ----------------------------------------------------------
+   Bootstrap Modal Improvements
+---------------------------------------------------------- */
+
+.modal-content
+{
+    border: none;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+.modal-header
+{
+    background: var(--app-theme-color);
+
+    color: white;
+
+    border-bottom: none;
+}
+
+.modal-header .close
+{
+    color: white;
+
+    opacity: 1;
+}
+
+.modal-title
+{
+    font-weight: 600;
+}
+
+.modal-body
+{
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+}
+
+.modal-footer
+{
+    background: var(--color-surface);
+
+    border-top: 1px solid var(--color-border);
+}
+
+
+/* ----------------------------------------------------------
+   Bootstrap Tables
+---------------------------------------------------------- */
+
+.table
+{
+    color: var(--color-text-primary);
+
+    background: var(--color-surface);
+}
+
+.table thead
+{
+    background: var(--app-theme-color);
+
+    color: white;
+}
+
+.table td,
+.table th
+{
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover
+{
+    background: rgba(18,59,141,.05);
+}
+
+
+/* ----------------------------------------------------------
+   Card Grid
+---------------------------------------------------------- */
+
+.card-grid
+{
+    display: grid;
+
+    gap: 16px;
+
+    grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
+}
+
+
+/* ----------------------------------------------------------
+   Pagination
+---------------------------------------------------------- */
+
+.pagination-area
+{
+    margin-top: 20px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+
+/* ----------------------------------------------------------
+   Info Card Rows - used by the Category/Section/Result/Student
+   "Info" preview dialogs to show label/value pairs in a clean
+   card layout instead of plain inline paragraphs.
+---------------------------------------------------------- */
+
+.info-card
+{
+    background: var(--color-surface);
+
+    border-radius: 14px;
+
+    padding: 6px 4px;
+}
+
+.info-card-row
+{
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 14px;
+
+    padding: 14px 12px;
+
+    border-bottom: 1px solid var(--color-border);
+}
+
+.info-card-row:last-child
+{
+    border-bottom: none;
+}
+
+.info-card-icon
+{
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+    flex: none;
+
+    border-radius: 10px;
+
+    background: var(--app-theme-color);
+
+    color: #ffffff;
+
+    font-size: 15px;
+}
+
+.info-card-text
+{
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+}
+
+.info-card-label
+{
+    font-size: 12px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+
+    color: var(--color-text-secondary);
+}
+
+.info-card-value
+{
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: var(--color-text-primary);
+
+    word-break: break-word;
+}
+
+
+/* ----------------------------------------------------------
+   List Card Icon Buttons - the small round Info / Edit
+   buttons on every list card, and the colored quick-action
+   buttons (Call / WhatsApp / SMS / Email) on the Student card.
+   Used by createHtmlListItem() in Student/Category/Section/
+   Result.script.js so every list page shares the same look.
+---------------------------------------------------------- */
+
+.icon-btn
+{
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: transform .15s ease, background .15s ease;
+}
+
+.icon-btn:hover
+{
+    transform: scale(1.08);
+}
+
+.icon-btn:active
+{
+    transform: scale(.94);
+}
+
+.icon-btn-info
+{
+    background: rgba(23,162,184,.12);
+
+    color: #17a2b8;
+}
+
+.icon-btn-edit
+{
+    background: rgba(63,81,181,.12);
+
+    color: #3f51b5;
+}
+
+.quick-action-btn
+{
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    font-size: 14px;
+
+    margin-left: 8px;
+
+    text-decoration: none;
+
+    transition: transform .15s ease;
+}
+
+.quick-action-btn:hover
+{
+    transform: translateY(-2px);
+
+    text-decoration: none;
+}
+
+.quick-action-call     { background: rgba(40,167,69,.12);  color: #28a745; }
+.quick-action-whatsapp { background: rgba(37,211,102,.15);  color: #25d366; }
+.quick-action-sms      { background: rgba(23,162,184,.12);  color: #17a2b8; }
+.quick-action-email    { background: rgba(255,152,0,.15);   color: #ff9800; }
+
+.list-card-title
+{
+    font-size: 17px;
+
+    font-weight: 700;
+
+    color: var(--color-text-primary);
+}
+
+.list-card-subtitle
+{
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--color-text-secondary);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 6px;
+}
+
+.list-card-footer
+{
+    margin-top: 10px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+}
+
+
+/* ----------------------------------------------------------
+   Toast Notifications - see CommonUtils.showAlert()/showToast()
+   in common.js. Replaces blocking browser alert() popups with
+   small, self-dismissing notifications.
+---------------------------------------------------------- */
+
+#toast-container
+{
+    position: fixed;
+
+    right: 20px;
+
+    bottom: 20px;
+
+    z-index: 2000;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    max-width: 320px;
+}
+
+.app-toast
+{
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    padding: 14px 16px;
+
+    border-radius: 10px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    box-shadow: var(--shadow-medium);
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    line-height: 1.4;
+
+    animation: app-toast-in .25s ease;
+
+    border-left: 4px solid var(--app-theme-color);
+}
+
+.app-toast i
+{
+    margin-top: 2px;
+
+    font-size: 16px;
+}
+
+.app-toast-success { border-left-color: var(--app-success); }
+.app-toast-success i { color: var(--app-success); }
+
+.app-toast-error { border-left-color: var(--app-danger); }
+.app-toast-error i { color: var(--app-danger); }
+
+.app-toast-warning { border-left-color: var(--app-warning); }
+.app-toast-warning i { color: var(--app-warning); }
+
+.app-toast-info { border-left-color: var(--app-theme-color); }
+.app-toast-info i { color: var(--app-theme-color); }
+
+.app-toast-hide
+{
+    animation: app-toast-out .25s ease forwards;
+}
+
+@keyframes app-toast-in
+{
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes app-toast-out
+{
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(10px); }
+}
+
+@media screen and (max-width:576px)
+{
+    #toast-container
+    {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+    }
+}
+
+
+/* ----------------------------------------------------------
+   Utility Classes
+---------------------------------------------------------- */
+
+.text-center
+{
+    text-align: center;
+}
+
+.text-right
+{
+    text-align: right;
+}
+
+.text-left
+{
+    text-align: left;
+}
+
+.w-100
+{
+    width: 100%;
+}
+
+.mt-10
+{
+    margin-top: 10px;
+}
+
+.mt-20
+{
+    margin-top: 20px;
+}
+
+.mb-10
+{
+    margin-bottom: 10px;
+}
+
+.mb-20
+{
+    margin-bottom: 20px;
+}
+
+.hidden
+{
+    display: none !important;
+}
+
+
+/* ----------------------------------------------------------
+   Responsive Design
+---------------------------------------------------------- */
+
+@media screen and (max-width:992px)
+{
+    .page-container
+    {
+        padding: 15px;
+    }
+
+    .list-container
+    {
+        padding: 15px;
+    }
+
+    .card-grid
+    {
+        grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+    }
+}
+
+@media screen and (max-width:768px)
+{
+    .header
+    {
+        height: 55px;
+    }
+
+    .heading-text
+    {
+        font-size: 18px;
+    }
+
+    .page-container
+    {
+        top: 55px;
+    }
+
+    .header-icons-L
+    {
+        font-size: 18px;
+    }
+
+    .float-button
+    {
+        width: 48px;
+
+        height: 48px;
+
+        right: 18px;
+
+        bottom: 18px;
+    }
+
+    .pagination-area
+    {
+        flex-direction: column;
+    }
+}
+
+@media screen and (max-width:576px)
+{
+    .header-items
+    {
+        padding: 0 10px;
+    }
+
+    .page-container
+    {
+        padding: 12px;
+    }
+
+    .list-container
+    {
+        padding: 12px;
+    }
+
+    .card-grid
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-dialog
+    {
+        margin: 10px;
+    }
+
+    .filter-items
+    {
+        font-size: 12px;
+
+        padding: 4px 10px;
+    }
+
+    /* Touch targets: 30-32px circular icon buttons are below the
+       ~44px minimum recommended tap size - bump them up only on
+       small/touch-sized screens, desktop stays compact. */
+    .icon-btn
+    {
+        width: 40px;
+
+        height: 40px;
+
+        font-size: 16px;
+    }
+
+    .quick-action-btn
+    {
+        width: 40px;
+
+        height: 40px;
+
+        font-size: 16px;
+    }
+
+    .menu-icon-bg
+    {
+        width: 38px;
+
+        height: 38px;
+    }
+}
+
+
+/* ----------------------------------------------------------
+   End of common.css
+---------------------------------------------------------- */

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<!-- ==========================================================
+     CONNECTION FIX - what changed in this pass (folder
+     structure was NOT changed; only the references below)
+     ==========================================================
+
+     Every <script src="../js/application/...js"> tag on this
+     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and Dashboard.script.js actually live
+     directly under www4/addedFiles/js/, not under an
+     "application" sub-folder - so those tags 404'd and none of
+     that code ever ran. Fixed by pointing each tag at
+     ../js/...js instead, without moving a single file.
+
+     Also added <script src="../js/DataService.js">, which did
+     not exist anywhere in the project - see DataService.js for
+     details.
+     ========================================================== -->
+
+<!-- ==========================================================
+     ROUND 2 IMPROVEMENTS
+
+     Completed Improvements
+     ----------------------
+     ✓ Dashboard global search across all modules - see
+       #txtSearch placeholder below and Dashboard.script.js
+     ✓ Settings moved from Profile to Dashboard - see the new
+       #btnDashboardSettings gear icon in the topbar below
+     ========================================================== -->
+<html lang="en">
+
+<head>
+    <link rel="manifest" href="../manifest.json">
+
+    <meta name="theme-color" content="#123b8d">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Management System</title>
+
+    <link rel="stylesheet" href="../dashboard.css">
+
+    <link rel="stylesheet" href="../common/common.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- ================= Sidebar ================= -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="logo">
+
+            <img id="dashboardLogo" src="../images/logo.png" alt="Logo">
+
+            <h2 id="sidebarAppName">Student Management System</h2>
+
+        </div>
+
+        <ul class="menu">
+
+            <li class="active">
+
+                <span class="menu-icon-bg menu-icon-blue"><i class="fa-solid fa-house"></i></span>
+
+                <span>Dashboard</span>
+
+            </li>
+
+            <li id="menuStudent">
+
+                <span class="menu-icon-bg menu-icon-green"><i class="fa-solid fa-users"></i></span>
+
+                <span>Student List</span>
+
+            </li>
+
+            <li id="menuCategory">
+
+                <span class="menu-icon-bg menu-icon-purple"><i class="fa-solid fa-list"></i></span>
+
+                <span>Category List</span>
+
+            </li>
+
+            <li id="menuSection">
+
+                <span class="menu-icon-bg menu-icon-orange"><i class="fa-solid fa-building"></i></span>
+
+                <span>Section List</span>
+
+            </li>
+
+            <li id="menuResult">
+
+                <span class="menu-icon-bg menu-icon-red"><i class="fa-solid fa-square-poll-vertical"></i></span>
+
+                <span>Result List</span>
+
+            </li>
+
+            <li id="menuProfile">
+
+                <span class="menu-icon-bg menu-icon-cyan"><i class="fa-solid fa-user"></i></span>
+
+                <span>Profile</span>
+
+            </li>
+
+            <li id="logout">
+
+                <span class="menu-icon-bg menu-icon-pink"><i class="fa-solid fa-right-from-bracket"></i></span>
+
+                <span>Sign Out</span>
+
+            </li>
+
+        </ul>
+
+    </aside>
+
+    <!-- ================= Main ================= -->
+
+    <main class="main">
+
+        <!-- Top Bar -->
+
+        <div class="topbar">
+
+            <button id="menuBtn">
+
+                <i class="fa-solid fa-bars"></i>
+
+            </button>
+
+            <div>
+
+                <h1 id="dashboardTitle">Dashboard</h1>
+
+                <p id="dashboardGreeting">Welcome to Student Management System</p>
+
+            </div>
+
+            <!-- Settings now lives directly on the Dashboard
+                 (Dashboard -> Settings) instead of behind Profile
+                 (see Round 2 improvement #4). Profile keeps only
+                 user info / login history / activity history. -->
+
+            <button id="btnDashboardSettings" class="topbar-settings-btn" title="Settings" aria-label="Settings">
+
+                <i class="fa-solid fa-gear"></i>
+
+            </button>
+
+        </div>
+
+        <!-- Search -->
+
+        <div class="search-box">
+
+            <input
+                type="text"
+                id="txtSearch"
+                placeholder="Search anything: students, categories, sections, results, pages...">
+
+            <button>
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+            </button>
+
+        </div>
+
+        <!-- Live results for the search box above, populated by
+             Dashboard.script.js as the user types. Hidden until
+             there is a keyword and at least one match. -->
+
+        <div class="search-results" id="searchResults"></div>
+
+        <!-- Cards -->
+
+        <section class="cards">
+
+            <div class="card" id="studentCard">
+
+                <i class="fa-solid fa-users"></i>
+
+                <h3>Student List</h3>
+
+                <p class="card-count" id="studentCount">&nbsp;</p>
+
+                <p>Manage student information.</p>
+
+            </div>
+
+            <div class="card" id="categoryCard">
+
+                <i class="fa-solid fa-list"></i>
+
+                <h3>Category List</h3>
+
+                <p class="card-count" id="categoryCount">&nbsp;</p>
+
+                <p>Manage student categories.</p>
+
+            </div>
+
+            <div class="card" id="sectionCard">
+
+                <i class="fa-solid fa-building"></i>
+
+                <h3>Section List</h3>
+
+                <p class="card-count" id="sectionCount">&nbsp;</p>
+
+                <p>Manage sections.</p>
+
+            </div>
+
+            <div class="card" id="resultCard">
+
+                <i class="fa-solid fa-square-poll-vertical"></i>
+
+                <h3>Result List</h3>
+
+                <p class="card-count" id="resultCount">&nbsp;</p>
+
+                <p>Manage student results.</p>
+
+            </div>
+
+        </section>
+
+        <!-- Quick Stats -->
+
+        <section class="panel">
+
+            <h2 class="panel-title">Quick Stats</h2>
+
+            <div class="quick-stats">
+
+                <div class="stat-item">
+                    <span class="stat-value" id="statStudents">-</span>
+                    <span class="stat-label">Students</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-value" id="statCategories">-</span>
+                    <span class="stat-label">Categories</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-value" id="statSections">-</span>
+                    <span class="stat-label">Sections</span>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-value" id="statResults">-</span>
+                    <span class="stat-label">Results</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Shortcuts -->
+
+        <section class="panel">
+
+            <h2 class="panel-title">Shortcuts</h2>
+
+            <div class="shortcuts-grid">
+
+                <div class="shortcut-box">
+
+                    <h4><i class="fa-solid fa-user-graduate"></i> Recent Students</h4>
+
+                    <ul class="shortcut-list" id="recentStudentsList">
+                        <li class="shortcut-empty">No students yet.</li>
+                    </ul>
+
+                </div>
+
+                <div class="shortcut-box">
+
+                    <h4><i class="fa-solid fa-square-poll-vertical"></i> Recent Reports</h4>
+
+                    <ul class="shortcut-list" id="recentReportsList">
+                        <li class="shortcut-empty">No results yet.</li>
+                    </ul>
+
+                </div>
+
+                <div class="shortcut-box">
+
+                    <h4><i class="fa-solid fa-star"></i> Frequently Used</h4>
+
+                    <ul class="shortcut-list" id="frequentlyUsedList">
+                        <li class="shortcut-empty">Nothing yet - start navigating!</li>
+                    </ul>
+
+                </div>
+
+                <div class="shortcut-box">
+
+                    <h4><i class="fa-solid fa-comment-sms"></i> SMS <span class="shortcut-badge">Coming Soon</span></h4>
+
+                    <p class="shortcut-placeholder-text">Bulk SMS to students/parents will live here.</p>
+
+                </div>
+
+                <div class="shortcut-box shortcut-box-wide">
+
+                    <h4><i class="fa-solid fa-bolt"></i> Operations</h4>
+
+                    <div class="shortcut-ops">
+
+                        <button type="button" id="opAddStudent"><i class="fa-solid fa-user-plus"></i> Add Student</button>
+
+                        <button type="button" id="opAddCategory"><i class="fa-solid fa-square-plus"></i> Add Category</button>
+
+                        <button type="button" id="opAddResult"><i class="fa-solid fa-square-plus"></i> Add Result</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ------------------------------------------------------------
+             CONNECTION FIX (Task 5 - sample/test data):
+             There is no visible button for this on purpose - it is a
+             developer/testing utility, not something an end user should
+             see. To add a small set of sample Categories, Sections,
+             Students and Results through the real backend connection
+             (Google Apps Script, or the offline queue if it is
+             unreachable), open this page's browser console (F12, or
+             Cmd+Option+J) and run:
+
+                 DataService.seedSampleData(console.log, console.error);
+
+             This calls the exact same DataService.addRecord() path a
+             real Add form uses, so it is a genuine end-to-end test of
+             whichever backend is currently active - not data that
+             bypasses the app. See DataService.js for details.
+             ------------------------------------------------------------ -->
+
+    </main>
+
+</div>
+
+<script src="../js/Config.js"></script>
+
+<script src="../js/StorageService.js"></script>
+
+<script src="../js/DataService.js"></script>
+
+<script src="../common/common.js"></script>
+
+<script src="../common/settings.js"></script>
+
+<script src="../common/activity.js"></script>
+
+<script src="../common/navigation.js"></script>
+
+<script src="../common/session.js"></script>
+
+<script src="../common/register-sw.js"></script>
+
+<script src="../js/Dashboard.script.js"></script>
+
+</body>
+
+</html>

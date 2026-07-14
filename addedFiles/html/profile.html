@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!-- ==========================================================
+     CONNECTION FIX - what changed in this pass (folder
+     structure was NOT changed; only the references below)
+     ==========================================================
+
+     Every <script src="../js/application/...js"> tag on this
+     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and Profile.script.js actually live
+     directly under www4/addedFiles/js/, not under an
+     "application" sub-folder - so those tags 404'd and none of
+     that code ever ran. Fixed by pointing each tag at
+     ../js/...js instead, without moving a single file.
+
+     Also added <script src="../js/DataService.js">, which did
+     not exist anywhere in the project - see DataService.js for
+     details.
+     ========================================================== -->
+
+<!-- ==========================================================
+     ROUND 2 IMPROVEMENTS
+
+     Completed Improvements
+     ----------------------
+     ✓ Settings moved from Profile to Dashboard: the Settings
+       button that used to live at the bottom of this page is
+       gone. Profile is now user info / login history / activity
+       history only, per the Round 2 brief.
+     ========================================================== -->
+<html lang="en">
+
+<head>
+    <link rel="manifest" href="../manifest.json">
+
+    <meta name="theme-color" content="#123b8d">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Details - Profile</title>
+
+    <link rel="stylesheet" href="../profile.css">
+
+    <link rel="stylesheet" href="../common/common.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="profile-page">
+
+    <!-- ================= Top Bar ================= -->
+
+    <div class="profile-topbar">
+
+        <button id="btnBack" title="Back to Dashboard">
+
+            <i class="fa-solid fa-arrow-left"></i>
+
+        </button>
+
+        <div>
+
+            <h1>Profile</h1>
+
+            <p>Your account information</p>
+
+        </div>
+
+    </div>
+
+    <!-- ================= User Information ================= -->
+
+    <section class="profile-card">
+
+        <div class="profile-avatar-row">
+
+            <!-- --------------------------------------------------
+                 WHY: no separate "profile" record with a photo
+                 exists anywhere on the backend - only a username
+                 is stored - so a real photo can't be shown here
+                 without inventing data that doesn't exist.
+                 WHAT: an initials avatar generated from the
+                 username on the client (see Profile.script.js's
+                 renderAvatarInitials()) is a reasonable, honest
+                 stand-in that needs no backend change at all.
+                 -------------------------------------------------- -->
+            <div class="profile-avatar" id="profileAvatar">?</div>
+
+            <div>
+
+                <h2 class="profile-card-title" style="margin-bottom:2px;">User Information</h2>
+
+                <p class="profile-info-label" id="txtRole">Administrator</p>
+
+            </div>
+
+        </div>
+
+        <div class="profile-info-row">
+
+            <i class="fa-solid fa-user"></i>
+
+            <div>
+
+                <p class="profile-info-label">Username</p>
+
+                <p class="profile-info-value" id="txtUsername">-</p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ================= Login History ================= -->
+
+    <section class="profile-card">
+
+        <h2 class="profile-card-title">Login History</h2>
+
+        <div class="login-history">
+
+            <div class="login-history-item">
+
+                <p class="profile-info-label">Current Login</p>
+
+                <p class="profile-info-value" id="txtCurrentLogin">-</p>
+
+            </div>
+
+            <div class="login-history-item">
+
+                <p class="profile-info-label">Last Login</p>
+
+                <p class="profile-info-value" id="txtLastLogin">-</p>
+
+            </div>
+
+            <div class="login-history-item">
+
+                <p class="profile-info-label">Last Logout</p>
+
+                <p class="profile-info-value" id="txtLastLogout">-</p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ================= Recent Activity (moved from Dashboard) ================= -->
+
+    <section class="profile-card">
+
+        <h2 class="profile-card-title">Recent Activity</h2>
+
+        <ul class="activity-list" id="activityList">
+
+            <li class="activity-empty">No recent activity yet.</li>
+
+        </ul>
+
+    </section>
+
+    <!-- ================= Change Password ================= -->
+
+    <section class="profile-card">
+
+        <h2 class="profile-card-title">Change Password</h2>
+
+        <!-- ------------------------------------------------
+             Frontend only for now, per Task 3. There is no
+             real backend yet, so submitting only validates
+             the fields and shows a message - no password is
+             actually changed anywhere.
+             ------------------------------------------------ -->
+
+        <div class="profile-form-group">
+
+            <label for="txtCurrentPassword">Current Password</label>
+
+            <input
+                type="password"
+                id="txtCurrentPassword"
+                placeholder="Enter current password">
+
+        </div>
+
+        <div class="profile-form-group">
+
+            <label for="txtNewPassword">New Password</label>
+
+            <input
+                type="password"
+                id="txtNewPassword"
+                placeholder="Enter new password">
+
+        </div>
+
+        <div class="profile-form-group">
+
+            <label for="txtConfirmPassword">Confirm New Password</label>
+
+            <input
+                type="password"
+                id="txtConfirmPassword"
+                placeholder="Re-enter new password">
+
+        </div>
+
+        <button type="button" id="btnChangePassword">
+
+            Change Password
+
+        </button>
+
+    </section>
+
+</div>
+
+<!-- JavaScript -->
+<!-- Common dependencies load first, same order as every other page -->
+
+<script src="../js/Config.js"></script>
+
+<script src="../js/StorageService.js"></script>
+
+<script src="../js/DataService.js"></script>
+
+<script src="../common/common.js"></script>
+
+<script src="../common/navigation.js"></script>
+
+<script src="../common/session.js"></script>
+
+<script src="../common/register-sw.js"></script>
+
+<script src="../common/theme.js"></script>
+
+<script src="../common/settings.js"></script>
+
+<script src="../common/activity.js"></script>
+
+<script src="../js/Profile.script.js"></script>
+
+</body>
+
+</html>

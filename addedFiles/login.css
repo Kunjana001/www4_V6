@@ -1,0 +1,343 @@
+/* ==========================================================
+   Student Management System
+   Login Page Style Sheet
+   ========================================================== */
+
+/* ==========================================================
+   Reset
+   ========================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ==========================================================
+   Body
+   ========================================================== */
+
+body {
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    background: var(--color-page-background);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-height: 100vh;
+}
+
+/* ==========================================================
+   Main Container
+   ========================================================== */
+
+.container {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+}
+
+/* ==========================================================
+   Login Card
+   ========================================================== */
+
+.login-card {
+
+    position: relative;
+
+    width: 380px;
+
+    background: var(--color-surface);
+
+    border-radius: 20px;
+
+    padding: 40px;
+
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================
+   Settings Button (Phase 3)
+   ========================================================== */
+
+.login-settings-btn {
+
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    width: 36px;
+    height: 36px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: var(--color-text-secondary);
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.login-settings-btn:hover {
+
+    background: var(--color-page-background);
+
+    color: var(--color-text-primary);
+}
+
+/* ==========================================================
+   Logo
+   ========================================================== */
+
+.logo {
+
+    width: 90px;
+
+    display: block;
+
+    margin: 0 auto 30px auto;
+}
+
+/* ==========================================================
+   Input Box
+   ========================================================== */
+
+.input-box {
+
+    display: flex;
+
+    align-items: center;
+
+    border: 2px solid #1d3f8e;
+
+    border-radius: 12px;
+
+    padding: 12px 15px;
+
+    margin-bottom: 20px;
+
+    transition: 0.3s;
+}
+
+.input-box:focus-within {
+
+    border-color: #123b8d;
+
+    box-shadow: 0px 0px 8px rgba(18, 59, 141, 0.3);
+}
+
+.input-box i {
+
+    color: #777777;
+
+    width: 22px;
+}
+
+.input-box input {
+
+    flex: 1;
+
+    border: none;
+
+    outline: none;
+
+    font-size: 16px;
+
+    padding-left: 10px;
+
+    background: transparent;
+}
+
+/* ==========================================================
+   Password Eye Icon
+   ========================================================== */
+
+#togglePassword {
+
+    cursor: pointer;
+
+    color: #666666;
+}
+
+#togglePassword:hover {
+
+    color: #123b8d;
+}
+
+/* ==========================================================
+   Remember Me
+   ========================================================== */
+
+.options {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    font-size: 14px;
+
+    margin-bottom: 25px;
+}
+
+.options label {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+.options a {
+
+    text-decoration: none;
+
+    color: #123b8d;
+
+    font-weight: bold;
+}
+
+.options a:hover {
+
+    text-decoration: underline;
+}
+
+/* ==========================================================
+   Buttons
+   ========================================================== */
+
+button {
+
+    width: 100%;
+
+    padding: 14px;
+
+    border-radius: 12px;
+
+    font-size: 17px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    margin-bottom: 15px;
+}
+
+/* Login Button */
+
+#loginBtn {
+
+    background: #123b8d;
+
+    color: white;
+
+    border: none;
+}
+
+#loginBtn:hover {
+
+    background: #0f3278;
+}
+
+/* Sign Up Button */
+
+.signup {
+
+    background: white;
+
+    color: #123b8d;
+
+    border: 2px solid #123b8d;
+}
+
+.signup:hover {
+
+    background: #123b8d;
+
+    color: white;
+}
+
+/* ==========================================================
+   Sign Up Page - Create Account Button
+
+   Same look as #loginBtn on the Login page, just under a
+   different ID because it lives on a different page.
+   ========================================================== */
+
+#createAccountBtn {
+
+    background: #123b8d;
+
+    color: white;
+
+    border: none;
+}
+
+#createAccountBtn:hover {
+
+    background: #0f3278;
+}
+
+/* ==========================================================
+   Sign Up Page - Confirm Password Eye Icon
+
+   Same look/behaviour as #togglePassword, just a second icon
+   for the Confirm Password field.
+   ========================================================== */
+
+#toggleConfirmPassword {
+
+    cursor: pointer;
+
+    color: #666666;
+}
+
+#toggleConfirmPassword:hover {
+
+    color: #123b8d;
+}
+
+/* ==========================================================
+   Responsive
+   ========================================================== */
+
+@media (max-width: 480px) {
+
+    .login-card {
+
+        width: 100%;
+
+        padding: 30px 20px;
+    }
+
+    .options {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 10px;
+    }
+
+}

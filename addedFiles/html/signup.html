@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!-- ==========================================================
+     CONNECTION FIX - what changed in this pass (folder
+     structure was NOT changed; only the references below)
+     ==========================================================
+
+     Every <script src="../js/application/...js"> tag on this
+     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and signup.js actually live
+     directly under www4/addedFiles/js/, not under an
+     "application" sub-folder - so those tags 404'd and none of
+     that code ever ran. Fixed by pointing each tag at
+     ../js/...js instead, without moving a single file.
+
+     Also added <script src="../js/DataService.js">, which did
+     not exist anywhere in the project - see DataService.js for
+     details.
+     ========================================================== -->
+<html lang="en">
+
+<head>
+    <link rel="manifest" href="../manifest.json">
+
+    <meta name="theme-color" content="#123b8d">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Management System - Sign Up</title>
+
+    <link rel="stylesheet" href="../login.css">
+
+    <link rel="stylesheet" href="../common/common.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <!-- ===========================
+         Sign Up Container
+    ============================ -->
+
+    <div class="container">
+
+        <div class="login-card">
+
+            <!-- Logo -->
+
+            <img
+                id="signupLogo"
+                src="../images/logo.png"
+                alt="Student Management System Logo"
+                class="logo">
+
+            <!-- Sign Up Title -->
+
+            <h2 class="title" id="signupTitle">
+
+                Sign Up
+
+            </h2>
+
+            <p class="subtitle" id="signupSubtitle">
+
+                Create your Student Management System account
+
+            </p>
+
+            <!-- Username -->
+
+            <div class="input-box">
+
+                <i class="fa-regular fa-user"></i>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Choose a Username"
+                    autocomplete="username">
+
+            </div>
+
+            <!-- Password -->
+
+            <div class="input-box">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Choose a Password"
+                    autocomplete="new-password">
+
+                <i
+                    class="fa-regular fa-eye"
+                    id="togglePassword"></i>
+
+            </div>
+
+            <!-- Confirm Password -->
+
+            <div class="input-box">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input
+                    type="password"
+                    id="confirmPassword"
+                    placeholder="Confirm Password"
+                    autocomplete="new-password">
+
+                <i
+                    class="fa-regular fa-eye"
+                    id="toggleConfirmPassword"></i>
+
+            </div>
+
+            <!-- Create Account Button -->
+
+            <button
+                type="button"
+                id="createAccountBtn">
+
+                Create Account
+
+            </button>
+
+            <!-- Back To Login Button -->
+
+            <button
+                type="button"
+                class="signup"
+                id="backToLoginBtn">
+
+                Back to Login
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- JavaScript -->
+    <!-- Common dependencies load first so signup.js can use Navigation's goLogin() -->
+
+    <script src="../js/Config.js"></script>
+
+    <script src="../js/StorageService.js"></script>
+
+    <script src="../js/DataService.js"></script>
+
+    <script src="../common/common.js"></script>
+
+<script src="../common/theme.js"></script>
+
+    <script src="../common/settings.js"></script>
+
+    <script src="../common/navigation.js"></script>
+
+    <script src="../common/session.js"></script>
+
+    <script src="../common/register-sw.js"></script>
+
+    <script src="../js/signup.js"></script>
+
+</body>
+
+</html>

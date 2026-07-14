@@ -1,0 +1,27 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency folders (in case any tooling gets added later)
+node_modules/
+
+# Local environment / secrets - NEVER commit real Server URLs,
+# API keys, or credentials for the Google Apps Script backend
+.env
+*.local
+
+# Build/output folders (if a bundler is ever introduced)
+dist/
+build/
+
+# Zip archives of this project (the repo IS the source of truth)
+*.zip

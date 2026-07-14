@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!-- ==========================================================
+     CONNECTION FIX - what changed in this pass (folder
+     structure was NOT changed; only the references below)
+     ==========================================================
+
+     Every <script src="../js/application/...js"> tag on this
+     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and Settings.script.js actually live
+     directly under www4/addedFiles/js/, not under an
+     "application" sub-folder - so those tags 404'd and none of
+     that code ever ran. Fixed by pointing each tag at
+     ../js/...js instead, without moving a single file.
+
+     Also added <script src="../js/DataService.js">, which did
+     not exist anywhere in the project - see DataService.js for
+     details.
+     ========================================================== -->
+<html lang="en">
+
+<head>
+    <link rel="manifest" href="../manifest.json">
+
+    <meta name="theme-color" content="#123b8d">
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Details - Settings</title>
+
+    <link rel="stylesheet" href="../settings.css">
+
+    <link rel="stylesheet" href="../common/common.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="settings-page">
+
+    <!-- ================= Top Bar ================= -->
+
+    <div class="settings-topbar">
+
+        <button id="btnBack" title="Back to Profile">
+
+            <i class="fa-solid fa-arrow-left"></i>
+
+        </button>
+
+        <div>
+
+            <h1>Settings</h1>
+
+            <p>Manage how the application looks</p>
+
+        </div>
+
+    </div>
+
+    <!-- ================= Application Settings Card (Phase 3) ================= -->
+
+    <section class="settings-card" style="margin-bottom: 20px;">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-sliders"></i>
+
+            <div>
+
+                <h3>Application</h3>
+
+                <p>Configure the backend address, name, and logo used across the app.</p>
+
+            </div>
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtServerUrl">Server URL</label>
+
+            <input
+                type="text"
+                id="txtServerUrl"
+                placeholder="https://script.google.com/macros/s/.../exec">
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtApplicationName">Application Name</label>
+
+            <input
+                type="text"
+                id="txtApplicationName"
+                placeholder="Student Details">
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtLogoUrl">Logo URL</label>
+
+            <input
+                type="text"
+                id="txtLogoUrl"
+                placeholder="../images/logo.png">
+
+        </div>
+
+        <button type="button" id="btnSaveSettings" class="settings-save-btn">
+
+            Save Application Settings
+
+        </button>
+
+    </section>
+
+    <!-- ================= Theme Card ================= -->
+
+    <section class="settings-card">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-palette"></i>
+
+            <div>
+
+                <h3>Theme</h3>
+
+                <p>Choose a color theme for the whole application.</p>
+
+            </div>
+
+        </div>
+
+        <!-- Theme Swatch Grid: populated by Settings.script.js from
+             ThemeManager.ALL_THEMES, so adding a theme only ever
+             means adding one entry to that one list, never editing
+             this HTML. -->
+        <div class="theme-grid" id="theme_grid"></div>
+
+    </section>
+
+</div>
+
+<!-- JavaScript -->
+<!-- Common dependencies load first, same order as every other page -->
+
+<script src="../js/Config.js"></script>
+
+<script src="../js/StorageService.js"></script>
+
+<script src="../js/DataService.js"></script>
+
+<script src="../common/common.js"></script>
+
+<script src="../common/navigation.js"></script>
+
+<script src="../common/session.js"></script>
+
+<script src="../common/register-sw.js"></script>
+
+<script src="../common/theme.js"></script>
+
+<script src="../common/settings.js"></script>
+
+<script src="../js/Settings.script.js"></script>
+
+</body>
+
+</html>
