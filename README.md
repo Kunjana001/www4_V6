@@ -1,4 +1,4 @@
-# Student Management System (www4_V5)
+# Student Management System (www4_V6)
 
 A vanilla JS / HTML / CSS Progressive Web App for managing Students,
 Categories, Sections, and Results, backed by Google Apps Script + Google
@@ -7,7 +7,7 @@ Sheets. Originally converted from a Cordova mobile app.
 ## Project structure
 
 ```
-www4_V5/
+www4_V6/
 ├── addedFiles/              # PWA shell: login, dashboard, profile, settings
 │   ├── common/               # navigation.js, session.js, theme.js, etc.
 │   ├── html/                 # index.html (login), dashboard.html, profile.html, settings.html, signup.html
@@ -50,12 +50,12 @@ initial commit made). To publish it:
 
 1. Create a new, empty repository on GitHub (do **not** initialize it with
    a README/.gitignore/license, since this folder already has them):
-   - Via the web UI: https://github.com/new
-   - Or via the GitHub CLI: `gh repo create <your-username>/www4_V5 --public --source=. --remote=origin`
+   - Via the web UI: https://github.com/new (owner: `Kunjana001`, name: `www4_V6`)
+   - Or via the GitHub CLI: `gh repo create Kunjana001/www4_V6 --public --source=. --remote=origin --push`
 
 2. If you created the repo via the web UI instead, connect it manually:
    ```bash
-   git remote add origin https://github.com/<your-username>/<repo-name>.git
+   git remote add origin https://github.com/Kunjana001/www4_V6.git
    git branch -M main
    git push -u origin main
    ```
