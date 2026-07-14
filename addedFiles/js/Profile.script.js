@@ -6,8 +6,8 @@
 
    Controls the Profile page: showing the logged-in username,
    showing the Login History (Current Login / Last Login /
-   Last Logout), the Change Password form (frontend only for
-   now), the Back button, and Recent Activity.
+   Last Logout), the Change Password form, the Back button,
+   and Recent Activity.
 
    ----------------------------------------------------------
    ROUND 2 - Improvement #4 (Move Settings)
@@ -20,7 +20,18 @@
    purely: user information, login history, and activity
    history, per the Round 2 brief.
 
-   Version: 1.1
+   ----------------------------------------------------------
+   ROUND 3 IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Change Password now actually changes the password.
+     handleChangePassword() used to validate the form and stop
+     ("...once the backend is ready"). It now calls the new
+     DataService.changePassword(), which checks the CURRENT
+     password against the real Users sheet before writing the
+     new one - see DataService.js for the full explanation and
+     the matching Apps Script snippet.
+
+   Version: 1.2
    ========================================================== */
 
 "use strict";
@@ -292,9 +303,15 @@ function formatFriendlyDateTime(strIsoTimestamp)
 /* ==========================================================
    Handle Change Password Button Click
 
-   Frontend validation only for now, as required by Task 3.
-   No password is actually changed anywhere yet - there is no
-   backend for this feature.
+   WHY: validates the form the same way it always did, then
+   (this pass) actually sends the change to the backend
+   instead of stopping after validation.
+   WHAT: calls DataService.changePassword() for the logged-in
+   user (Session.getUsername()). Success clears the form and
+   shows a confirmation; a wrong current password or backend
+   error is shown instead and the form is left as typed so the
+   user can fix just the field that was wrong.
+   WHEN: runs when the Change Password button is clicked.
    ========================================================== */
 
 function handleChangePassword()
@@ -360,14 +377,36 @@ function handleChangePassword()
     }
 
     /* ------------------------------------------------------
-       There is no backend yet, so we can only tell the user
-       the form looks correct. Clearing the fields afterward
-       keeps the password from lingering on screen.
+       All fields look good - hand off to the backend, which
+       is the only place that can actually verify the current
+       password against the Users sheet. See DataService.js
+       for the changePassword() function and the matching
+       Apps Script action it depends on.
        ------------------------------------------------------ */
 
-    CommonUtils.showAlert("Looks good! Password changes will be enabled once the backend is ready.");
+    showLoader("Changing password...");
 
-    txtCurrentPassword.value = "";
-    txtNewPassword.value = "";
-    txtConfirmPassword.value = "";
+    DataService.changePassword(
+        Session.getUsername(),
+        strCurrentPassword,
+        strNewPassword,
+        function ()
+        {
+            hideLoader();
+
+            CommonUtils.showAlert("Password changed successfully!", "success");
+
+            ActivityLog.logActivity("Password Changed");
+
+            txtCurrentPassword.value = "";
+            txtNewPassword.value = "";
+            txtConfirmPassword.value = "";
+        },
+        function (objError)
+        {
+            hideLoader();
+
+            CommonUtils.showAlert((objError && objError.message) || "Could not change password.");
+        }
+    );
 }

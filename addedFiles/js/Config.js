@@ -5,7 +5,20 @@
    Purpose:
    Stores all application configuration in one place.
 
-   Version: 1.0
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Theme/Font Size + Settings task)
+   ----------------------------------------------------------
+   ✓ Added STORAGE_KEYS.FONT_SIZE - a new LocalStorage key so
+     theme.js can remember whether the user picked Small,
+     Medium, or Large text, the same way STORAGE_KEYS.THEME
+     already remembers the color theme. No existing key was
+     renamed or removed.
+   ✓ Added STORAGE_KEYS.REMEMBERED_USERNAME for the Login page's
+     "Remember Me" checkbox (see login.js), so the saved
+     username lives in the same one place every other saved
+     value already lives.
+
+   Version: 1.2
    ========================================================== */
 
 "use strict";
@@ -310,6 +323,31 @@ CACHE_KEYS: {
         THEME:
 
             "theme",
+
+        /* --------------------------------------------------
+           Remembers whether the user chose Small / Medium /
+           Large text, so theme.js can restore it on every
+           page, the same way THEME is restored. Added for
+           the Theme System Enhancement task (Font Size).
+           -------------------------------------------------- */
+
+        FONT_SIZE:
+
+            "fontSize",
+
+        /* --------------------------------------------------
+           Remembers the username typed on the Login page when
+           "Remember Me" is checked, so it can be prefilled on
+           the next visit. Deliberately does NOT store the
+           password - storing a plaintext password in
+           LocalStorage would be readable by any script on the
+           page, so only the username is remembered; the
+           password field is always left blank to be re-typed.
+           -------------------------------------------------- */
+
+        REMEMBERED_USERNAME:
+
+            "rememberedUsername",
 
         /* --------------------------------------------------
            User-configurable Settings (Phase 3): the Server

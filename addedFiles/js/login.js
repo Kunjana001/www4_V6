@@ -1,6 +1,18 @@
 /* ==========================================================
    Student Management System
    Login JavaScript
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Wired up the "Remember Me" checkbox, which existed in
+     index.html but had no logic behind it anywhere - checking
+     it and logging in did nothing. Only the username is
+     remembered (see the REMEMBERED_USERNAME comment in
+     Config.js for why the password is deliberately never
+     stored); it is prefilled and the checkbox is pre-checked
+     on the next visit, and unchecking it before login forgets
+     the saved username again.
    ========================================================== */
 
 
@@ -10,6 +22,8 @@
 
 var txtUsername = document.getElementById("username");
 var txtPassword = document.getElementById("password");
+
+var chkRememberMe = document.getElementById("rememberMe");
 
 var btnLogin = document.getElementById("loginBtn");
 
@@ -70,14 +84,40 @@ lblLoginSubtitle.textContent = "Welcome to " + SettingsManager.getApplicationNam
 
 
 /* ==========================================================
+   Remember Me - Prefill a Saved Username
+
+   WHY: so a user who checked "Remember Me" last time does not
+   have to retype their username every visit.
+   WHAT: if a username was saved, fills it in and checks the
+   box to match. Runs before the DEV_MODE prefill below so a
+   real remembered username always wins over the admin/admin
+   test shortcut.
+   WHEN: runs once, as soon as this script loads.
+   ========================================================== */
+
+(function prefillRememberedUsername()
+{
+    var strRememberedUsername = StorageService.getValue(AppConfig.STORAGE_KEYS.REMEMBERED_USERNAME);
+
+    if (strRememberedUsername)
+    {
+        txtUsername.value = strRememberedUsername;
+
+        chkRememberMe.checked = true;
+    }
+})();
+
+
+/* ==========================================================
    Development Only - Prefill Admin Credentials
 
    Saves re-typing admin/admin on every test run. Set
    AppConfig.DEV_MODE to false before shipping to turn this
-   off.
+   off. Skipped when a remembered username was already
+   filled in above, so it never overwrites a real saved login.
    ========================================================== */
 
-if (AppConfig.DEV_MODE === true)
+if (AppConfig.DEV_MODE === true && chkRememberMe.checked === false)
 {
     txtUsername.value = "admin";
     txtPassword.value = "admin";
@@ -174,6 +214,26 @@ function loginUser()
         Session.login(objUser.username, objUser.role);
 
         ActivityLog.logActivity("Login");
+
+        /* --------------------------------------------------
+           WHY: apply the Remember Me choice at the moment
+           login is confirmed successful - not before - so a
+           failed login attempt never saves (or clears) a
+           username the backend didn't actually accept.
+           WHAT: saves the username if the box is checked,
+           otherwise removes any previously-saved one, so
+           unchecking it and logging in again forgets it.
+           WHEN: runs right after DataService.login() succeeds.
+           -------------------------------------------------- */
+
+        if (chkRememberMe.checked === true)
+        {
+            StorageService.saveValue(AppConfig.STORAGE_KEYS.REMEMBERED_USERNAME, strUsername);
+        }
+        else
+        {
+            StorageService.removeValue(AppConfig.STORAGE_KEYS.REMEMBERED_USERNAME);
+        }
 
         // Improvements Made (brief item 5): this used to call
         // CommonUtils.showAlert("Login Successful!") right here,

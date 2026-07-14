@@ -20,7 +20,20 @@
    • This file runs on every page load so the last chosen
      theme is automatically restored, as required by Task 6.
 
-   Version: 1.0
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Theme System Enhancement task)
+   ----------------------------------------------------------
+   ✓ Added Font Size support (Small / Medium / Large), the
+     other half of the Theme System Enhancement task - the
+     6 color themes already existed. Font size is stored,
+     applied, and restored exactly the way color themes are:
+     a new FontSizeManager object below follows the same
+     shape as ThemeManager (getCurrentFontSize / applyFontSize /
+     restoreSavedFontSize), saved under the new
+     AppConfig.STORAGE_KEYS.FONT_SIZE key added in Config.js.
+     Nothing about ThemeManager itself was changed or removed.
+
+   Version: 1.1
    ========================================================== */
 
 "use strict";
@@ -216,11 +229,138 @@ var ThemeManager = (function ()
 
 
 /* ==========================================================
-   Restore the Theme Immediately
+   Font Size Manager
+
+   WHY: the Theme System Enhancement task asks for Small /
+   Medium / Large text sizes in addition to the color themes
+   above. This mirrors ThemeManager's exact shape (same
+   function names, same StorageService pattern) so anyone who
+   already understands ThemeManager already understands this.
+
+   WHAT it does: stores the chosen font size under
+   AppConfig.STORAGE_KEYS.FONT_SIZE and applies it as a
+   "data-font-size" attribute on <html>, the same way
+   ThemeManager uses "data-theme". common.css reads that
+   attribute to scale text up or down.
+
+   WHEN it runs: restoreSavedFontSize() runs immediately below,
+   the moment this file loads on any page - identical timing to
+   ThemeManager.restoreSavedTheme().
+   ========================================================== */
+
+var FontSizeManager = (function ()
+{
+
+    var FONT_SMALL = "small";
+
+    var FONT_MEDIUM = "medium";
+
+    var FONT_LARGE = "large";
+
+    /* All font sizes in the order they should be offered on
+       the Settings page. common.css has a matching
+       html[data-font-size="..."] block for each one. */
+
+    var ALL_FONT_SIZES = [
+        { id: FONT_SMALL,  label: "Small" },
+        { id: FONT_MEDIUM, label: "Medium" },
+        { id: FONT_LARGE,  label: "Large" }
+    ];
+
+    return {
+
+        FONT_SMALL: FONT_SMALL,
+
+        FONT_MEDIUM: FONT_MEDIUM,
+
+        FONT_LARGE: FONT_LARGE,
+
+        ALL_FONT_SIZES: ALL_FONT_SIZES,
+
+        getCurrentFontSize: getCurrentFontSize,
+
+        applyFontSize: applyFontSize,
+
+        restoreSavedFontSize: restoreSavedFontSize
+
+    };
+
+
+
+    /* ======================================================
+       Get the Currently Saved Font Size
+
+       Same fallback rule as ThemeManager.getCurrentTheme():
+       an unknown or missing value defaults to Medium, which
+       matches the font sizing the app already shipped with,
+       so a first-time visit looks unchanged.
+       ====================================================== */
+
+    function getCurrentFontSize()
+    {
+        var strSavedSize = StorageService.getValue(AppConfig.STORAGE_KEYS.FONT_SIZE);
+
+        var bIsKnownSize = ALL_FONT_SIZES.some(function (objSize)
+        {
+            return objSize.id === strSavedSize;
+        });
+
+        if (bIsKnownSize === true)
+        {
+            return strSavedSize;
+        }
+
+        return FONT_MEDIUM;
+    }
+
+
+
+    /* ======================================================
+       Apply a Font Size to the Page
+
+       strSize : one of FONT_SMALL / FONT_MEDIUM / FONT_LARGE
+
+       Sets "data-font-size" on <html> so common.css can scale
+       text, and saves the choice the same way applyTheme()
+       saves the color theme.
+       ====================================================== */
+
+    function applyFontSize(strSize)
+    {
+        document.documentElement.setAttribute("data-font-size", strSize);
+
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.FONT_SIZE, strSize);
+    }
+
+
+
+    /* ======================================================
+       Restore the Last Saved Font Size
+
+       Call this as soon as a page loads, right alongside
+       ThemeManager.restoreSavedTheme(), so the correct text
+       size is showing before the user notices anything change.
+       ====================================================== */
+
+    function restoreSavedFontSize()
+    {
+        var strSavedSize = getCurrentFontSize();
+
+        document.documentElement.setAttribute("data-font-size", strSavedSize);
+    }
+
+})();
+
+
+
+/* ==========================================================
+   Restore the Theme and Font Size Immediately
 
    This runs the moment theme.js loads on any page, so the
-   saved theme is applied automatically everywhere, as
-   required by Task 6 and Task 7.
+   saved theme and font size are applied automatically
+   everywhere, as required by Task 6 and Task 7.
    ========================================================== */
 
 ThemeManager.restoreSavedTheme();
+
+FontSizeManager.restoreSavedFontSize();

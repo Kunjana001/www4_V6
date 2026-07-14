@@ -16,7 +16,7 @@
      offline (this is the "Background synchronization when
      internet returns" requirement)
 
-   Version: 1.0
+   Version: 1.1
 
    ----------------------------------------------------------
    UI Modernization Pass 2 (added)
@@ -26,6 +26,17 @@
    showFilteredList() so an empty search result shows a
    friendly message instead of blank space. No existing
    function changed, architecture unchanged.
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Added showLoader()/hideLoader() (moved here from
+     LegacyCompatShim.js, which is not loaded on every page -
+     see the functions themselves for the full WHY). Every
+     page already loads common.js, so this fixes a real bug
+     where signup.js's showLoader() call threw on signup.html
+     (no LegacyCompatShim.js there), breaking every Sign Up
+     attempt before it reached the backend.
    ========================================================== */
 
 "use strict";
@@ -395,6 +406,91 @@ StorageService.initializeDatabase()
     {
         CommonUtils.logError("common.js (initializeDatabase)", objError);
     });
+
+
+
+/* ==========================================================
+   Show / Hide a Full-Screen Loading Overlay
+
+   WHY: showLoader()/hideLoader() used to only exist inside
+   LegacyCompatShim.js, which is loaded on index.html and the
+   four legacy list pages - but signup.js, Settings.script.js,
+   and (this pass) Profile.script.js all needed the same thing
+   on pages that never load that file (signup.html,
+   settings.html, profile.html). Calling an undefined
+   showLoader() there threw immediately and broke the whole
+   click handler before the backend was ever reached - for
+   signup.js specifically, that meant every Sign Up attempt
+   failed silently with a console error, never actually calling
+   DataService.createAccount(). Moved here instead, since
+   common.js is the one file every page already loads, so
+   there is now exactly one copy used everywhere.
+   WHAT: builds one reusable full-screen overlay (created once,
+   reused after that) with a spinner + message, and toggles it
+   on/off. A request counter means nested show/hide calls (more
+   than one DataService call in flight at once) only hide the
+   overlay once every one of them has finished.
+   WHEN: showLoader() is called right before a DataService call;
+   hideLoader() is called once that call's callback fires.
+   ========================================================== */
+
+function getOrCreateLoaderElement()
+{
+    var oLoader = document.getElementById("appLoadingOverlay");
+
+    if (oLoader)
+    {
+        return oLoader;
+    }
+
+    var oStyle = document.createElement("style");
+
+    oStyle.textContent =
+        "#appLoadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;" +
+        "background:rgba(255,255,255,0.85);z-index:99999;display:none;" +
+        "align-items:center;justify-content:center;flex-direction:column;}" +
+        "#appLoadingOverlay .appLoadingSpinner{width:36px;height:36px;border-radius:50%;" +
+        "border:4px solid #cfd8ea;border-top-color:var(--app-theme-color,#123b8d);animation:appLoadingSpin 0.8s linear infinite;}" +
+        "#appLoadingOverlay .appLoadingMessage{margin-top:10px;color:var(--app-theme-color,#123b8d);font-size:14px;}" +
+        "@keyframes appLoadingSpin{to{transform:rotate(360deg);}}";
+
+    document.head.appendChild(oStyle);
+
+    oLoader = document.createElement("div");
+    oLoader.id = "appLoadingOverlay";
+    oLoader.innerHTML = "<div class=\"appLoadingSpinner\"></div><div class=\"appLoadingMessage\"></div>";
+
+    document.body.appendChild(oLoader);
+
+    return oLoader;
+}
+
+var numLoaderRequestCount = 0;
+
+function showLoader(strMessage)
+{
+    numLoaderRequestCount++;
+
+    var oLoader = getOrCreateLoaderElement();
+
+    oLoader.querySelector(".appLoadingMessage").textContent = strMessage || "Loading...";
+    oLoader.style.display = "flex";
+}
+
+function hideLoader()
+{
+    numLoaderRequestCount = Math.max(0, numLoaderRequestCount - 1);
+
+    if (numLoaderRequestCount === 0)
+    {
+        var oLoader = document.getElementById("appLoadingOverlay");
+
+        if (oLoader)
+        {
+            oLoader.style.display = "none";
+        }
+    }
+}
 
 
 

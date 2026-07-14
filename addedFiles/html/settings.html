@@ -116,6 +116,22 @@
 
         </div>
 
+        <!-- Improvements Made (Settings Improvements task): Version was
+             never shown anywhere in Settings. Read-only field filled by
+             Settings.script.js from AppConfig.APP_VERSION - the single
+             existing source of truth for the app version, so this is
+             purely a new display, not a new value to maintain. -->
+        <div class="settings-input-group">
+
+            <label for="txtVersion">Version</label>
+
+            <input
+                type="text"
+                id="txtVersion"
+                readonly>
+
+        </div>
+
         <button type="button" id="btnSaveSettings" class="settings-save-btn">
 
             Save Application Settings
@@ -126,7 +142,7 @@
 
     <!-- ================= Theme Card ================= -->
 
-    <section class="settings-card">
+    <section class="settings-card" style="margin-bottom: 20px;">
 
         <div class="settings-row-text" style="margin-bottom: 18px;">
 
@@ -147,6 +163,34 @@
              means adding one entry to that one list, never editing
              this HTML. -->
         <div class="theme-grid" id="theme_grid"></div>
+
+    </section>
+
+    <!-- ================= Font Size Card =================
+         Improvements Made (Theme System Enhancement task):
+         new card, same layout pattern as the Theme card above.
+         Populated by Settings.script.js from
+         FontSizeManager.ALL_FONT_SIZES (common/theme.js), so
+         it follows the exact same "add one entry, not new HTML"
+         pattern the Theme grid already uses. -->
+
+    <section class="settings-card">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-text-height"></i>
+
+            <div>
+
+                <h3>Font Size</h3>
+
+                <p>Choose how large text appears throughout the application.</p>
+
+            </div>
+
+        </div>
+
+        <div class="theme-grid" id="font_size_grid"></div>
 
     </section>
 

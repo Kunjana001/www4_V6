@@ -23,7 +23,18 @@
      icon) instead of from Profile, so Back returns to Dashboard
      for a logged-in user instead of Profile
 
-   Version: 2.0
+   ----------------------------------------------------------
+   ROUND 3 IMPROVEMENTS (Theme System Enhancement + Settings task)
+   ----------------------------------------------------------
+   ✓ Added a Font Size grid (Small/Medium/Large), built and
+     wired up exactly like the existing Theme grid, reading
+     from the new FontSizeManager.ALL_FONT_SIZES list in
+     common/theme.js
+   ✓ Version field on the Application card now shows
+     AppConfig.APP_VERSION (read-only - the version is set in
+     one place, Config.js, not typed in twice)
+
+   Version: 3.0
    ========================================================== */
 
 "use strict";
@@ -36,9 +47,16 @@ var btnBack = document.getElementById("btnBack");
 
 var themeGrid = document.getElementById("theme_grid");
 
+/* New for the Font Size part of the Theme System Enhancement task */
+var fontSizeGrid = document.getElementById("font_size_grid");
+
 var txtServerUrl = document.getElementById("txtServerUrl");
 var txtApplicationName = document.getElementById("txtApplicationName");
 var txtLogoUrl = document.getElementById("txtLogoUrl");
+
+/* New: read-only Version field, Settings Improvements task */
+var txtVersion = document.getElementById("txtVersion");
+
 var btnSaveSettings = document.getElementById("btnSaveSettings");
 
 
@@ -89,6 +107,8 @@ function initializeSettingsPage()
 
     renderThemeGrid();
 
+    renderFontSizeGrid();
+
     populateApplicationSettingsFields();
 
     btnSaveSettings.onclick = handleSaveSettings;
@@ -111,6 +131,11 @@ function populateApplicationSettingsFields()
     txtApplicationName.value = SettingsManager.getApplicationName();
 
     txtLogoUrl.value = SettingsManager.getLogoUrl(AppConfig.DEFAULT_LOGO_URL);
+
+    /* Version is not user-editable - it always shows whatever
+       Config.js currently says, so there is only ever one
+       place that needs updating when the app version changes. */
+    txtVersion.value = AppConfig.APP_VERSION;
 }
 
 
@@ -207,5 +232,72 @@ function handleThemeSelected(strThemeId)
     if (typeof CommonUtils !== "undefined")
     {
         CommonUtils.showToast("Theme updated.", "success");
+    }
+}
+
+
+
+/* ==========================================================
+   Render the Font Size Grid
+
+   WHY: added for the Font Size part of the Theme System
+   Enhancement task.
+   WHAT: one button per size in FontSizeManager.ALL_FONT_SIZES,
+   built the same way renderThemeGrid() builds its buttons
+   (same CSS classes, same active-checkmark pattern) so it
+   looks and behaves consistently with the Theme grid above it.
+   WHEN: called once from initializeSettingsPage(), and again
+   after every selection so the checkmark moves.
+   ========================================================== */
+
+function renderFontSizeGrid()
+{
+    var strCurrentSize = FontSizeManager.getCurrentFontSize();
+
+    fontSizeGrid.innerHTML = "";
+
+    FontSizeManager.ALL_FONT_SIZES.forEach(function (objSize)
+    {
+        var bIsActive = (objSize.id === strCurrentSize);
+
+        var btnSize = document.createElement("button");
+        btnSize.type = "button";
+        btnSize.className = "theme-swatch-btn" + (bIsActive === true ? " theme-swatch-active" : "");
+        btnSize.setAttribute("data-font-size-id", objSize.id);
+
+        btnSize.innerHTML =
+            "<span class=\"theme-swatch-color\" style=\"background:var(--app-theme-color)\">" +
+                (bIsActive === true ? "<i class=\"fa-solid fa-check\"></i>" : "<i class=\"fa-solid fa-font\"></i>") +
+            "</span>" +
+            "<span class=\"theme-swatch-label\">" + objSize.label + "</span>";
+
+        btnSize.onclick = function ()
+        {
+            handleFontSizeSelected(objSize.id);
+        };
+
+        fontSizeGrid.appendChild(btnSize);
+    });
+}
+
+
+
+/* ==========================================================
+   Handle a Font Size Being Selected
+
+   Mirrors handleThemeSelected(): applies + persists the
+   choice immediately (no reload needed), then redraws the
+   grid so the checkmark moves to the new selection.
+   ========================================================== */
+
+function handleFontSizeSelected(strSizeId)
+{
+    FontSizeManager.applyFontSize(strSizeId);
+
+    renderFontSizeGrid();
+
+    if (typeof CommonUtils !== "undefined")
+    {
+        CommonUtils.showToast("Font size updated.", "success");
     }
 }

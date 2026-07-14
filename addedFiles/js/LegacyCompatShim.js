@@ -21,6 +21,16 @@
    Load this file BEFORE CategoryHTML.script.js /
    SectionHTML.script.js / ResultHTML.script.js in the HTML
    <script> tags.
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Removed the showLoader()/hideLoader() implementation from
+     this file - moved to common.js instead, since common.js
+     is loaded by every page (this file is not). See common.js
+     for why. Nothing that used to call showLoader()/hideLoader()
+     needs to change, since they are still plain global
+     functions - just defined in one place now instead of two.
    ========================================================== */
 
 "use strict";
@@ -289,84 +299,14 @@ function gotoHome()
 /* ==========================================================
    showLoader() / hideLoader()
 
-   CONNECTION FIX: these used to only console.log(), so nothing
-   was ever visible on screen while a backend request was in
-   flight - a slow/failed request just looked like the app was
-   doing nothing. This now also shows a small full-screen
-   overlay with a spinner + message, built and styled entirely
-   in JS (no HTML/CSS files touched, so every existing page
-   gets it automatically since they all already load this
-   file).
-
-   WHY: the old code showed a loading indicator while it
-   waited for the server (or SQLite) to respond.
-   WHAT: builds one reusable overlay element (created once,
-   reused after that) and toggles it on/off.
-   WHEN: showLoader() runs right before a DataService call;
-   hideLoader() runs once that call's callback fires.
+   MOVED to common.js (this pass) - common.js is loaded by
+   every page, including every page this file is loaded on, so
+   keeping two copies risked them silently drifting apart. This
+   file's own callers (getBackendMode() switches, etc.) still
+   work unchanged since showLoader()/hideLoader() are still
+   plain global functions - just defined in one place now.
+   See common.js for the full WHY/WHAT/WHEN.
    ========================================================== */
-
-function getOrCreateLoaderElement()
-{
-    var oLoader = document.getElementById("legacyCompatShimLoader");
-
-    if (oLoader)
-    {
-        return oLoader;
-    }
-
-    var oStyle = document.createElement("style");
-
-    oStyle.textContent =
-        "#legacyCompatShimLoader{position:fixed;top:0;left:0;right:0;bottom:0;" +
-        "background:rgba(255,255,255,0.85);z-index:99999;display:none;" +
-        "align-items:center;justify-content:center;flex-direction:column;}" +
-        "#legacyCompatShimLoader .lcsSpinner{width:36px;height:36px;border-radius:50%;" +
-        "border:4px solid #cfd8ea;border-top-color:#123b8d;animation:lcsSpin 0.8s linear infinite;}" +
-        "#legacyCompatShimLoader .lcsMessage{margin-top:10px;color:#123b8d;font-size:14px;}" +
-        "@keyframes lcsSpin{to{transform:rotate(360deg);}}";
-
-    document.head.appendChild(oStyle);
-
-    oLoader = document.createElement("div");
-    oLoader.id = "legacyCompatShimLoader";
-    oLoader.innerHTML = "<div class=\"lcsSpinner\"></div><div class=\"lcsMessage\"></div>";
-
-    document.body.appendChild(oLoader);
-
-    return oLoader;
-}
-
-var numLoaderRequestCount = 0;
-
-function showLoader(strMessage)
-{
-    console.log("Loading: " + (strMessage || ""));
-
-    numLoaderRequestCount++;
-
-    var oLoader = getOrCreateLoaderElement();
-
-    oLoader.querySelector(".lcsMessage").textContent = strMessage || "Loading...";
-    oLoader.style.display = "flex";
-}
-
-function hideLoader()
-{
-    console.log("Loading finished.");
-
-    numLoaderRequestCount = Math.max(0, numLoaderRequestCount - 1);
-
-    if (numLoaderRequestCount === 0)
-    {
-        var oLoader = document.getElementById("legacyCompatShimLoader");
-
-        if (oLoader)
-        {
-            oLoader.style.display = "none";
-        }
-    }
-}
 
 
 

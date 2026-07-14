@@ -298,6 +298,48 @@ html[data-theme="orange"]
     --app-accent:#ffa726;
 }
 
+/*==========================================================
+    FONT SIZE
+
+    WHY: the Theme System Enhancement task also asks for
+    Small / Medium / Large text sizes, set by
+    common/theme.js (FontSizeManager) via a "data-font-size"
+    attribute on <html> - the same pattern already used for
+    "data-theme" above.
+
+    WHAT: almost every font-size in this stylesheet is a
+    fixed px value (not rem), so changing the root font-size
+    alone would not cascade. Instead this scales the whole
+    rendered page uniformly with "zoom", which resizes text
+    AND layout together (unlike transform:scale, it does not
+    cause overflow or clipping). Medium is the default and
+    matches the sizing the app already shipped with, so
+    picking Medium (or never opening Settings) looks
+    unchanged.
+
+    Known limitation: zoom is supported by Chrome, Edge, and
+    Safari 17+ (i.e. the browsers this PWA already targets on
+    Android/iOS/desktop) but not by older Firefox. On a
+    browser that ignores it, the app simply stays at its
+    normal Medium size instead of resizing - it never breaks
+    layout.
+==========================================================*/
+
+html[data-font-size="small"] body
+{
+    zoom:0.9;
+}
+
+html[data-font-size="medium"] body
+{
+    zoom:1;
+}
+
+html[data-font-size="large"] body
+{
+    zoom:1.15;
+}
+
 
 /*==========================================================
     MAIN PAGE

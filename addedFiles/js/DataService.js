@@ -155,10 +155,23 @@
    Google backend is reachable, this sample data really is
    written to your Google Sheet, and if it is not reachable,
    the sample data is queued/offline exactly like a real user's
-   data would be. There is a "Load Sample Data" button on the
-   Dashboard page that calls this (see Dashboard.script.js).
+   data would be. There is deliberately no button for this on
+   the Dashboard - it is a developer/testing utility, called
+   from the browser console (see Dashboard.script.js for the
+   exact console command).
 
-   Version: 1.0
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Added changePassword() - Profile.script.js's Change
+     Password form validated its fields and then stopped,
+     since there was nothing to actually send the new password
+     to. Built the same way login()/createAccount() already
+     talk to the Google Apps Script backend - see the function
+     itself for the full WHY/WHAT and the matching Apps Script
+     snippet needed alongside it.
+
+   Version: 1.1
    ========================================================== */
 
 "use strict";
@@ -207,7 +220,10 @@ var DataService = (function ()
             login,
 
         createAccount:
-            createAccount
+            createAccount,
+
+        changePassword:
+            changePassword
 
     };
 
@@ -1440,6 +1456,73 @@ var DataService = (function ()
         function (objError)
         {
             CommonUtils.logError("DataService.createAccount (GOOGLE unreachable)", objError);
+
+            fnError(objError);
+        });
+    }
+
+
+
+    /* ======================================================
+       Change Password
+
+       WHY: Profile.script.js's Change Password form used to
+       validate the fields and then just show "Looks good!
+       ...once the backend is ready." - it never actually
+       changed anything, because there was no backend action
+       for it yet. This is that missing piece, built exactly
+       the same way login()/createAccount() above call the
+       Google Apps Script backend, so Change Password checks
+       the CURRENT password against the real Users sheet
+       before writing the new one - it cannot be bypassed by
+       editing the page.
+
+       NOTE: like createAccount(), this requires a matching
+       `changePassword` action to exist in the Apps Script
+       project (alongside the existing `login`/`createAccount`
+       actions) that: 1) looks up the row by username, 2)
+       rejects the request if strCurrentPassword does not match
+       what is stored, 3) otherwise overwrites that row's
+       password with strNewPassword, 4) responds with the same
+       { success, message, data } shape login()/createAccount()
+       already use. That server-side action lives outside this
+       repo (Apps Script project) - see chat for the exact
+       snippet to paste into Login.gs/Code.gs.
+
+       strUsername        : the logged-in user (Session.getUsername())
+       strCurrentPassword  : typed into the "Current Password" field
+       strNewPassword      : typed into the "New Password" field
+       fnSuccess : function(objResult)
+       fnError   : function(objError) - includes the wrong-current-
+                   password case, since only the backend can see
+                   the real stored password to check it against
+       ====================================================== */
+
+    function changePassword(strUsername, strCurrentPassword, strNewPassword, fnSuccess, fnError)
+    {
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to change your password."));
+            return;
+        }
+
+        callGoogleGet(buildGoogleUrl("changePassword", {
+            username: strUsername,
+            currentPassword: strCurrentPassword,
+            newPassword: strNewPassword
+        }), function (objResponse)
+        {
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error(objResponse ? objResponse.message : "Could not change password."));
+                return;
+            }
+
+            fnSuccess(objResponse.data);
+        },
+        function (objError)
+        {
+            CommonUtils.logError("DataService.changePassword (GOOGLE unreachable)", objError);
 
             fnError(objError);
         });

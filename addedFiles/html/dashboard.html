@@ -26,6 +26,19 @@
      ✓ Settings moved from Profile to Dashboard - see the new
        #btnDashboardSettings gear icon in the topbar below
      ========================================================== -->
+
+<!-- ==========================================================
+     ROUND 3 IMPROVEMENTS
+
+     Completed Improvements
+     ----------------------
+     ✓ Added the missing <script src="../common/theme.js">
+       include (see the script tags near the bottom of this
+       file) - this page never loaded it, so a saved color
+       theme or font size from Settings never applied on the
+       Dashboard specifically, even though it applied on every
+       other page.
+     ========================================================== -->
 <html lang="en">
 
 <head>
@@ -365,6 +378,17 @@
 <script src="../js/DataService.js"></script>
 
 <script src="../common/common.js"></script>
+
+<!-- Improvements Made: this page never loaded theme.js, so a
+     saved color theme or font size (Settings page) never
+     applied here - the Dashboard always rendered in default
+     Light Mode / Medium font no matter what was chosen
+     elsewhere. Added in the same position every other page
+     already loads it (right after common.js), which also
+     means ThemeManager/FontSizeManager.restoreSavedTheme()/
+     restoreSavedFontSize() run here before Dashboard.script.js
+     touches the DOM, so there's no flash of the wrong theme. -->
+<script src="../common/theme.js"></script>
 
 <script src="../common/settings.js"></script>
 
