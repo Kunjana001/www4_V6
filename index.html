@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- ==========================================================
+     Root redirect for GitHub Pages
+
+     GitHub Pages serves whatever is at the repo root. This
+     project's real entry point is addedFiles/html/index.html
+     (the login page), not the repo root itself - without this
+     file, Pages had no index.html to serve and fell back to
+     rendering README.md as a plain webpage instead of loading
+     the app.
+
+     This file just bounces the visitor straight to the real
+     login page, both via an instant JS redirect and a
+     <meta http-equiv="refresh"> fallback for anyone with
+     JavaScript disabled (and a manual link as a last resort).
+     ========================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=addedFiles/html/index.html">
+    <title>Student Management System</title>
+    <script>
+        window.location.replace("addedFiles/html/index.html");
+    </script>
+</head>
+<body>
+    <p>Redirecting to the <a href="addedFiles/html/index.html">Student Management System</a>...</p>
+</body>
+</html>
