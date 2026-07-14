@@ -52,7 +52,27 @@
      itself. Previously Students were only matched on
      name/mobile/email.
 
-   Version: 3.1
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+
+   ✓ Activity Log audit (brief Priority: Recent Activity):
+     openCategoryList(), openSectionList() and openResultList()
+     below all call ActivityLog.logActivity(...) when their
+     card/menu item is clicked, but openStudentList() did not -
+     so opening the Student list was silently missing from the
+     Recent Activity panel on the Profile page while the other
+     three modules were recorded correctly. WHY: this is used
+     for the audit/history the Profile page shows the user; a
+     missing entry made that history incomplete. WHAT: added
+     the same ActivityLog.logActivity("Opened Student") call,
+     in the same position (after trackFrequentlyUsed(), before
+     the goX() navigation call) already used by the other three
+     open handlers. WHEN: runs every time the Student card,
+     Student sidebar menu item, or "Add Student" shortcut is
+     clicked. No other behavior in this function changed.
+
+   Version: 3.2
    ========================================================== */
 
 "use strict";
@@ -919,6 +939,8 @@ function toggleSidebar()
 function openStudentList()
 {
     trackFrequentlyUsed("student");
+
+    ActivityLog.logActivity("Opened Student");
 
     goStudent();
 }
