@@ -1,4 +1,4 @@
- /* ==========================================================
+/* ==========================================================
    Student Management System
    DataService.js
 
@@ -411,14 +411,33 @@ var DataService = (function ()
             /* Student.script.js builds records with JSON_KEY
                fields (student_id, category_id, section_id, name,
                roll_number, mobile, email, parent_mobile,
-               telegram, parent_email). Student.gs only has
-               columns for studentId/studentName/phone/email/
-               telegram/organization/category/section/status, so
-               roll_number, parent_mobile and parent_email have no
-               column to be saved into on the Sheet - they are
-               kept locally (IndexedDB) but will NOT round-trip
-               through Google until Student.gs / the Sheet gains
-               matching columns. */
+               telegram, parent_email).
+
+               PASS 4 (added) - roll_number / parent_mobile /
+               parent_email round-trip:
+               These three are now ALWAYS sent to Google as
+               rollNumber / parentMobile / parentEmail, and ALWAYS
+               read back the same way. Until Student.gs's Students
+               sheet gains matching columns, Apps Script will just
+               ignore the 3 extra request params it doesn't
+               recognize, and will not return them either - so
+               fromBackendFields() below falls back to whatever
+               value the record already had (its previous local
+               copy) instead of overwriting it with undefined. That
+               fallback is what stops these 3 fields from being
+               silently wiped out of IndexedDB every time the list
+               refreshes from Google, which is what happened before
+               this change (cacheListLocally() replaces the whole
+               local store with exactly what fromBackendFields()
+               returns, so any field missing from that return value
+               was being erased locally on every single refresh,
+               not just failing to save to the Sheet).
+
+               Once Student.gs / the Students sheet gain rollNumber,
+               parentMobile and parentEmail columns (see the Code.gs
+               snippet provided alongside this file), Google will
+               start echoing real values for these 3 fields and the
+               fallback below simply stops being used. */
             toBackendFields: function (objRecord)
             {
                 return {
@@ -430,12 +449,17 @@ var DataService = (function ()
                     organization: objRecord.organization_id || "",
                     category: objRecord.category_id || "",
                     section: objRecord.section_id || "",
-                    status: objRecord.status || "Active"
+                    status: objRecord.status || "Active",
+                    rollNumber: objRecord.roll_number || "",
+                    parentMobile: objRecord.parent_mobile || "",
+                    parentEmail: objRecord.parent_email || ""
                 };
             },
 
-            fromBackendFields: function (objBackendRecord)
+            fromBackendFields: function (objBackendRecord, objExistingRecord)
             {
+                var objPrevious = objExistingRecord || {};
+
                 return {
                     student_id: objBackendRecord.studentId,
                     name: objBackendRecord.studentName,
@@ -445,7 +469,22 @@ var DataService = (function ()
                     organization_id: objBackendRecord.organization,
                     category_id: objBackendRecord.category,
                     section_id: objBackendRecord.section,
-                    status: objBackendRecord.status
+                    status: objBackendRecord.status,
+
+                    /* Fall back to the previous local value until
+                       Student.gs actually returns these - see the
+                       PASS 4 note above. */
+                    roll_number: (objBackendRecord.rollNumber !== undefined && objBackendRecord.rollNumber !== null && objBackendRecord.rollNumber !== "")
+                        ? objBackendRecord.rollNumber
+                        : objPrevious.roll_number,
+
+                    parent_mobile: (objBackendRecord.parentMobile !== undefined && objBackendRecord.parentMobile !== null && objBackendRecord.parentMobile !== "")
+                        ? objBackendRecord.parentMobile
+                        : objPrevious.parent_mobile,
+
+                    parent_email: (objBackendRecord.parentEmail !== undefined && objBackendRecord.parentEmail !== null && objBackendRecord.parentEmail !== "")
+                        ? objBackendRecord.parentEmail
+                        : objPrevious.parent_email
                 };
             }
         };
@@ -726,41 +765,61 @@ var DataService = (function ()
 
         if (strMode === AppConfig.BACKEND.GOOGLE && objEntity)
         {
-            callGoogleGet(buildGoogleUrl(objEntity.listAction, {}), function (objResponse)
-            {
-                if (!objResponse || objResponse.success !== true)
+            /* PASS 4 (added): load the existing local cache FIRST
+               and index it by id, so fromBackendFields() can fall
+               back to a field's previous local value (e.g. Student
+               roll_number/parent_mobile/parent_email) instead of
+               that field being wiped out below whenever Google
+               doesn't echo it back. See the PASS 4 note on the
+               Student entity map above for why this matters. */
+
+            StorageService.getAllRecords(strStoreName)
+                .then(function (arrExistingRecords)
                 {
-                    CommonUtils.logError(
-                        "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
-                        objResponse ? objResponse.message : "no response body"
-                    );
+                    var strIdField = getIdFieldName(strStoreName);
 
-                    StorageService.getAllRecords(strStoreName)
-                        .then(fnSuccess)
-                        .catch(fnError);
+                    var objExistingById = {};
 
-                    return;
-                }
+                    (arrExistingRecords || []).forEach(function (objExistingRecord)
+                    {
+                        objExistingById[objExistingRecord[strIdField]] = objExistingRecord;
+                    });
 
-                var arrRawRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
+                    callGoogleGet(buildGoogleUrl(objEntity.listAction, {}), function (objResponse)
+                    {
+                        if (!objResponse || objResponse.success !== true)
+                        {
+                            CommonUtils.logError(
+                                "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
+                                objResponse ? objResponse.message : "no response body"
+                            );
 
-                var arrRecords = arrRawRecords.map(function (objBackendRecord)
-                {
-                    return normalizeRecordId(strStoreName, objEntity.fromBackendFields(objBackendRecord));
-                });
+                            fnSuccess(arrExistingRecords);
 
-                cacheListLocally(strStoreName, arrRecords);
+                            return;
+                        }
 
-                fnSuccess(arrRecords);
-            },
-            function (objError)
-            {
-                CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
+                        var arrRawRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
 
-                StorageService.getAllRecords(strStoreName)
-                    .then(fnSuccess)
-                    .catch(fnError);
-            });
+                        var arrRecords = arrRawRecords.map(function (objBackendRecord)
+                        {
+                            var objExisting = objExistingById[objBackendRecord[objEntity.idParam]];
+
+                            return normalizeRecordId(strStoreName, objEntity.fromBackendFields(objBackendRecord, objExisting));
+                        });
+
+                        cacheListLocally(strStoreName, arrRecords);
+
+                        fnSuccess(arrRecords);
+                    },
+                    function (objError)
+                    {
+                        CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
+
+                        fnSuccess(arrExistingRecords);
+                    });
+                })
+                .catch(fnError);
 
             return;
         }
@@ -807,36 +866,42 @@ var DataService = (function ()
             var objIdParams = {};
             objIdParams[objEntity.idParam] = mId;
 
-            callGoogleGet(buildGoogleUrl(objEntity.getByIdAction, objIdParams), function (objResponse)
-            {
-                if (!objResponse || objResponse.success !== true)
+            /* PASS 4 (added): same reasoning as getAllRecords()
+               above - load the existing local record first so it
+               can be passed into fromBackendFields() as a
+               fallback source for fields Google doesn't return. */
+
+            StorageService.getRecordById(strStoreName, mId)
+                .then(function (objExistingRecord)
                 {
-                    CommonUtils.logError(
-                        "DataService.getRecordById (GOOGLE returned success:false, falling back to offline cache)",
-                        objResponse ? objResponse.message : "no response body"
-                    );
+                    callGoogleGet(buildGoogleUrl(objEntity.getByIdAction, objIdParams), function (objResponse)
+                    {
+                        if (!objResponse || objResponse.success !== true)
+                        {
+                            CommonUtils.logError(
+                                "DataService.getRecordById (GOOGLE returned success:false, falling back to offline cache)",
+                                objResponse ? objResponse.message : "no response body"
+                            );
 
-                    StorageService.getRecordById(strStoreName, mId)
-                        .then(fnSuccess)
-                        .catch(fnError);
+                            fnSuccess(objExistingRecord);
 
-                    return;
-                }
+                            return;
+                        }
 
-                var objRecord = objResponse.data ?
-                    normalizeRecordId(strStoreName, objEntity.fromBackendFields(objResponse.data)) :
-                    null;
+                        var objRecord = objResponse.data ?
+                            normalizeRecordId(strStoreName, objEntity.fromBackendFields(objResponse.data, objExistingRecord)) :
+                            null;
 
-                fnSuccess(objRecord);
-            },
-            function (objError)
-            {
-                CommonUtils.logError("DataService.getRecordById (GOOGLE unreachable, falling back to offline cache)", objError);
+                        fnSuccess(objRecord);
+                    },
+                    function (objError)
+                    {
+                        CommonUtils.logError("DataService.getRecordById (GOOGLE unreachable, falling back to offline cache)", objError);
 
-                StorageService.getRecordById(strStoreName, mId)
-                    .then(fnSuccess)
-                    .catch(fnError);
-            });
+                        fnSuccess(objExistingRecord);
+                    });
+                })
+                .catch(fnError);
 
             return;
         }
