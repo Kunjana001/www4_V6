@@ -398,12 +398,28 @@ function showAlertDialog(strMessage, fnCallback, strTitle, strButtonLabel)
 
 function showConfirmationAlert(strMessage, fnCallback, strTitle, arrButtonLabels)
 {
-    var bConfirmed = CommonUtils.showConfirm(strMessage);
+    // --------------------------------------------------
+    // Confirmation Dialogs: arrButtonLabels used to be accepted
+    // here but never actually used - every confirmation showed
+    // the browser's native "OK"/"Cancel" box no matter what
+    // labels a caller passed in. Now it drives the app's own
+    // styled dialog (CommonUtils.showConfirmDialog), so Save
+    // confirmations can read "Yes"/"No" and Delete confirmations
+    // can read "Delete"/"Cancel", matching what each one is
+    // actually asking. Falls back to "Yes"/"No" if a caller
+    // doesn't pass labels.
+    // --------------------------------------------------
+    var strConfirmLabel = (arrButtonLabels && arrButtonLabels[0]) || "Yes";
+    var strCancelLabel  = (arrButtonLabels && arrButtonLabels[1]) || "No";
 
-    if (fnCallback)
-    {
-        fnCallback(bConfirmed ? BUTTON_CONFIRM : BUTTON_CANCEL);
-    }
+    CommonUtils.showConfirmDialog(strMessage, strConfirmLabel, strCancelLabel, strTitle)
+        .then(function (bConfirmed)
+        {
+            if (fnCallback)
+            {
+                fnCallback(bConfirmed ? BUTTON_CONFIRM : BUTTON_CANCEL);
+            }
+        });
 }
 
 // --------------------------------------------------------
@@ -488,6 +504,23 @@ function showShortBottomToast(strMessage)
    the confirmation that was already fully built now actually runs;
    no other file needed to change, exactly as this comment already
    promised above.
+
+   Follow-up: despite the above, Delete/Save/Share confirmations
+   were still silently crashing on every one of those four pages -
+   showConfirmationAlert()'s 4th argument, buttonLabels, was
+   referenced at every call site but never declared anywhere in
+   the project. Reading an undeclared variable throws a
+   ReferenceError in JavaScript, so the confirmation never even
+   opened. Fixed by declaring buttonLabels in each entity script
+   (default ["Yes", "No"]), with the two Delete confirmations in
+   each file passing their own ["Delete", "Cancel"] instead. At
+   the same time, showConfirmationAlert() and Dashboard's
+   logoutUser() were switched from the browser's native confirm()
+   box (always "OK"/"Cancel", can't be relabeled) to the app's own
+   styled dialog - CommonUtils.showConfirmDialog() in common.js -
+   so Save reads "Yes"/"No", Delete reads "Delete"/"Cancel", and
+   Logout reads "Yes"/"No" under a "Logout?" heading, matching the
+   brief's mockups exactly.
    ========================================================== */
 
 var FEATURE_ENABLED  = "ENABLED";

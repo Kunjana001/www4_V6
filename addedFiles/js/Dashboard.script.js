@@ -994,12 +994,14 @@ function openProfilePage()
 
 function logoutUser()
 {
-    var blnConfirmedLogout = CommonUtils.showConfirm("Are you sure you want to sign out?");
+    CommonUtils.showConfirmDialog("Are you sure you want to sign out?", "Yes", "No", "Logout?")
+        .then(function (blnConfirmedLogout)
+        {
+            if (blnConfirmedLogout === true)
+            {
+                ActivityLog.logActivity("Logout");
 
-    if (blnConfirmedLogout === true)
-    {
-        ActivityLog.logActivity("Logout");
-
-        Session.logout();
-    }
+                Session.logout();
+            }
+        });
 }

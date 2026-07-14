@@ -310,6 +310,19 @@ var StudentScript = (function () {
 	// Save the Filtered main list
 	var mSelectedDataList = [];
 
+	// --------------------------------------------------
+	// Confirmation Dialogs: this was referenced by every
+	// showConfirmationAlert(...) call below but never declared
+	// anywhere in the project - reading an undeclared bare
+	// variable throws a ReferenceError, so every Save/Update/
+	// Share confirmation on this page was crashing silently
+	// before the confirmation dialog could even open. Declaring
+	// it here with the general-purpose Yes/No labels fixes that;
+	// the two Delete confirmations below pass their own
+	// ["Delete", "Cancel"] labels instead.
+	// --------------------------------------------------
+	var buttonLabels = [ "Yes", "No" ];
+
 	var mDoubleBackToExitPressedOnce = false;
 
 	// Share using Email and WhatsApp
@@ -1929,7 +1942,7 @@ function parseListResponse(arrStudents)
 	function onClickDelete() {
 
 		closeSelectMenu();
-		showConfirmationAlert( "Do you want to delete selected Student?", onConfirmDelete, "Message", buttonLabels );
+		showConfirmationAlert( "Do you want to delete selected Student?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 	function searchList() {
@@ -2595,7 +2608,7 @@ function parseListResponse(arrStudents)
 
 		closeMultiSelectMenu();
 
-		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 

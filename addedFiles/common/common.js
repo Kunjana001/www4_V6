@@ -59,6 +59,10 @@ var CommonUtils = (function ()
 
             showConfirm,
 
+        showConfirmDialog:
+
+            showConfirmDialog,
+
         logError:
 
             logError,
@@ -200,6 +204,104 @@ var CommonUtils = (function ()
     function showConfirm(strMessage)
     {
         return confirm(strMessage);
+    }
+
+
+
+    /* ======================================================
+       Show a Styled Yes/No (or Delete/Cancel) Confirmation
+
+       Replaces the browser's native confirm() box - which
+       always shows "OK"/"Cancel" and can't be relabeled - with
+       the app's own dialog, built the same self-contained way
+       showToast() builds its own DOM (no HTML changes needed on
+       any page that loads common.js).
+
+       strMessage      : the question to ask the user
+       strConfirmLabel : text for the confirm button, e.g.
+                         "Yes" or "Delete" (default "Yes")
+       strCancelLabel  : text for the cancel button, e.g. "No"
+                         or "Cancel" (default "No")
+       strTitle        : optional heading shown above the
+                         message (omitted if not given)
+
+       Returns a Promise that resolves true if the user pressed
+       the confirm button, false for cancel/backdrop click.
+       ====================================================== */
+
+    function showConfirmDialog(strMessage, strConfirmLabel, strCancelLabel, strTitle)
+    {
+        return new Promise(function (fnResolve)
+        {
+            var elOverlay = document.createElement("div");
+            elOverlay.className = "app-confirm-overlay";
+
+            var elBox = document.createElement("div");
+            elBox.className = "app-confirm-box";
+
+            elBox.innerHTML =
+                (strTitle ? "<div class=\"app-confirm-title\"></div>" : "") +
+                "<div class=\"app-confirm-message\"></div>" +
+                "<div class=\"app-confirm-actions\">" +
+                    "<button type=\"button\" class=\"app-confirm-btn app-confirm-btn-cancel\"></button>" +
+                    "<button type=\"button\" class=\"app-confirm-btn app-confirm-btn-confirm\"></button>" +
+                "</div>";
+
+            if (strTitle)
+            {
+                elBox.querySelector(".app-confirm-title").textContent = strTitle;
+            }
+
+            /* textContent (not innerHTML) so nothing in the message
+               can ever be interpreted as markup. */
+            elBox.querySelector(".app-confirm-message").textContent = strMessage;
+
+            var btnCancel = elBox.querySelector(".app-confirm-btn-cancel");
+            var btnConfirm = elBox.querySelector(".app-confirm-btn-confirm");
+
+            btnCancel.textContent = strCancelLabel || "No";
+            btnConfirm.textContent = strConfirmLabel || "Yes";
+
+            var fnClose = function (bResult)
+            {
+                elOverlay.classList.add("app-confirm-hide");
+
+                window.setTimeout(function ()
+                {
+                    if (elOverlay.parentNode !== null)
+                    {
+                        elOverlay.parentNode.removeChild(elOverlay);
+                    }
+                }, 200);
+
+                fnResolve(bResult);
+            };
+
+            btnCancel.onclick = function ()
+            {
+                fnClose(false);
+            };
+
+            btnConfirm.onclick = function ()
+            {
+                fnClose(true);
+            };
+
+            /* Clicking the dimmed backdrop counts as Cancel, same as
+               dismissing a native confirm() box. */
+            elOverlay.onclick = function (objEvent)
+            {
+                if (objEvent.target === elOverlay)
+                {
+                    fnClose(false);
+                }
+            };
+
+            elOverlay.appendChild(elBox);
+            document.body.appendChild(elOverlay);
+
+            btnConfirm.focus();
+        });
     }
 
 

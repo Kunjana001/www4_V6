@@ -165,6 +165,19 @@ var ResultScript = (function () {
 	// Save the Filtered main list
 	var mSelectedDataList = [];
 
+	// --------------------------------------------------
+	// Confirmation Dialogs: this was referenced by every
+	// showConfirmationAlert(...) call below but never declared
+	// anywhere in the project - reading an undeclared bare
+	// variable throws a ReferenceError, so every Save/Update/
+	// Share confirmation on this page was crashing silently
+	// before the confirmation dialog could even open. Declaring
+	// it here with the general-purpose Yes/No labels fixes that;
+	// the two Delete confirmations below pass their own
+	// ["Delete", "Cancel"] labels instead.
+	// --------------------------------------------------
+	var buttonLabels = [ "Yes", "No" ];
+
 	var mDoubleBackToExitPressedOnce = false;
 
 	// Share using Email and WhatsApp
@@ -1389,10 +1402,19 @@ var ResultScript = (function () {
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
 
-				$("#search").keyup( function (e) {
+				// --------------------------------------------------
+				// Universal Search: bound via the native "input" event
+				// instead of jQuery's keyup() - input fires for every
+				// value change (typing, paste, autofill, mobile
+				// keyboard predictions/backspace-hold), whereas keyup
+				// can miss some of those. Matches the same fix already
+				// applied to the Student List search box. The
+				// search_icon click binding right below is unchanged.
+				// --------------------------------------------------
+				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
-				});
+				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
 				$("#search_icon").click(function () {
@@ -1463,7 +1485,7 @@ var ResultScript = (function () {
 	function onClickDelete() {
 
 		closeSelectMenu();
-		showConfirmationAlert( "Do you want to delete selected Result?", onConfirmDelete, "Message", buttonLabels );
+		showConfirmationAlert( "Do you want to delete selected Result?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 	function searchList() {
@@ -1474,24 +1496,40 @@ var ResultScript = (function () {
 		var input = document.getElementById("search");
 		var filter = input.value.toUpperCase();
 
+		// Rebuilt fresh on every keystroke so it always matches exactly
+		// what's currently visible - previously this only ever grew
+		// (never cleared), which corrupted the row lookup used by
+		// multi-select (mMultiSelectedList) the longer someone typed.
+		mSearchList = [];
+
 		for( var i = 0; i < listItems.length; i++ ) {
 
-			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+			var resultData = mSelectedDataList[ i ];
 
-			if( name != null ) {
+			if( resultData == null ) {
 
-				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+				continue;
+			}
 
-					var resultData = mSelectedDataList;
+			// Every field the Result List should be searchable by -
+			// previously this only ever checked the rendered Exam
+			// Name text in the card's first <li>, so Date Of Exam/
+			// Total Marks/Marks Obtained were never actually searched.
+			var searchableText = [
+				resultData[ SUMMARY_INDEX.EXAM_NAME ],
+				resultData[ SUMMARY_INDEX.DATE_OF_EXAM ],
+				resultData[ SUMMARY_INDEX.TOTAL_MARKS ],
+				resultData[ SUMMARY_INDEX.MARKS_OBTAINED ]
+			].join( " " ).toUpperCase();
 
-					var index = mSearchList.length;
-					mSearchList[index] = resultData[ i ];
+			if( searchableText.indexOf( filter ) > -1 ) {
 
-					listItems[i].style.display = "";
-				} else {
+				mSearchList[ mSearchList.length ] = resultData;
 
-					listItems[i].style.display = "none";
-				}
+				listItems[i].style.display = "";
+			} else {
+
+				listItems[i].style.display = "none";
 			}
 		}
 
@@ -1906,7 +1944,7 @@ var ResultScript = (function () {
 
 		closeMultiSelectMenu();
 
-		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 
