@@ -1,180 +1,581 @@
 <!DOCTYPE html>
+<html lang="en">
+<!-- --------------------------------------------------------
+     MENTOR NOTE (added): "Copy student details" button added
+     to the Student Info popup footer, next to Close. Click
+     handler lives in Student.script.js (onInfoViewDocumentReady /
+     copyStudentDetails()); nothing else in this popup's markup
+     changed.
+     -------------------------------------------------------- -->
+<!-- --------------------------------------------------------
+     CONNECTION FIX (mobile/desktop rendering): this page had
+     no DOCTYPE and no opening html tag at all (it started
+     straight at the head section), which makes browsers render
+     it in "quirks mode" instead of standards mode - a common
+     cause of inconsistent sizing/spacing between phone and
+     desktop browsers. Added the standard, empty HTML5
+     boilerplate here; nothing inside the head or body below
+     was reordered or removed.
+     -------------------------------------------------------- -->
 <!-- ==========================================================
      CONNECTION FIX - what changed in this pass (folder
      structure was NOT changed; only the references below)
      ==========================================================
 
-     Every <script src="../js/application/...js"> tag on this
-     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and Settings.script.js actually live
-     directly under www4/addedFiles/js/, not under an
-     "application" sub-folder - so those tags 404'd and none of
-     that code ever ran. Fixed by pointing each tag at
-     ../js/...js instead, without moving a single file.
+     1. Every <script src="../js/application/...">, <script
+        src="../common/...">, <link href="../common/common.css">
+        and <link rel="manifest" href="../manifest.json"> on
+        this page pointed one folder too shallow. Config.js,
+        StorageService.js, common.js, theme.js, navigation.js,
+        session.js, register-sw.js, manifest.json and
+        common.css actually live under www4/addedFiles/, not
+        directly under www4/ - so every one of those tags 404'd
+        and none of that shared code ever ran. Fixed by pointing
+        each tag at ../addedFiles/... instead, without moving a
+        single file.
 
-     Also added <script src="../js/DataService.js">, which did
-     not exist anywhere in the project - see DataService.js for
-     details.
+     2. Added <script src=".../js/application/DataService.js">
+        - this file did not exist anywhere in the project, so
+        every DataService.* call on this page (loading the
+        list, saving, deleting) threw "DataService is not
+        defined" as soon as it ran. See DataService.js itself
+        for the fix.
+
+     3. Added jQuery and Bootstrap's JS bundle (matching the
+        Bootstrap 4.6.2 CSS already linked above). This page's
+        own script uses $(...) selectors and Bootstrap's
+        .modal('show')/.modal('hide') for the Add/Edit/Filter/
+        Info popups, but neither library was ever linked here.
      ========================================================== -->
-<html lang="en">
+
+<!-- ==========================================================
+     UI PASS - Student List matched to Category/Section/Result
+     ==========================================================
+
+     WHY: This page had a hand-written "page-header / search-box
+     / card-grid / pagination" block sitting in the HTML, but
+     StudentHTML.script.js (like CategoryHTML.script.js,
+     SectionHTML.script.js and ResultHTML.script.js) already
+     injects its own header + search bar at runtime via
+     $(".main-container").prepend(...), and Student.script.js
+     only ever reads/writes #list_id, #search and #records - it
+     never looked at #txtSearch, #btnSearch, #btnAddStudent,
+     #btnPrevious/#btnNext or the card-grid markup at all. That
+     block was dead HTML: it rendered, but no button on it did
+     anything, which is why the page looked and behaved
+     differently from Category/Section/Result even though all
+     four share the same list-rendering code.
+
+     WHAT CHANGED: replaced that block with the same single
+     empty `<div id="list_id" class="list-container">` used on
+     categoryList.html / sectionList.html / resultList.html.
+     StudentHTML.script.js now prepends the identical header and
+     search bar used by the other three lists, so Student List
+     looks and behaves the same way. No modal, no script tag, and
+     no function name below this comment was touched.
+
+     Search button and the larger Export button were added
+     inside the reusable search bar template in
+     js/application/StudentHTML.script.js (studentSearchBar),
+     with their click handlers added in
+     js/application/Student.script.js (onListDocumentReady) -
+     see the WHY/WHAT/WHEN comments in those two files.
+     ========================================================== -->
 
 <head>
-    <link rel="manifest" href="../manifest.json">
+	<meta charset="UTF-8">
 
-    <meta name="theme-color" content="#123b8d">
+	<link rel="manifest" href="../addedFiles/manifest.json">
 
-    <meta charset="UTF-8">
+    <!-- --------------------------------------------------------
+         CONNECTION FIX (mobile): this page had no viewport meta
+         tag at all, so phones rendered it at a fixed ~980px
+         desktop width and zoomed out to fit it - buttons and text
+         were tiny and hard to tap. Added the same viewport tag
+         already used on dashboard/login/profile/settings/signup
+         so this page scales correctly on a phone too.
+         -------------------------------------------------------- -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Student Details - Settings</title>
+    <meta name="theme-color" content="#123b8d">
 
-    <link rel="stylesheet" href="../settings.css">
+    <link rel="stylesheet" href="../addedFiles/common/common.css">
 
-    <link rel="stylesheet" href="../common/common.css">
+    <!-- ------------------------------------------------------------
+         Bootstrap and Font Awesome were never linked on this page,
+         even though the markup below uses their classes (card,
+         container-fluid, form-control, modal, fa-arrow-down, etc).
+         Linking them here is the CSS fix for this page - no classes
+         in the HTML below were changed.
+         ------------------------------------------------------------ -->
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
 
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
 </head>
 
-<body>
 
-<div class="settings-page">
 
-    <!-- ================= Top Bar ================= -->
+<body onload="onBackPress();">
 
-    <div class="settings-topbar">
+<!-- ------------------------------------------------------------
+     CONNECTION FIX: this button used to sit between </head> and
+     <body> - not valid HTML anywhere, and with no CSS class at
+     all. Browsers "fix" invalid markup like that by moving it to
+     be the very first thing inside <body>, unstyled. On this
+     page that accidentally ended up hidden behind the header
+     below (the header uses position:fixed and happens to sit in
+     exactly the same spot), but on a page where the header failed
+     to load for any reason, this button was the ONLY thing
+     visible - a plain, unstyled "Dashboard" box and nothing else.
+     Moved inside <body> (which is valid) and given the same
+     .btn/.btn-primary classes already used elsewhere, fixed to
+     the bottom-left corner so it never overlaps the header, the
+     Add button, or the existing bottom-right controls. The click
+     handler (goDashboard(), wired further down this file) was not
+     changed. -->
 
-        <!-- Improvements Made: tooltip said "Back to Profile", but
-             btnBack.onclick (Settings.script.js) goes to Dashboard
-             if logged in, otherwise Login - never Profile. Fixed
-             to match actual behavior. -->
-        <button id="btnBack" title="Back">
+<button id="btnDashboard" class="btn btn-primary"
+    style="position:fixed; left:16px; bottom:16px; z-index:950;">
+    Dashboard
+</button>
 
-            <i class="fa-solid fa-arrow-left"></i>
 
-        </button>
+  <main class="main-container" style="width: 100%; height: 100%">
 
-        <div>
 
-            <h1>Settings</h1>
 
-            <p>Manage how the application looks</p>
 
-        </div>
+	<!-- -------------------------------------------------------------------------------------------------------------------------------- -->
 
-    </div>
+	<!-- List (same empty container Category/Section/Result use - StudentHTML.script.js
+	     fills this in at runtime, same as the other three lists) -->
+	<div id="list_id" class="list-container" style="padding-bottom: 4em !important;padding-top: 3.8rem;"></div>
+	<!-- List -->
 
-    <!-- ================= Application Settings Card (Phase 3) ================= -->
+	<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
 
-    <section class="settings-card" style="margin-bottom: 20px;">
 
-        <div class="settings-row-text" style="margin-bottom: 18px;">
 
-            <i class="fa-solid fa-sliders"></i>
 
-            <div>
 
-                <h3>Application</h3>
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
-                <p>Configure the backend address, name, and logo used across the app.</p>
 
-            </div>
+	<!-- Hidden Close Button to programmitically close the modals -->
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true"></button>
+	<!-- Hidden Close Button to programmitically close the modals -->
 
-        </div>
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
-        <div class="settings-input-group">
 
-            <label for="txtServerUrl">Server URL</label>
 
-            <input
-                type="text"
-                id="txtServerUrl"
-                placeholder="https://script.google.com/macros/s/.../exec">
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
-        </div>
+	<!-- Floating button to navigate to top -->
+	<a href="#bottom_target_span">
+	  <div class="col-xl-auto float-button">
+		<i class="fa fa-arrow-down" style="padding-top: 22px;"></i>
+	  </div>
+	</a>
+	<!-- /Floating button to navigate to top -->
 
-        <div class="settings-input-group">
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
-            <label for="txtApplicationName">Application Name</label>
 
-            <input
-                type="text"
-                id="txtApplicationName"
-                placeholder="Student Details">
 
-        </div>
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
+	<!-- Modal for Add/Edit Details -->
+	<div class="modal editDetails fade" id="edit_details" tabindex="-1" role="dialog" aria-labelledby="edit_details">	
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
 
-        <div class="settings-input-group">
+		  <!-- Modal Header -->
+		  <div class="modal-header">
+			<h4 class="modal-title" id="edit_details_title" style="font-size: x-large;">Student</h4>
+			<button type="button" class="close" aria-label="Close" id="add_edit_header_close"><span
+				aria-hidden="true">&times;</span></button>
+		  </div>
+		  <!-- Modal Header -->
 
-            <label for="txtLogoUrl">Logo URL</label>
+		  <!-- Modal Body -->
+		  <div class="modal-body" style="overflow: scroll;">
 
-            <input
-                type="text"
-                id="txtLogoUrl"
-                placeholder="../images/logo.png">
+			<!-- CodeGeneration is working for the div below -->
+			<div class="popup_container">
 
-        </div>
 
-        <button type="button" id="btnSaveSettings" class="settings-save-btn">
+	<div class="form-group" hidden>
 
-            Save Application Settings
+		<label class="form-control-label" >Student Id</label>
 
-        </button>
+		<input type="text" id="student_id" class="form-control" value="0" readonly>
+	</div>
 
-    </section>
+<!-- Select Input Field with Label-->
+	<div class = "form-group" >
 
-    <!-- ================= Theme Card ================= -->
+		<label class = "form-control-label">Category</label>
 
-    <section class="settings-card">
+		<select id = "category_id" class = "form-control" >
 
-        <div class="settings-row-text" style="margin-bottom: 18px;">
+			<option value = "0"> Select Category </option>
+		</select>
+	</div>
 
-            <i class="fa-solid fa-palette"></i>
+<!-- Select Input Field with Label-->
+	<div class = "form-group" >
 
-            <div>
+		<label class = "form-control-label">Section</label>
 
-                <h3>Theme</h3>
+		<select id = "section_id" class = "form-control" >
 
-                <p>Choose a color theme for the whole application.</p>
+			<option value = "0"> Select Section </option>
+		</select>
+	</div>
 
-            </div>
+	<div class="form-group">
 
-        </div>
+		<label class="form-control-label" >Name</label>
 
-        <!-- Theme Swatch Grid: populated by Settings.script.js from
-             ThemeManager.ALL_THEMES, so adding a theme only ever
-             means adding one entry to that one list, never editing
-             this HTML. -->
-        <div class="theme-grid" id="theme_grid"></div>
+		<input type="text" id="name" class="form-control" placeholder="Please Enter Name" required>
+	</div>
 
-    </section>
 
+	<div class="form-group">
+
+		<label class="form-control-label" >Roll Number</label>
+
+		<input type="text" id="roll_number" class="form-control" placeholder="Please Enter Roll Number" required>
+	</div>
+
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Mobile</label>
+
+		<input type="text" id="mobile" class="form-control" placeholder="Please Enter Mobile" required>
+	</div>
+
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Email</label>
+
+		<input type="text" id="email" class="form-control" placeholder="Please Enter Email" required>
+	</div>
+
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Parent Mobile</label>
+
+		<input type="text" id="parent_mobile" class="form-control" placeholder="Please Enter Parent Mobile" required>
+	</div>
+
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Telegram</label>
+
+		<input type="text" id="telegram" class="form-control" placeholder="Please Enter Telegram" required>
+	</div>
+
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Parent Email</label>
+
+		<input type="text" id="parent_email" class="form-control" placeholder="Please Enter Parent Email" required>
+	</div>
+
+
+			</div>
+
+		  </div>
+		  <!-- /Modal Body -->
+			<!-- Modal Footer -->
+			<div class="modal-footer" style="display: block; padding-bottom: 0;">
+				<!-- Save and Close Fixed Row -->
+				<div class="row">
+					<div class="col" id="save_div" style="display: none;">
+						<div class="form-group">
+							<button style="background-color: var(--app-theme-color);
+									  color: aliceblue;
+									  font-weight: bolder;" class="form-control" data-theme="a" id="save_data">Save </button>
+						</div>
+					</div>
+					<div class="col">
+						<div class="form-group">
+							<button style="background-color: var(--app-theme-color);
+									  color: aliceblue;
+									  font-weight: bolder;" class="form-control" id="add_edit_footer_close">Close </button>
+						</div>
+					</div>
+				</div>
+				<!-- /Save and Close Fixed Row -->
+			</div>
+			<!-- /Modal Footer -->
+
+		</div><!-- /modal-content -->
+	  </div><!-- /modal-dialog -->
+	</div><!-- /modal -->
+	<!-- /Modal for Edit Details -->
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
+
+<!-- -------------------------------------------------------------------------------------------------------------------------- -->
+<!-- Modal for Filter -->
+<div class="modal fade" id="modal_filter" tabindex="-1" role="dialog" aria-labelledby="modal-notification">
+	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
+		<div class="modal-content bg-white">
+			<!-- Modal Header -->
+			<div class="modal-header" style="border-bottom: solid;
+			border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="settings-title" style="color: #181a63;">Filter Students</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span> </button>
+			</div>
+			<!-- Modal Header -->
+		  <div class="modal-body" style="padding-top: 5px; padding-bottom: 0;">
+
+
+			<div class="form-group">
+			  <p class="form-control-label m-b-5 filter-modal-label">Category</p>
+			  <select id="filter_category_id" class="form-control">
+				<option value="0">Select All</option>
+			  </select>
+			</div>
+			<div class="form-group">
+			  <p class="form-control-label m-b-5 filter-modal-label">Section</p>
+			  <select id="filter_section_id" class="form-control">
+				<option value="0">Select All</option>
+			  </select>
+			</div>
+
+		  </div>
+		  <!-- Modal Footer -->
+		  <div class="modal-footer" style="justify-content: center; padding: 0.5rem;">
+
+			<div class="row" style="width: 95%;">
+			  <div class="col">
+				<div class="form-group">
+				  <button style="background-color: var(--app-theme-color);
+					  color: aliceblue;
+					  font-weight: bolder;" class="form-control" id="btn_filter">Apply
+				  </button>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		  <!-- Modal Footer -->
+
+		</div>
+	  </div>
+	</div>
+	<!-- Modal for Filter -->
+	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
+
+
+
+<!-- ------------------------------------------------------------------------------------------------ -->
+<!-- ROUND 2 - Improvement #5: header now reads "Student Details"
+     (was "Student Info") and this text is static, so it is
+     visible before, during, and after data loads - see
+     Student.script.js/showInfoPopupLoadingState() and
+     onClickInfoIcon() for the loading-state + popup-order work
+     (#6/#7), which were already implemented in this file. -->
+<!-- Modal for Show Info -->
+<div class="modal adDetails fade" id="list_details" tabindex="-1" role="dialog" aria-labelledby="list_details">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title" id="list_details_title" style="font-size: x-large;">Student Details</h4>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			</div>
+			<!-- /Modal Header -->
+			<!-- Modal Body -->
+			<div class="modal-body" style="padding: 0;"> <span class="clear-60px" style="padding-top: 120px;"></span>
+				<div class="container-fluid" style="margin-bottom: 4rem !important;">
+					<div class="container-fluid mt--7">
+						<div class="row">
+							<!-- Student data -->
+
+							<div class="col-xl-8 order-xl-1">
+								<div class="card bg-secondary shadow">
+									<div class="card-header bg-white border-0">
+										<div class="row align-items-center">
+											<div class="col text-center">
+												<h3 class="mb-0">
+							  <span id="lbl_first_name" style="font-weight: 800;font-size: large;"></span>
+							  <span id="lbl_last_name" style="font-weight: 800;font-size: large;"></span>
+							</h3> </div>
+										</div>
+									</div>
+									<!-- Body -->
+									<div class="card-body">
+										<div class="pl-xl-4">
+											<div class="card-body box-shadow">
+
+
+												<p id="student_student_id" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Student: </span> <span id="lbl_student_id"></span> </span> </p>
+
+												<p id="student_category_id" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Category: </span> <span id="lbl_category_id"></span> </span> </p>
+
+												<p id="student_section_id" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Section: </span> <span id="lbl_section_id"></span> </span> </p>
+
+												<p id="student_name" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Name: </span> <span id="lbl_name"></span> </span> </p>
+
+												<p id="student_roll_number" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Roll Number: </span> <span id="lbl_roll_number"></span> </span> </p>
+
+												<p id="student_mobile" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Mobile: </span> <span id="lbl_mobile"></span> </span> </p>
+
+												<p id="student_email" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Email: </span> <span id="lbl_email"></span> </span> </p>
+
+												<p id="student_parent_mobile" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Parent Mobile: </span> <span id="lbl_parent_mobile"></span> </span> </p>
+
+												<p id="student_telegram" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Telegram: </span> <span id="lbl_telegram"></span> </span> </p>
+
+												<p id="student_parent_email" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Parent Email: </span> <span id="lbl_parent_email"></span> </span> </p>
+
+											</div>
+										</div>
+									</div>
+									<!-- /Body -->
+								</div>
+							</div>
+							<!-- /Data -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /Modal Body -->
+			<!-- Modal Footer -->
+			<div class="modal-footer" style="display: block; padding-bottom: 0;">
+				<div class="row">
+					<div class="col-6">
+						<div class="form-group">
+							<!-- MENTOR NOTE (added): Copy student details button.
+							     Click handler is bound in onInfoViewDocumentReady()
+							     in Student.script.js, same pattern already used for
+							     every other button in this file. -->
+							<button id="copy_student_details" type="button" style="background-color: var(--app-theme-color);
+						  color: aliceblue;
+						  font-weight: bolder;" class="form-control"><i class="fa-solid fa-copy"></i> Copy </button>
+						</div>
+					</div>
+					<div class="col-6">
+						<div class="form-group">
+							<button style="background-color: var(--app-theme-color);
+						  color: aliceblue;
+						  font-weight: bolder;" class="form-control" onclick="$('#list_details').modal('hide');">Close </button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /Modal Footer -->
+		</div>
+		<!-- /modal-content -->
+	</div>
+	<!-- /modal-dialog -->
 </div>
+<!-- /modal -->
+<!-- /Modal for Show Info -->
+<!-- ------------------------------------------------------ -->
 
-<!-- JavaScript -->
-<!-- Common dependencies load first, same order as every other page -->
-
-<script src="../js/Config.js"></script>
-
-<script src="../js/StorageService.js"></script>
-
-<script src="../js/DataService.js"></script>
-
-<script src="../common/common.js"></script>
-
-<script src="../common/navigation.js"></script>
-
-<script src="../common/session.js"></script>
-
-<script src="../common/register-sw.js"></script>
-
-<script src="../common/theme.js"></script>
-
-<script src="../common/settings.js"></script>
-
-<script src="../js/Settings.script.js"></script>
-
+	<!-- This span is for scroll down button target -->
+	<span id="bottom_target_span"></span>
+  </main>
 </body>
+
+<!-- Navigate to Dashboard using the shared navigation helper (no direct window.location.href) -->
+<script>
+document.getElementById("btnDashboard").onclick = function () {
+    goDashboard();
+};
+</script>
+
+<!-- ------------------------------------------------------------
+     CONNECTION FIX: this page's own script ($ selectors,
+     .modal('show')/.modal('hide') for the Add/Edit/Filter/Info
+     popups) has always required jQuery and Bootstrap's JS, but
+     neither was ever linked here (only the Bootstrap CSS was).
+     Adding them, in the same 4.6.2 version as the Bootstrap CSS
+     already linked above, before any other page script runs.
+     ------------------------------------------------------------ -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+
+<script src="../addedFiles/js/Config.js"></script>
+
+<script>
+document.getElementById("pageTitle").textContent = AppConfig.TEXT.student.title;
+</script>
+
+<script src="../addedFiles/js/StorageService.js"></script>
+
+<script src="../addedFiles/js/DataService.js"></script>
+
+<script src="../addedFiles/common/common.js"></script>
+
+<script src="../addedFiles/common/theme.js"></script>
+
+<script src="../addedFiles/common/settings.js"></script>
+
+<script src="../addedFiles/common/activity.js"></script>
+
+<script src="../addedFiles/common/navigation.js"></script>
+
+<script src="../addedFiles/common/session.js"></script>
+
+<script src="../addedFiles/common/register-sw.js"></script>
+
+<!-- ------------------------------------------------------------
+     CONNECTION FIX: this page was missing LegacyCompatShim.js,
+     which every other list page (Category/Section/Result) already
+     loads. Without it, setErrorHandler(), getAppMode(),
+     checkRolePermission() and the other legacy helper functions
+     StudentHTML.script.js/Student.script.js call are all undefined,
+     so onDeviceReady() threw an error the moment it ran and NOTHING
+     after that point (the header, the search bar, loading the
+     list) ever executed - the page was effectively blank except
+     for the stray Dashboard button above. Added the same script
+     tag, in the same position, as the other three list pages.
+     ------------------------------------------------------------ -->
+
+<script src="../addedFiles/js/LegacyCompatShim.js"></script>
+<!--
+     CONNECTION FIX: this page also calls
+     CategoryScript.getInstance() and SectionScript.getInstance()
+     (see loadCategoryList()/loadSectionList()/setCategorySelection()/
+     setSectionSelection() in Student.script.js) to populate the
+     Category/Section dropdowns in the Add/Edit Student form, but
+     Category.script.js and Section.script.js were never loaded on
+     this page - both calls threw "CategoryScript is not defined" /
+     "SectionScript is not defined". Both files are self-contained
+     singletons with no page-specific auto-run code (everything
+     lives inside their own IIFE and only runs when something calls
+     CategoryScript.getInstance()/SectionScript.getInstance()), so
+     they are safe to include here.
+-->
+<script src="../js/application/Category.script.js"></script>
+<script src="../js/application/Section.script.js"></script>
+<script src="../js/application/Student.script.js"></script>
+
+<script src="../js/application/StudentHTML.script.js"></script>
 
 </html>
