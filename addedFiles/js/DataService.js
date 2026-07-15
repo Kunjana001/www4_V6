@@ -171,7 +171,31 @@
      itself for the full WHY/WHAT and the matching Apps Script
      snippet needed alongside it.
 
-   Version: 1.1
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Student List "only part of the data
+   loads" fix)
+   ----------------------------------------------------------
+   ✓ ROOT CAUSE FOUND AND FIXED - getAllRecords() (GOOGLE mode)
+     used arrRawRecords.map(...) to convert every raw Sheet row
+     into the app's record shape. map() has no per-row error
+     isolation: one malformed/blank row (e.g. left behind after
+     manually adding/editing rows directly in the Google Sheet)
+     threw, which was silently caught by callGoogleGet's own
+     "GOOGLE unreachable, falling back to offline cache" handler
+     further down - discarding the ENTIRE fresh list of good
+     rows and quietly re-showing the last cached list from
+     BEFORE the Sheet was updated. That is exactly why the
+     Student List kept showing fewer students than the Sheet
+     actually had, with no error visible to the user. Replaced
+     with a per-row try/catch loop (and the same treatment for
+     the existing-cache indexing step just above it) so a single
+     bad row is skipped and logged instead of taking down the
+     other 14/15 good rows. Same fix benefits Category/Section/
+     Result/User too, since they all share this one
+     getAllRecords() function. No API/behavior change for the
+     normal (all rows valid) case.
+
+   Version: 1.2
    ========================================================== */
 
 "use strict";
@@ -858,7 +882,22 @@ var DataService = (function ()
 
                     (arrExistingRecords || []).forEach(function (objExistingRecord)
                     {
-                        objExistingById[objExistingRecord[strIdField]] = objExistingRecord;
+                        /* Same reasoning as the row-conversion loop
+                           below: one malformed/null record already
+                           sitting in the local IndexedDB cache (e.g.
+                           left over from an earlier bug) must not be
+                           able to throw here and take the whole load
+                           down with a visible "Unable to load
+                           students" alert - just skip that one cached
+                           record and keep indexing the rest. */
+                        try
+                        {
+                            objExistingById[objExistingRecord[strIdField]] = objExistingRecord;
+                        }
+                        catch (objIndexError)
+                        {
+                            CommonUtils.logError("DataService.getAllRecords (skipping one malformed cached " + strStoreName + " record)", objIndexError);
+                        }
                     });
 
                     callGoogleGet(buildGoogleUrl(objEntity.listAction, {}), function (objResponse)
@@ -877,12 +916,62 @@ var DataService = (function ()
 
                         var arrRawRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
 
-                        var arrRecords = arrRawRecords.map(function (objBackendRecord)
+                        if (!Array.isArray(arrRawRecords))
                         {
-                            var objExisting = objExistingById[objBackendRecord[objEntity.idParam]];
+                            arrRawRecords = [];
+                        }
 
-                            return normalizeRecordId(strStoreName, objEntity.fromBackendFields(objBackendRecord, objExisting));
-                        });
+                        /* STUDENT LOADING FIX (root cause):
+                           This used to be a plain arrRawRecords.map(...).
+                           Array.prototype.map() has no per-item error
+                           isolation - if converting even ONE row threw
+                           (e.g. a blank/partially-filled row left behind
+                           after manually adding/editing rows directly in
+                           the Google Sheet, or a row missing the id
+                           column), the exception propagated out of this
+                           whole .then() callback. Because this callback
+                           runs inside callGoogleGet()'s own promise chain
+                           (fetch().then().then(fnSuccess).catch(fnError)),
+                           that thrown error was being swallowed by
+                           callGoogleGet's OWN internal catch two lines
+                           below (the "GOOGLE unreachable, falling back to
+                           offline cache" branch), which silently replaced
+                           the entire freshly-fetched list with
+                           arrExistingRecords - the last successful cache,
+                           taken BEFORE the Sheet was updated. That is
+                           exactly why, after adding new rows to the
+                           Sheet, the Student List kept showing the old,
+                           smaller count instead of throwing a visible
+                           error: one bad row was quietly discarding all
+                           15 good rows and falling back to a stale,
+                           shorter cached list.
+
+                           Fix: convert each row inside its own try/catch
+                           so a single malformed row is skipped (and
+                           logged) instead of taking down the entire
+                           batch - every good row from the Sheet now
+                           always reaches the UI. */
+
+                        var arrRecords = [];
+
+                        for (var intRowIndex = 0; intRowIndex < arrRawRecords.length; intRowIndex++)
+                        {
+                            try
+                            {
+                                var objBackendRecord = arrRawRecords[intRowIndex];
+
+                                var objExisting = objExistingById[objBackendRecord[objEntity.idParam]];
+
+                                arrRecords.push(normalizeRecordId(strStoreName, objEntity.fromBackendFields(objBackendRecord, objExisting)));
+                            }
+                            catch (objRowError)
+                            {
+                                CommonUtils.logError(
+                                    "DataService.getAllRecords (skipping one malformed " + strStoreName + " row, row index " + intRowIndex + ")",
+                                    objRowError
+                                );
+                            }
+                        }
 
                         cacheListLocally(strStoreName, arrRecords);
 

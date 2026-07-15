@@ -85,6 +85,23 @@ Changes:
     that instead, so pressing Back while the Share modal is open
     correctly closes it instead of falling through to the
     double-back-press "press again to exit" logic.
+12. Student "+" Add button fix (Priority 3): the per-Student
+    select menu (listenersSingleClickModal(), opened only after
+    a Student row is tapped) had its own "#student_add" entry
+    sitting alongside that Student's Info/Edit/Delete actions,
+    making Add look tied to whichever Student was selected. That
+    entry is no longer wired up as a second Add trigger. Add New
+    Student now has exactly one entry point - the floating
+    "#btn_add" button on the Student List page itself
+    (onListDocumentReady()) - which already always opened a
+    blank Add form regardless of selection (onClickAdd() forces
+    ADD_EDIT_MODE = INSERT_DATA, which always calls
+    popUpAddForm(), never getData()/getSelectedData()) and now
+    also explicitly clears any stale selected-student id
+    (SESSION_OBJECT.STUDENT_ID) the moment it's clicked, plus a
+    "Add New Student" tooltip. No new Add/Edit/Delete logic -
+    the existing onClickAdd()/Add Student workflow is reused
+    unchanged.
 
 Architecture:
 - No architecture changes.
@@ -1306,18 +1323,28 @@ function getListData()
 			onInfoViewDocumentReady();
 		});
 
-		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_STUDENT ) == true ) {
+		// --------------------------------------------------
+		// STUDENT ADD BUTTON FIX (Priority 3):
+		// WHY: this whole listenersSingleClickModal() function
+		// only runs for the popup menu that opens AFTER a specific
+		// Student row has been tapped/selected (see
+		// onSingleClickListener() -> openSelectMenu()), alongside
+		// that same Student's Info/Edit/Delete actions. Having an
+		// "Add" entry inside that per-Student menu is exactly what
+		// made Add look like it belonged to whichever Student was
+		// currently selected, instead of being its own,
+		// selection-independent action.
+		// WHAT: #student_add is no longer wired up as a second Add
+		// trigger here - Add New Student now has exactly one entry
+		// point, the floating #btn_add button on the Student List
+		// page itself (see onListDocumentReady()), which already
+		// always opens a blank Add form and now also clears any
+		// stale selected-student id before doing so. No CRUD logic
+		// changed - onClickAdd()/the Add Student workflow itself is
+		// untouched and still reused as-is.
+		// --------------------------------------------------
 
-			$( '#student_add' ).off().on( 'click', function() {
-
-				closeSelectMenu();
-				onClickAdd();
-			});
-		}
-		else {
-
-			$( "#student_add" ).hide();
-		}
+		$( '#student_add' ).off().hide();
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_STUDENT ) == true ) {
 
@@ -1575,10 +1602,41 @@ function getListData()
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_STUDENT ) == true ) {
 
-			$( "#btn_add" ).off().on( "click", function() {
+			// --------------------------------------------------
+			// STUDENT ADD BUTTON FIX (Priority 3):
+			// WHY: #btn_add is the floating "+" button that lives
+			// on the Student List page itself (wired here, in
+			// onListDocumentReady() - not inside the per-row
+			// select menu in listenersSingleClickModal() below,
+			// which only opens after a specific Student row has
+			// been tapped/selected). Selecting a row still left
+			// that row's id sitting in sessionStorage
+			// (SESSION_OBJECT.STUDENT_ID, set by
+			// onSingleClickListener()), so even though onClickAdd()
+			// already forces ADD_EDIT_MODE to INSERT_DATA (a blank
+			// form, never getData()/getSelectedData() for an
+			// existing Student), a stale selected-student id was
+			// still left behind in storage while the Add form was
+			// open - i.e. the "+" button could still look/behave
+			// as if it belonged to whichever Student was last
+			// selected.
+			// WHAT: explicitly clears that stale selected-student
+			// id the moment "+" is pressed, so Add can never be
+			// mistaken for - or accidentally carry over any state
+			// from - a previously selected Student, and sets a
+			// tooltip so the button's purpose is unambiguous.
+			// Reuses the existing onClickAdd()/Add Student workflow
+			// as-is - no new CRUD logic.
+			// --------------------------------------------------
 
-				onClickAdd();
-			});
+			$( "#btn_add" )
+				.attr( "title", "Add New Student" )
+				.off().on( "click", function() {
+
+					clearSessionStorage( SESSION_OBJECT.STUDENT_ID );
+
+					onClickAdd();
+				});
 		}
 		else {
 
