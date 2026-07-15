@@ -324,6 +324,465 @@ body {
     text-align: center;
 }
 
+/* ---------- User Management (Admin only) ---------- */
+
+.user-mgmt-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+.user-mgmt-add-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 10px 16px;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    background: var(--app-theme-color);
+
+    color: white;
+
+    transition: 0.3s;
+}
+
+.user-mgmt-add-btn:hover {
+
+    opacity: 0.9;
+}
+
+.user-mgmt-toolbar {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.user-mgmt-search {
+
+    flex: 1;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 14px;
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 8px;
+
+    background: var(--color-surface);
+}
+
+.user-mgmt-search i {
+
+    color: var(--color-text-secondary);
+}
+
+.user-mgmt-search input {
+
+    flex: 1;
+
+    border: none;
+
+    outline: none;
+
+    font-size: 14px;
+
+    background: transparent;
+
+    color: var(--color-text-primary);
+}
+
+.user-mgmt-export-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: 2px solid var(--app-theme-color);
+
+    border-radius: 8px;
+
+    padding: 10px 14px;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    background: var(--color-surface);
+
+    color: var(--app-theme-color);
+
+    transition: 0.3s;
+
+    white-space: nowrap;
+}
+
+.user-mgmt-export-btn:hover {
+
+    background: var(--app-theme-color);
+
+    color: white;
+}
+
+.user-card-list {
+
+    list-style: none;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.user-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px;
+
+    border-radius: 10px;
+
+    background: var(--color-page-background);
+}
+
+.user-card-avatar {
+
+    width: 42px;
+
+    height: 42px;
+
+    flex: none;
+
+    border-radius: 50%;
+
+    background: var(--app-theme-color);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 15px;
+
+    font-weight: 700;
+}
+
+.user-card-info {
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+.user-card-username {
+
+    color: var(--color-text-primary);
+
+    font-weight: bold;
+
+    font-size: 15px;
+}
+
+.user-card-fullname {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+
+    margin-bottom: 6px;
+}
+
+.user-card-badges {
+
+    display: flex;
+
+    gap: 8px;
+
+    margin-bottom: 4px;
+}
+
+.user-badge {
+
+    display: inline-block;
+
+    padding: 2px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    text-transform: uppercase;
+}
+
+.user-badge-role-admin {
+
+    background: rgba(220, 53, 69, 0.15);
+
+    color: #dc3545;
+}
+
+.user-badge-role-student {
+
+    background: rgba(13, 110, 253, 0.15);
+
+    color: #0d6efd;
+}
+
+.user-badge-status-active {
+
+    background: rgba(25, 135, 84, 0.15);
+
+    color: #198754;
+}
+
+.user-badge-status-inactive {
+
+    background: rgba(108, 117, 125, 0.15);
+
+    color: #6c757d;
+}
+
+.user-card-lastlogin {
+
+    color: var(--color-text-secondary);
+
+    font-size: 12px;
+}
+
+.user-card-actions {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+    flex: none;
+}
+
+.user-card-action-btn {
+
+    width: 34px;
+
+    height: 34px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-secondary);
+
+    transition: 0.2s;
+}
+
+.user-card-action-btn:hover {
+
+    background: var(--app-theme-color);
+
+    color: white;
+}
+
+.user-card-action-delete:hover {
+
+    background: #dc3545;
+
+    color: white;
+}
+
+/* ---------- Add / Edit User Modal ---------- */
+
+.user-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 1000;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.user-modal-box {
+
+    width: 100%;
+
+    max-width: 420px;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: var(--color-surface);
+
+    border-radius: 15px;
+
+    box-shadow: 0px 10px 30px rgba(0,0,0,.25);
+}
+
+.user-modal-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--color-border);
+}
+
+.user-modal-header h3 {
+
+    color: var(--color-text-primary);
+
+    font-size: 18px;
+}
+
+.user-modal-close {
+
+    border: none;
+
+    background: none;
+
+    font-size: 24px;
+
+    line-height: 1;
+
+    color: var(--color-text-secondary);
+
+    cursor: pointer;
+}
+
+.user-modal-body {
+
+    padding: 20px 24px;
+}
+
+.user-modal-body select {
+
+    width: 100%;
+
+    padding: 12px 14px;
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    outline: none;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+}
+
+.user-modal-body select:focus {
+
+    border-color: var(--app-theme-color);
+}
+
+.user-modal-footer {
+
+    display: flex;
+
+    gap: 12px;
+
+    padding: 16px 24px 24px;
+}
+
+.user-mgmt-cancel-btn,
+.user-mgmt-save-btn {
+
+    flex: 1;
+
+    padding: 12px;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.user-mgmt-cancel-btn {
+
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+}
+
+.user-mgmt-cancel-btn:hover {
+
+    background: var(--color-page-background);
+}
+
+.user-mgmt-save-btn {
+
+    border: none;
+
+    background: var(--app-theme-color);
+
+    color: white;
+}
+
+.user-mgmt-save-btn:hover {
+
+    opacity: 0.9;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 480px) {
@@ -336,6 +795,36 @@ body {
     .profile-card {
 
         padding: 20px;
+    }
+
+    .user-mgmt-header {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 10px;
+    }
+
+    .user-mgmt-toolbar {
+
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .user-card {
+
+        flex-wrap: wrap;
+    }
+
+    .user-card-actions {
+
+        flex-direction: row;
+
+        width: 100%;
+
+        justify-content: flex-end;
     }
 
 }

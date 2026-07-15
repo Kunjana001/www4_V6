@@ -166,6 +166,44 @@
 
     </section>
 
+    <!-- ================= User Management (Admin only) =================
+         Hidden by default; UserManagement.script.js's
+         initializeUserManagementSection() only reveals this for
+         Session.getRole() === "Admin". -->
+
+    <section class="profile-card" id="userManagementSection" style="display:none;">
+
+        <div class="user-mgmt-header">
+
+            <h2 class="profile-card-title" style="margin-bottom:0;">User Management</h2>
+
+            <button type="button" id="btnAddUser" class="user-mgmt-add-btn">
+                <i class="fa-solid fa-plus"></i> Add User
+            </button>
+
+        </div>
+
+        <div class="user-mgmt-toolbar">
+
+            <div class="user-mgmt-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="txtUserSearch" placeholder="Search users...">
+            </div>
+
+            <button type="button" id="btnExportUsers" class="user-mgmt-export-btn" title="Export CSV">
+                <i class="fa-solid fa-file-export"></i> Export
+            </button>
+
+        </div>
+
+        <ul class="user-card-list" id="userCardList">
+
+            <li class="activity-empty">Loading users...</li>
+
+        </ul>
+
+    </section>
+
     <!-- ================= Change Password ================= -->
 
     <section class="profile-card">
@@ -222,6 +260,67 @@
 
 </div>
 
+<!-- ================= Add / Edit User Modal (Admin only) ================= -->
+
+<div class="user-modal-overlay" id="userModalOverlay" style="display:none;">
+
+    <div class="user-modal-box">
+
+        <div class="user-modal-header">
+
+            <h3 id="userModalTitle">Add User</h3>
+
+            <button type="button" id="btnCloseUserModal" class="user-modal-close">&times;</button>
+
+        </div>
+
+        <div class="user-modal-body">
+
+            <div class="profile-form-group">
+                <label for="txtUserUsername">Username</label>
+                <input type="text" id="txtUserUsername" placeholder="Username">
+            </div>
+
+            <div class="profile-form-group" id="userPasswordGroup">
+                <label for="txtUserPassword">Password</label>
+                <input type="password" id="txtUserPassword" placeholder="At least 6 characters">
+            </div>
+
+            <div class="profile-form-group">
+                <label for="txtUserFullName">Full Name</label>
+                <input type="text" id="txtUserFullName" placeholder="Full Name">
+            </div>
+
+            <div class="profile-form-group">
+                <label for="selUserRole">Role</label>
+                <select id="selUserRole">
+                    <option value="Student">Student</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+
+            <div class="profile-form-group">
+                <label for="selUserStatus">Status</label>
+                <select id="selUserStatus">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="user-modal-footer">
+
+            <button type="button" id="btnCancelUserModal" class="user-mgmt-cancel-btn">Cancel</button>
+
+            <button type="button" id="btnSaveUser" class="user-mgmt-save-btn">Save</button>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- JavaScript -->
 <!-- Common dependencies load first, same order as every other page -->
 
@@ -246,6 +345,8 @@
 <script src="../common/activity.js"></script>
 
 <script src="../js/Profile.script.js"></script>
+
+<script src="../js/UserManagement.script.js"></script>
 
 </body>
 

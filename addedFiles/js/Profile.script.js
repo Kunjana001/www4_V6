@@ -106,6 +106,19 @@ function initializeProfilePage()
     loadRecentActivity();
 
     registerEvents();
+
+    /* ----------------------------------------------------------
+       User Management (Admin only) - see UserManagement.script.js.
+       Guarded with a typeof check so this page still works
+       unchanged if that file is ever missing for some reason;
+       the function itself also re-checks Session.getRole() and
+       does nothing at all for a non-Admin.
+       ---------------------------------------------------------- */
+
+    if (typeof initializeUserManagementSection === "function")
+    {
+        initializeUserManagementSection();
+    }
 }
 
 

@@ -298,6 +298,11 @@ var DataService = (function ()
             return "result_id";
         }
 
+        if (strStoreName === AppConfig.STORES.USER)
+        {
+            return "user_id";
+        }
+
         return "id";
     }
 
@@ -626,6 +631,66 @@ var DataService = (function ()
                     marks_obtained: objBackendRecord.marks,
                     grade: objBackendRecord.grade,
                     result: objBackendRecord.result
+                };
+            }
+        };
+
+        /* -------------------- Users -------------------- */
+
+        /* Admin-only User Management, embedded on the Profile
+           page (see UserManagement.script.js / profile.html).
+           Reuses this same generic getAllRecords/addRecord/
+           updateRecord/deleteRecord machinery every other module
+           already uses - only the field mapping below is new.
+
+           SECURITY NOTE: the password is only ever sent UP to
+           the backend on Add (User.gs's addUser requires it to
+           create the account); it is intentionally never
+           requested back down. fromBackendFields() below has no
+           password field at all, so a user's password is never
+           stored in IndexedDB or held in memory here - only
+           User.gs (server-side) ever reads/writes it, and only
+           for the Add action. Editing an existing user only ever
+           touches fullName/role/status - the username and
+           password are immutable through this screen (username
+           is permanent, password can only be changed by the
+           account owner via Profile's Change Password, which
+           calls DataService.changePassword() separately). */
+        GOOGLE_ENTITY_MAP[AppConfig.STORES.USER] =
+        {
+            listAction: "getUsers",
+            listDataKey: "users",
+            getByIdAction: "getUserById",
+            addAction: "addUser",
+            updateAction: "updateUser",
+            deleteAction: "deleteUser",
+            idParam: "userId",
+
+            toBackendFields: function (objRecord)
+            {
+                return {
+                    userId: objRecord.user_id || objRecord.id || "",
+                    username: objRecord.username || "",
+                    /* Only ever populated by the Add User form -
+                       the Edit User form never sets this, and
+                       updateUser() on the backend ignores it even
+                       if it were sent. */
+                    password: objRecord.password || "",
+                    fullName: objRecord.fullName || "",
+                    role: objRecord.role || "",
+                    status: objRecord.status || "Active"
+                };
+            },
+
+            fromBackendFields: function (objBackendRecord)
+            {
+                return {
+                    user_id: objBackendRecord.userId,
+                    username: objBackendRecord.username,
+                    fullName: objBackendRecord.fullName,
+                    role: objBackendRecord.role,
+                    status: objBackendRecord.status,
+                    lastLogin: objBackendRecord.lastLogin
                 };
             }
         };
