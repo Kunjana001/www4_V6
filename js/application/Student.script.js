@@ -1875,6 +1875,38 @@ function parseListResponse(arrStudents)
     );
 
     doFilterStudentList();
+
+    // --------------------------------------------------
+    // DASHBOARD QUICK ADD (Priority 2):
+    // WHY: the Dashboard's "Add Student" Operations shortcut
+    // used to just open this list page (openStudentList()) -
+    // the user still had to find and tap the "+" button
+    // themselves once it loaded.
+    // WHAT: Dashboard.script.js now sets a small sessionStorage
+    // flag (DASHBOARD_QUICK_ADD_ACTION = "student") right
+    // before navigating here. Once the Student list has
+    // finished its first load, this checks for that flag and -
+    // only if the user actually has Add permission, same as the
+    // "+" button already requires - immediately calls the exact
+    // same onClickAdd() the "+" button uses, then clears the
+    // flag so it can never fire again on a later refresh or a
+    // normal (non-Dashboard) visit to this page. Reuses the
+    // existing Add Student form/workflow as-is - no new CRUD
+    // logic, no duplicate form.
+    // WHEN: runs once, right after the Student list's first
+    // load, only when that load was triggered by the Dashboard
+    // quick-add shortcut.
+    // --------------------------------------------------
+
+    if( sessionStorage.getItem( "DASHBOARD_QUICK_ADD_ACTION" ) == "student" ) {
+
+        sessionStorage.removeItem( "DASHBOARD_QUICK_ADD_ACTION" );
+
+        if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_STUDENT ) == true ) {
+
+            onClickAdd();
+        }
+    }
 }
 	// parse summary list response from the storage
 	function parseListFromStorage() {

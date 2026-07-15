@@ -1391,6 +1391,24 @@ var CategoryScript = (function () {
 		loadOrganizationList( arrCategoryRows );
 
 		doFilterCategoryList();
+
+		// --------------------------------------------------
+		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
+		// Student.script.js/parseListResponse() - see the WHY/
+		// WHAT/WHEN comment there for the full explanation.
+		// Reuses the existing onClickAdd()/Add Category workflow
+		// as-is.
+		// --------------------------------------------------
+
+		if( sessionStorage.getItem( "DASHBOARD_QUICK_ADD_ACTION" ) == "category" ) {
+
+			sessionStorage.removeItem( "DASHBOARD_QUICK_ADD_ACTION" );
+
+			if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_CATEGORY ) == true ) {
+
+				onClickAdd();
+			}
+		}
 	}
 
 	// --------------------------------------------------

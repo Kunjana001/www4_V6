@@ -204,7 +204,7 @@ var studentHeader = `	<!-- header -->
 		<span class="heading-text" id="activity_title"></span>
 		<!-- Page Heading -->
 		<!-- Add Details Button -->
-		<li id="btn_add" class="float-right">
+		<li id="btn_add" class="float-right" title="Add New Student">
 			<a href="#" class="header-icons-L">
 			<i class="fas fa-plus"></i>
 			</a>
@@ -315,11 +315,23 @@ var singleClickMenu = `	<!-- Single Click Menu -->
 						<i class="fa fa-info-circle text-info"></i> Show Info
 						</a>
 					</li>
-					<li class="nav-item" id="student_add">
-						<a class=" nav-link active">
-						<i class="fa fa-plus-square text-info"></i> Add New Student
-						</a>
-					</li>
+					<!-- STUDENT ADD BUTTON FIX (Priority 3): the
+					     "Add New Student" entry that used to be
+					     here (id="student_add") has been removed.
+					     This popup only ever opens after a specific
+					     Student row has been tapped/selected (see
+					     onSingleClickListener() in Student.script.js),
+					     alongside that same Student's Show Info/Edit/
+					     Delete actions - bundling "Add New Student"
+					     into that per-Student menu made Add look like
+					     it belonged to whichever Student was
+					     currently selected. Add New Student now has
+					     exactly one entry point: the "+" button in
+					     the page header above (id="btn_add"), which
+					     is not tied to any row selection. Student.script.js
+					     also defensively hides #student_add if it is
+					     ever reintroduced, but removing it here is the
+					     real fix. -->
 					<li class="nav-item"  id="student_edit">
 						<a class="nav-link">
 						<i class="fa fa-edit text-info"></i> Edit Student

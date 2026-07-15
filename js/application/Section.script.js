@@ -1315,6 +1315,24 @@ var SectionScript = (function () {
 		setStorageData( arrSectionRows, SESSION_OBJECT.SECTION_SUMMARY_DATA );
 
 		doFilterSectionList();
+
+		// --------------------------------------------------
+		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
+		// Student.script.js/parseListResponse() - see the WHY/
+		// WHAT/WHEN comment there for the full explanation.
+		// Reuses the existing onClickAdd()/Add Section workflow
+		// as-is.
+		// --------------------------------------------------
+
+		if( sessionStorage.getItem( "DASHBOARD_QUICK_ADD_ACTION" ) == "section" ) {
+
+			sessionStorage.removeItem( "DASHBOARD_QUICK_ADD_ACTION" );
+
+			if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_SECTION ) == true ) {
+
+				onClickAdd();
+			}
+		}
 	}
 	// parse summary list response from the storage
 	function parseListFromStorage() {

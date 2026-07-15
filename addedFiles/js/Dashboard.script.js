@@ -72,7 +72,24 @@
      Student sidebar menu item, or "Add Student" shortcut is
      clicked. No other behavior in this function changed.
 
-   Version: 3.2
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Priority 2 - Dashboard Quick Add)
+   ----------------------------------------------------------
+
+   ✓ The Operations shortcuts (Add Student / Add Category / Add
+     Section / Add Result - Add Section button added to
+     dashboard.html to match the other 3, it was missing) now
+     pop open that entity's existing Add form as soon as its
+     list page finishes loading, instead of just dropping the
+     user on the list page. See requestDashboardQuickAdd() and
+     the matching "DASHBOARD_QUICK_ADD_ACTION" sessionStorage
+     check added to the end of each entity's parseListResponse()
+     in Student.script.js/Category.script.js/Section.script.js/
+     Result.script.js. Reuses each page's existing Add form/
+     onClickAdd() workflow unchanged - no duplicate forms, no
+     new CRUD logic, no architecture change.
+
+   Version: 3.3
    ========================================================== */
 
 "use strict";
@@ -126,6 +143,7 @@ var listFrequentlyUsed = document.getElementById("frequentlyUsedList");
 
 var btnOpAddStudent = document.getElementById("opAddStudent");
 var btnOpAddCategory = document.getElementById("opAddCategory");
+var btnOpAddSection = document.getElementById("opAddSection");
 var btnOpAddResult = document.getElementById("opAddResult");
 
 
@@ -890,13 +908,70 @@ function registerEvents()
 
     liLogout.onclick = logoutUser;
 
-    /* Operations shortcut (Phase 4): quick jump to each list
-       page, where the existing Add form for that entity
-       already lives - no new forms/routes introduced. */
+    /* Operations shortcut (Phase 4, extended - Priority 2):
+       quick jump to each list page, where the existing Add form
+       for that entity already lives - no new forms/routes
+       introduced. Previously this only navigated to the list
+       page and left the user to find that page's own "+"
+       button; requestDashboardQuickAdd() below now also flags
+       that page to pop its existing Add form open automatically
+       as soon as it finishes loading - see the WHY/WHAT/WHEN
+       comment on requestDashboardQuickAdd() and the matching
+       check added to the end of each entity's
+       parseListResponse(). */
 
-    btnOpAddStudent.onclick = openStudentList;
-    btnOpAddCategory.onclick = openCategoryList;
-    btnOpAddResult.onclick = openResultList;
+    btnOpAddStudent.onclick = function() { requestDashboardQuickAdd( "student", openStudentList ); };
+    btnOpAddCategory.onclick = function() { requestDashboardQuickAdd( "category", openCategoryList ); };
+    btnOpAddSection.onclick = function() { requestDashboardQuickAdd( "section", openSectionList ); };
+    btnOpAddResult.onclick = function() { requestDashboardQuickAdd( "result", openResultList ); };
+}
+
+
+
+/* ==========================================================
+   Dashboard Quick Add (Priority 2)
+
+   WHY: the Dashboard's Operations shortcuts (Add Student / Add
+   Category / Add Section / Add Result) used to just navigate to
+   that entity's list page (openStudentList() / openCategoryList()
+   / openSectionList() / openResultList()) - the user still had
+   to locate and tap that page's own "+" button once it loaded.
+   The brief asks for these to actually open the Add dialog/form
+   directly, reusing the existing Add functionality with no
+   duplicate forms and no new CRUD logic.
+
+   WHAT: this page (dashboard.html) never has the Student/
+   Category/Section/Result list markup or scripts loaded, so the
+   Add form itself cannot be opened from here - only the target
+   list page (which already contains that exact form and its
+   onClickAdd()/popUpAddForm() workflow) can. Instead of
+   duplicating that form here, this sets a one-shot sessionStorage
+   flag (the same mechanism already used everywhere else in this
+   project to pass small bits of state between pages, e.g.
+   Student.script.js's SESSION_OBJECT.ADD_EDIT_MODE) naming which
+   entity's Add form should open, then reuses the existing
+   openX() navigation function (already used by the equivalent
+   sidebar/card - keeps Recent Activity/Frequently Used tracking
+   identical either way) to go there. Once that page's list
+   finishes its first load, it checks for this same flag and - if
+   the user actually holds Add permission for that entity, same
+   check the "+" button itself already requires - calls its own
+   existing onClickAdd(), then clears the flag so it cannot fire
+   again on a later refresh or a normal (non-Dashboard) visit.
+
+   strEntityKey : "student" | "category" | "section" | "result" -
+                  must match the check added to the matching
+                  entity's parseListResponse()
+   fnOpenList   : the existing openStudentList()/openCategoryList()/
+                  openSectionList()/openResultList() to reuse for
+                  navigation + Activity Log + Frequently Used
+   ========================================================== */
+
+function requestDashboardQuickAdd( strEntityKey, fnOpenList )
+{
+    sessionStorage.setItem( "DASHBOARD_QUICK_ADD_ACTION", strEntityKey );
+
+    fnOpenList();
 }
 
 

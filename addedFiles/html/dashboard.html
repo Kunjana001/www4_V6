@@ -39,6 +39,26 @@
        Dashboard specifically, even though it applied on every
        other page.
      ========================================================== -->
+
+<!-- ==========================================================
+     PROJECT IMPROVEMENTS (Priority 2 - Dashboard Quick Add)
+
+     Completed Improvements
+     ----------------------
+     ✓ The 4 existing Operations shortcut buttons (Add Student /
+       Add Category / Add Section / Add Result - Add Section was
+       missing and has been added to match the other 3) now
+       actually pop open that entity's existing Add form as soon
+       as its list page finishes loading, instead of just
+       dropping the user on the list page and leaving them to
+       find the "+" button themselves. See Dashboard.script.js's
+       requestDashboardQuickAdd() and the matching
+       "DASHBOARD_QUICK_ADD_ACTION" check added to the end of
+       each entity's parseListResponse() (Student.script.js /
+       Category.script.js / Section.script.js / Result.script.js).
+       No new forms, no new CRUD logic - 100% reuse of each
+       page's existing Add workflow.
+     ========================================================== -->
 <html lang="en">
 
 <head>
@@ -338,6 +358,16 @@
                         <button type="button" id="opAddStudent"><i class="fa-solid fa-user-plus"></i> Add Student</button>
 
                         <button type="button" id="opAddCategory"><i class="fa-solid fa-square-plus"></i> Add Category</button>
+
+                        <!-- PROJECT IMPROVEMENTS (Priority 2 - Dashboard Quick Add):
+                             the Operations panel had Add Student / Add Category /
+                             Add Result shortcuts but no Add Section shortcut, even
+                             though Section is one of the four core entities (see
+                             Dashboard.script.js's registerEvents()). Added here to
+                             match the existing 3 buttons exactly - same markup
+                             pattern, same shortcut-ops container, no new panel/
+                             module introduced. -->
+                        <button type="button" id="opAddSection"><i class="fa-solid fa-square-plus"></i> Add Section</button>
 
                         <button type="button" id="opAddResult"><i class="fa-solid fa-square-plus"></i> Add Result</button>
 
