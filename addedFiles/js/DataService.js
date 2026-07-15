@@ -752,8 +752,6 @@ var DataService = (function ()
 
     function callGoogleGet(strUrl, fnSuccess, fnError)
     {
-        console.log("Fetching:", strUrl);
-
         fetch(strUrl)
             .then(function (objResponse)
             {
@@ -798,9 +796,6 @@ var DataService = (function ()
             throw new Error("Google Script responded with status " + objResponse.status);
         }
        
-        console.log("Raw Response:");
-         
-        console.log(strRawBody);
         try
         {
             return JSON.parse(strRawBody);

@@ -392,8 +392,6 @@ var CommonUtils = (function ()
 StorageService.initializeDatabase()
     .then(function ()
     {
-        console.log("Offline database ready.");
-
         /* If we came back online while the page was loading,
            this also gives queued changes a chance to sync. */
 
@@ -513,8 +511,6 @@ window.addEventListener("online", handleDeviceCameOnline);
 
 function handleDeviceCameOnline()
 {
-    console.log("Internet connection restored. Starting background sync...");
-
     if (typeof DataService !== "undefined")
     {
         DataService.synchronizePendingChanges();

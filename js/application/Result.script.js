@@ -9,6 +9,38 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /* ----------------------------------------------------------
+   Final QA Pass - Back Button / Share Modal Fix (added)
+   ----------------------------------------------------------
+   Fixed a broken Back-button/reset check in Result.script.js:
+   the Back-button handler and resetMultiSelection() both
+   tested for the Share modal being open using ids that don't
+   exist anywhere in the DOM, so those checks were always
+   false. The real share modal's id is "modal_share" - both
+   checks now use that instead, so pressing Back while the
+   Share modal is open correctly closes it instead of falling
+   through to the double-back-press "press again to exit"
+   logic. No architecture, file, or folder changes.
+   ---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
+   Final QA Pass - Console Cleanup (added)
+   ----------------------------------------------------------
+   Removed leftover debug console.log() calls in Result.script.js
+   (form-data dumps, TBD stub messages, commented-out
+   file-picker logs, etc.) and replaced every
+   console.log(objError)/console.log(error) inside a catch
+   block with CommonUtils.logError("Result.script.js
+   (<function>)", objError), matching the pattern already
+   used in common.js/DataService.js. No behavior changed -
+   errors are still logged, just through the shared utility
+   instead of a bare console.log. The two "Multiple selection
+   option 1/2: TBD" stubs were left as // TODO comments
+   instead of being silently removed, since those two menu
+   options are genuinely unimplemented, not just noisy
+   logging. No architecture, file, or folder changes.
+   ---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
    UI Modernization Pass 2 (added)
    ----------------------------------------------------------
    showFilteredList() now shows a shared empty-state message when a search/filter returns zero results
@@ -229,6 +261,12 @@ var ResultScript = (function () {
 
 	//-----------------------------Default values------------------------------------
 	//// TODO: Assign group_lookup_id of Lookup forign keys
+	//// (Final QA note: this TODO predates this QA pass and is
+	//// part of the original codegen scaffolding, not something
+	//// introduced by recent changes. Left unresolved rather
+	//// than guessed at, since implementing it correctly needs
+	//// the intended group_lookup_id convention from the
+	//// original spec/mentor, which isn't available here.)
 	var DEFAULT = {
 
 		RESULT_ID : 0,
@@ -346,7 +384,6 @@ var ResultScript = (function () {
 		var noOfDigits = getOrgNoOfDigits();
 		var fv = FormValidation;
 
-		console.log('Enable the validation for this form');
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.RESULT_ID), G_ERROR.MSG.empty_error+LABEL.RESULT_ID);
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.EXAM_NAME), G_ERROR.MSG.empty_error+LABEL.EXAM_NAME);
@@ -611,7 +648,6 @@ var ResultScript = (function () {
 		mFile = null;
 		mFileClosed = false;
 
-		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
@@ -699,7 +735,7 @@ var ResultScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Result.script.js (onConfirmSaveFormData)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to save Result." );
 				}
@@ -720,7 +756,7 @@ var ResultScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Result.script.js (onConfirmSaveFormData)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to save Result." );
 				}
@@ -728,7 +764,7 @@ var ResultScript = (function () {
 		}
 		else {
 
-			console.log( "Invalid mode passed to onConfirmSaveFormData, mode = " + mode );
+			CommonUtils.logError( "Result.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
@@ -748,7 +784,6 @@ var ResultScript = (function () {
 	
 		function successNative( finalPath ) {
 	
-		  console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
@@ -791,7 +826,7 @@ var ResultScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Result.script.js (deleteNextRow)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to delete Result." );
 					return;
@@ -875,7 +910,7 @@ var ResultScript = (function () {
 
 			function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Result.script.js (getData)", objError );
 				hideLoader();
 				CommonUtils.showAlert( "Unable to load Result." );
 			}
@@ -942,7 +977,7 @@ var ResultScript = (function () {
 
 			function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Result.script.js (getListData)", objError );
 				hideLoader();
 				CommonUtils.showAlert( "Unable to load Results." );
 			}
@@ -1054,9 +1089,6 @@ var ResultScript = (function () {
 
 			(async () => {
 				mFile = await chooser.getFile();
-				// console.log(file ? file.name : 'canceled');
-				// console.log(file ? file.uri : 'canceled');
-				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1579,7 +1611,13 @@ var ResultScript = (function () {
 
 			closeFilterMenu();
 		} 
-		else if( $('#modal_share_question').hasClass('show')) {
+		// Final QA fix: this used to check the nonexistent
+		// '#modal_share_question' element (always false, so the
+		// Back button never detected the Share modal was open).
+		// The real share modal's id is 'modal_share' - corrected
+		// below so Back now properly closes it instead of falling
+		// through to the double-back-press exit logic.
+		else if( $('#modal_share').hasClass('show')) {
 
 			closeShareMenu();
 		}
@@ -1836,7 +1874,6 @@ var ResultScript = (function () {
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
-		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -1880,7 +1917,6 @@ var ResultScript = (function () {
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
-		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -1904,7 +1940,11 @@ var ResultScript = (function () {
 
 	function resetMultiSelection() {
 
-		if( $( '#modal_share_result' ).hasClass( 'show' )) {
+		// Final QA fix: this used to check a nonexistent element
+		// ('#modal_share_result', always false) instead of the real
+		// share modal's id, 'modal_share'. Corrected so this
+		// function properly recognizes the share modal is open.
+		if( $( '#modal_share' ).hasClass( 'show' )) {
 
 			closeShareMenu();
 		}
@@ -1952,14 +1992,14 @@ var ResultScript = (function () {
 
 		closeMultiSelectMenu();
 
-		console.log( "Multiple selection option 1: TBD" );
+		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
 	function onClickMultiOption2() {
 
 		closeMultiSelectMenu();
 
-		console.log( "Multiple selection option 2: TBD" );
+		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
 	function openSelectMenu() {
@@ -2263,7 +2303,7 @@ var ResultScript = (function () {
 
 			function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Result.script.js (onInfoViewDocumentReady)", objError );
 				hideLoader();
 				CommonUtils.showAlert( "Unable to load Result." );
 			}

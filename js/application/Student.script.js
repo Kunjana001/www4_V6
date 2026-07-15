@@ -63,6 +63,28 @@ Changes:
    helpers) - resolved from the same CATEGORY_LIST/SECTION_LIST
    already cached in storage, same lookup approach searchList()
    already uses.
+10. Final QA pass - console cleanup: removed leftover debug
+    console.log() calls (form-data dumps, TBD stub messages,
+    commented-out file-picker logs, etc.) and replaced every
+    console.log(objError) inside a catch block with
+    CommonUtils.logError("Student.script.js (<function>)",
+    objError), matching the same pattern already used in
+    common.js/DataService.js. No behavior changed - errors are
+    still logged, just through the shared utility instead of a
+    bare console.log. The two "Multiple selection option
+    1/2: TBD" stubs were left as // TODO comments instead of
+    being silently removed, since those two menu options are
+    genuinely unimplemented, not just noisy logging.
+11. Final QA pass - fixed a broken Back-button/reset check: the
+    Back-button handler and resetMultiSelection() both tested
+    for the Share modal being open using ids that don't exist
+    anywhere in the DOM ("modal_share_question",
+    "modal_share_student"), so those checks were always false.
+    The real share modal's id is "modal_share" (see shareMenu
+    template in StudentHTML.script.js) - both checks now use
+    that instead, so pressing Back while the Share modal is open
+    correctly closes it instead of falling through to the
+    double-back-press "press again to exit" logic.
 
 Architecture:
 - No architecture changes.
@@ -389,6 +411,12 @@ var StudentScript = (function () {
 
 	//-----------------------------Default values------------------------------------
 	//// TODO: Assign group_lookup_id of Lookup forign keys
+	//// (Final QA note: this TODO predates this QA pass and is
+	//// part of the original codegen scaffolding, not something
+	//// introduced by recent changes. Left unresolved rather
+	//// than guessed at, since implementing it correctly needs
+	//// the intended group_lookup_id convention from the
+	//// original spec/mentor, which isn't available here.)
 	var DEFAULT = {
 
 		STUDENT_ID : 0,
@@ -566,7 +594,6 @@ var StudentScript = (function () {
 		var noOfDigits = getOrgNoOfDigits();
 		var fv = FormValidation;
 
-		console.log('Enable the validation for this form');
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.STUDENT_ID), G_ERROR.MSG.empty_error+LABEL.STUDENT_ID);
 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.CATEGORY_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.CATEGORY_ID);
@@ -894,7 +921,6 @@ var StudentScript = (function () {
 		mFile = null;
 		mFileClosed = false;
 
-		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
@@ -955,7 +981,6 @@ var StudentScript = (function () {
 	
 		function successNative( finalPath ) {
 	
-		  console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
@@ -998,7 +1023,7 @@ var StudentScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Student.script.js (onConfirmSaveFormData)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to save Student." );
 				}
@@ -1019,7 +1044,7 @@ var StudentScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Student.script.js (onConfirmSaveFormData)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to save Student." );
 				}
@@ -1027,7 +1052,7 @@ var StudentScript = (function () {
 		}
 		else {
 
-			console.log( "Invalid mode passed to onConfirmSaveFormData, mode = " + mode );
+			CommonUtils.logError( "Student.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
@@ -1082,7 +1107,7 @@ var StudentScript = (function () {
 
 				function( objError ) {
 
-					console.log( objError );
+					CommonUtils.logError( "Student.script.js (deleteNextRow)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to delete Student." );
 					return;
@@ -1216,7 +1241,7 @@ var StudentScript = (function () {
 
 			function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Student.script.js (getData)", objError );
 				hideLoader();
 				CommonUtils.showAlert( "Unable to load Student." );
 			}
@@ -1264,7 +1289,7 @@ function getListData()
         {
             hideLoader();
 
-            console.log(objError);
+            CommonUtils.logError( "Student.script.js (getListData)", objError );
 
             CommonUtils.showAlert("Unable to load students.");
         }
@@ -1377,9 +1402,6 @@ function getListData()
 
 			(async () => {
 				mFile = await chooser.getFile();
-				// console.log(file ? file.name : 'canceled');
-				// console.log(file ? file.uri : 'canceled');
-				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1663,7 +1685,7 @@ function getListData()
 
 		}, function( objError ) {
 
-			console.log( objError );
+			CommonUtils.logError( "Student.script.js (loadCategoryList)", objError );
 
 			// Keep going even if Categories fail to load, so the
 			// Student list itself can still load.
@@ -1703,7 +1725,7 @@ function getListData()
 
 		}, function( objError ) {
 
-			console.log( objError );
+			CommonUtils.logError( "Student.script.js (loadSectionList)", objError );
 
 			// Keep going even if Sections fail to load, so the
 			// Student list itself can still load.
@@ -2212,7 +2234,13 @@ function parseListResponse(arrStudents)
 
 			closeFilterMenu();
 		} 
-		else if( $('#modal_share_question').hasClass('show')) {
+		// Final QA fix: this used to check the nonexistent
+		// '#modal_share_question' element (always false, so the
+		// Back button never detected the Share modal was open).
+		// The real share modal's id is 'modal_share' - corrected
+		// below so Back now properly closes it instead of falling
+		// through to the double-back-press exit logic.
+		else if( $('#modal_share').hasClass('show')) {
 
 			closeShareMenu();
 		}
@@ -2500,7 +2528,6 @@ function parseListResponse(arrStudents)
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
-		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2544,7 +2571,6 @@ function parseListResponse(arrStudents)
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
-		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2568,7 +2594,11 @@ function parseListResponse(arrStudents)
 
 	function resetMultiSelection() {
 
-		if( $( '#modal_share_student' ).hasClass( 'show' )) {
+		// Final QA fix: this used to check a nonexistent element
+		// ('#modal_share_student', always false) instead of the real
+		// share modal's id, 'modal_share'. Corrected so this
+		// function properly recognizes the share modal is open.
+		if( $( '#modal_share' ).hasClass( 'show' )) {
 
 			closeShareMenu();
 		}
@@ -2616,14 +2646,14 @@ function parseListResponse(arrStudents)
 
 		closeMultiSelectMenu();
 
-		console.log( "Multiple selection option 1: TBD" );
+		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
 	function onClickMultiOption2() {
 
 		closeMultiSelectMenu();
 
-		console.log( "Multiple selection option 2: TBD" );
+		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
 	function openSelectMenu() {
@@ -2952,7 +2982,7 @@ function parseListResponse(arrStudents)
 
 			function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Student.script.js (onInfoViewDocumentReady)", objError );
 				hideLoader();
 				CommonUtils.showAlert( "Unable to load Student." );
 			}
@@ -3159,7 +3189,7 @@ function parseListResponse(arrStudents)
 
 			}, function( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Student.script.js (copyStudentDetails)", objError );
 				CommonUtils.showAlert( "Could not copy details." );
 			});
 		}
@@ -3182,7 +3212,7 @@ function parseListResponse(arrStudents)
 			}
 			catch( objError ) {
 
-				console.log( objError );
+				CommonUtils.logError( "Student.script.js (copyStudentDetails)", objError );
 				CommonUtils.showAlert( "Could not copy details." );
 			}
 

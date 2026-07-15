@@ -131,7 +131,8 @@ function rgb2hex(strRgb)
 
 function setErrorHandler(strPageName)
 {
-    console.log("setErrorHandler() called for page: " + strPageName);
+    // Legacy no-op shim: intentionally does nothing now that
+    // DataService handles errors directly.
 }
 
 
@@ -148,7 +149,8 @@ function setErrorHandler(strPageName)
 
 function openDatabase()
 {
-    console.log("openDatabase() called, but this app now uses DataService instead of a local SQLite database. Doing nothing.");
+    // Legacy no-op shim: this app now uses DataService instead of
+    // a local SQLite database, so there is nothing to do here.
 }
 
 
@@ -384,9 +386,17 @@ function showOperationMessage(strMessage, strType, fnCallback)
     }
 }
 
+// Final QA fix: this used to only console.log(strMessage), so
+// the "Please click BACK again to exit" message (see the four
+// onBackKeyDown handlers in Student/Category/Section/Result)
+// was never actually visible to the user - back-button exit
+// confirmation looked broken even though the underlying
+// double-press logic worked. Now reuses the existing
+// CommonUtils.showToast(), the same toast already used
+// elsewhere in the app, so no new UI/feature was added.
 function showShortBottomToast(strMessage)
 {
-    console.log(strMessage);
+    CommonUtils.showToast(strMessage, "info");
 }
 
 

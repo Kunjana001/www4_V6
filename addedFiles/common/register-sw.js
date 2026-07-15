@@ -247,7 +247,6 @@ function registerServiceWorkerNormally()
     navigator.serviceWorker.register(strServiceWorkerUrl)
         .then(function (objRegistration)
         {
-            console.log("Service worker registered with scope:", objRegistration.scope);
         })
         .catch(function (objError)
         {

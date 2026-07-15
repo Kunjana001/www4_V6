@@ -240,8 +240,6 @@ var StorageService = (function () {
 
             objDatabase = objEvent.target.result;
 
-            console.log("Database initialized.");
-
             fnResolve(objDatabase);
 
         };
@@ -250,7 +248,7 @@ var StorageService = (function () {
 
         objRequest.onerror = function (objEvent) {
 
-            console.log("Database error.");
+            CommonUtils.logError("StorageService.initializeDatabase (onerror)", objEvent.target.error);
 
             fnReject(objEvent.target.error);
 
