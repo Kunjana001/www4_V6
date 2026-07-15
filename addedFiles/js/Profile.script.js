@@ -407,7 +407,7 @@ function handleChangePassword()
         {
             hideLoader();
 
-            CommonUtils.showAlert("Password changed successfully!", "success");
+            CommonUtils.showAlert("Password changed successfully.", "success");
 
             ActivityLog.logActivity("Password Changed");
 

@@ -158,7 +158,7 @@ var Session = (function ()
         // this hard navigation - see the STORAGE_KEYS.POST_REDIRECT_TOAST
         // comment in Config.js for why. login.js shows and clears
         // this once the Login page has actually loaded.
-        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Logout Successful!");
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Logout successful.");
 
         StorageService.clearSession();
 

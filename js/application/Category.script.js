@@ -605,16 +605,20 @@ var CategoryScript = (function () {
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
 
-
-		if( mode == UPDATE_DATA ) { // Edit/Update
-
-			var data = getSelectedData();
-
-			jsonData[ JSON_KEY.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
-			jsonData[ JSON_KEY.NAME ] = data[ INDEX.NAME ];
-			jsonData[ JSON_KEY.ORGANIZATION_ID ] = data[ INDEX.ORGANIZATION_ID ];
-
-		}
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
+		// --------------------------------------------------------
+		// WHY: this used to re-read every field from
+		// getSelectedData() (the OLD, pre-edit record) and overwrite
+		// what was just read from the form above - so clicking Save
+		// on an Edit silently re-saved the record unchanged, no
+		// matter what the person had typed. This is the actual
+		// cause of "my edits aren't showing up" for Categories.
+		// category_id does not need to be re-read here - it already
+		// comes from the hidden, readonly #category_id field, which
+		// the Edit form population already set from the record
+		// being edited.
+		// --------------------------------------------------------
 
 		if( mUploadedImage.length > 0 ) {
 
@@ -1746,7 +1750,7 @@ var CategoryScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response.id );
-			message = "Category has been added successfully";
+			message = "Category saved successfully.";
 			
 			categoryList.push( result );
 
@@ -1758,7 +1762,7 @@ var CategoryScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
-			message = "Category has been updated successfully";
+			message = "Category updated successfully.";
 
 			for ( var i = 0; i < categoryList.length; i++ ) {
 
@@ -1864,7 +1868,7 @@ var CategoryScript = (function () {
 
 			parseListFromStorage();
 
-			showOperationMessage( "Selected Category(s) has been deleted successfully", "Success", null );
+			showOperationMessage( "Category deleted successfully.", "Success", null );
 		}
 	}
 	function getSelectedId() {

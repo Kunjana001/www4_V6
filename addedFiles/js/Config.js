@@ -61,10 +61,17 @@ const AppConfig = {
 
        When true, the Login page prefills the admin/admin
        credentials so testing doesn't require re-typing
-       them every time. Set to false before shipping.
+       them every time.
+
+       PROJECT IMPROVEMENTS (Final UX Polish pass - fixed):
+       this defaulted to true, which is exactly the hardcoded
+       default Admin credential the "Remember Me" spec says to
+       remove - first launch must show an empty username and
+       password. Left the flag itself in place (a developer can
+       still flip it on locally) but it now defaults to off.
        -------------------------------------------------- */
 
-    DEV_MODE: true,
+    DEV_MODE: false,
 
 
 

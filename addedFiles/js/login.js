@@ -175,7 +175,7 @@ function loginUser()
 
     if (strUsername === "")
     {
-        alert("Please enter your username.");
+        CommonUtils.showAlert("Please enter your username.");
 
         txtUsername.focus();
 
@@ -184,7 +184,7 @@ function loginUser()
 
     if (strPassword === "")
     {
-        alert("Please enter your password.");
+        CommonUtils.showAlert("Please enter your password.");
 
         txtPassword.focus();
 
@@ -245,7 +245,7 @@ function loginUser()
         // Dashboard.script.js to show once the Dashboard has
         // actually loaded - see STORAGE_KEYS.POST_REDIRECT_TOAST
         // in Config.js.
-        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Login Successful!");
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Login successful.");
 
         goDashboard();
     },

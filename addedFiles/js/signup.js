@@ -129,7 +129,7 @@ function createAccount()
 
     if (strUsername === "")
     {
-        alert("Please choose a username.");
+        CommonUtils.showAlert("Please choose a username.");
 
         txtUsername.focus();
 
@@ -138,7 +138,7 @@ function createAccount()
 
     if (strPassword === "")
     {
-        alert("Please choose a password.");
+        CommonUtils.showAlert("Please choose a password.");
 
         txtPassword.focus();
 
@@ -147,7 +147,7 @@ function createAccount()
 
     if (strConfirmPassword === "")
     {
-        alert("Please confirm your password.");
+        CommonUtils.showAlert("Please confirm your password.");
 
         txtConfirmPassword.focus();
 
@@ -156,7 +156,7 @@ function createAccount()
 
     if (strPassword !== strConfirmPassword)
     {
-        alert("Passwords do not match.");
+        CommonUtils.showAlert("Passwords do not match.");
 
         txtConfirmPassword.focus();
 

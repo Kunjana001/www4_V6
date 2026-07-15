@@ -442,7 +442,7 @@ function addNewUser(strUsername, strFullName, strRole, strStatus)
         hideLoader();
         closeUserModal();
 
-        CommonUtils.showAlert("User added successfully!", "success");
+        CommonUtils.showAlert("User created successfully.", "success");
 
         ActivityLog.logActivity("Added User: " + strUsername);
 
@@ -485,7 +485,7 @@ function saveEditedUser(strUsername, strFullName, strRole, strStatus)
         hideLoader();
         closeUserModal();
 
-        CommonUtils.showAlert("User updated successfully!", "success");
+        CommonUtils.showAlert("User updated successfully.", "success");
 
         ActivityLog.logActivity("Edited User: " + strUsername);
 

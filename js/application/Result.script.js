@@ -228,12 +228,40 @@ var ResultScript = (function () {
 
 	var value = 0;
 
+	// --------------------------------------------------------
+	// PROJECT IMPROVEMENTS (Final UX Polish pass - added)
+	// --------------------------------------------------------
+	// WHY: this whole field model (EXAM_NAME/DATE_OF_EXAM/
+	// TOTAL_MARKS/MARKS_OBTAINED) was a codegen guess that never
+	// matched the actual "Results" Google Sheet, which has columns
+	// resultId, studentId, exam, subject, marks, grade, result
+	// (confirmed against the live sheet). Result.gs's backend
+	// (see DataService.js's GOOGLE_ENTITY_MAP[RESULT]) already
+	// requires studentId/exam/subject to Add or Update - this file
+	// simply never collected them, so every Result the app tried
+	// to save was rejected by the backend, and the list/Info popup
+	// showed "undefined" for fields that don't exist (Date Of Exam,
+	// Total Marks). This is the root cause of "my data isn't
+	// showing up in the app" for Results.
+	// WHAT: INDEX/SUMMARY_INDEX/LABEL/DEFAULT/FORM_FIELD/
+	// FORM_FIELD_INFO/JSON_KEY/SUMMARY_JSON_KEY/DB_FIELD now match
+	// the real sheet: STUDENT_ID, SUBJECT and GRADE/RESULT
+	// (pass/fail) added; DATE_OF_EXAM and TOTAL_MARKS (columns
+	// that do not exist) removed. MARKS_OBTAINED is kept as the
+	// local field name (it already maps to the sheet's "marks"
+	// column via DataService.js's toBackendFields/fromBackendFields,
+	// which was NOT changed - no architecture change).
+	// WHEN: every place this file reads/writes a Result record.
+	// --------------------------------------------------------
+
 	var INDEX = {
 		RESULT_ID : value++,		// 1
-		EXAM_NAME : value++,		// 2
-		DATE_OF_EXAM : value++,		// 3
-		TOTAL_MARKS : value++,		// 4
-		MARKS_OBTAINED : value++,		// 5		// 5
+		STUDENT_ID : value++,		// 2
+		EXAM_NAME : value++,		// 3
+		SUBJECT : value++,		// 4
+		MARKS_OBTAINED : value++,		// 5
+		GRADE : value++,		// 6
+		RESULT : value++,		// 7
 	};
 
 	//--------------Summary row index:-----------------
@@ -242,10 +270,12 @@ var ResultScript = (function () {
 
 	var SUMMARY_INDEX = {
 		RESULT_ID : value++,		// 1
-		EXAM_NAME : value++,		// 2
-		DATE_OF_EXAM : value++,		// 3
-		TOTAL_MARKS : value++,		// 4
-		MARKS_OBTAINED : value++,		// 5		// 5
+		STUDENT_ID : value++,		// 2
+		EXAM_NAME : value++,		// 3
+		SUBJECT : value++,		// 4
+		MARKS_OBTAINED : value++,		// 5
+		GRADE : value++,		// 6
+		RESULT : value++,		// 7
 	};
 
 	//-------------Table Header Label----------------------
@@ -253,37 +283,36 @@ var ResultScript = (function () {
 	var LABEL = {
 
 		RESULT_ID : "Result",
-		EXAM_NAME : "Exam Name",
-		DATE_OF_EXAM : "Date Of Exam",
-		TOTAL_MARKS : "Total Marks",
-		MARKS_OBTAINED : "Marks Obtained"
+		STUDENT_ID : "Student",
+		EXAM_NAME : "Exam",
+		SUBJECT : "Subject",
+		MARKS_OBTAINED : "Marks",
+		GRADE : "Grade",
+		RESULT : "Result"
 	};
 
 	//-----------------------------Default values------------------------------------
-	//// TODO: Assign group_lookup_id of Lookup forign keys
-	//// (Final QA note: this TODO predates this QA pass and is
-	//// part of the original codegen scaffolding, not something
-	//// introduced by recent changes. Left unresolved rather
-	//// than guessed at, since implementing it correctly needs
-	//// the intended group_lookup_id convention from the
-	//// original spec/mentor, which isn't available here.)
 	var DEFAULT = {
 
 		RESULT_ID : 0,
+		STUDENT_ID : 0,
 		EXAM_NAME : "",
-		DATE_OF_EXAM : "",
-		TOTAL_MARKS : 0,
-		MARKS_OBTAINED : 0
+		SUBJECT : "",
+		MARKS_OBTAINED : 0,
+		GRADE : "",
+		RESULT : ""
 	};
 
 	//-----------------------------Form Elements------------------------------------
 	var FORM_FIELD = {
 
 		RESULT_ID : '#result_id',
+		STUDENT_ID : '#student_id',
 		EXAM_NAME : '#exam_name',
-		DATE_OF_EXAM : '#date_of_exam',
-		TOTAL_MARKS : '#total_marks',
+		SUBJECT : '#subject',
 		MARKS_OBTAINED : '#marks_obtained',
+		GRADE : '#grade',
+		RESULT : '#result_status',
 		DOCUMENT_DIV : '#file_div',
 		DOCUMENTS_PATH : '#file_id',
 		PHOTO_DIV : '#image_div',
@@ -294,40 +323,48 @@ var ResultScript = (function () {
 	var FORM_FIELD_INFO = { 		// For Show Info Screen
 
 		LBL_RESULT_ID : '#lbl_result_id',
+		LBL_STUDENT_NAME : '#lbl_student_name',
 		LBL_EXAM_NAME : '#lbl_exam_name',
-		LBL_DATE_OF_EXAM : '#lbl_date_of_exam',
-		LBL_TOTAL_MARKS : '#lbl_total_marks',
-		LBL_MARKS_OBTAINED : '#lbl_marks_obtained'
+		LBL_SUBJECT : '#lbl_subject',
+		LBL_MARKS_OBTAINED : '#lbl_marks_obtained',
+		LBL_GRADE : '#lbl_grade',
+		LBL_RESULT : '#lbl_result'
 	};
 
 	//-----------------------------JSON Key------------------------------------
 	var JSON_KEY = {
 
 		RESULT_ID : "result_id",
+		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
-		DATE_OF_EXAM : "date_of_exam",
-		TOTAL_MARKS : "total_marks",
-		MARKS_OBTAINED : "marks_obtained"
+		SUBJECT : "subject",
+		MARKS_OBTAINED : "marks_obtained",
+		GRADE : "grade",
+		RESULT : "result"
 	};
 
 	//-----------------------------SUMMARY JSON Key------------------------------------
 	var SUMMARY_JSON_KEY = {
 
 		RESULT_ID : "result_id",
+		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
-		DATE_OF_EXAM : "date_of_exam",
-		TOTAL_MARKS : "total_marks",
-		MARKS_OBTAINED : "marks_obtained"
+		SUBJECT : "subject",
+		MARKS_OBTAINED : "marks_obtained",
+		GRADE : "grade",
+		RESULT : "result"
 	};
 
 	//-----------------------------DB Table Fields------------------------------------
 	var DB_FIELD = {
 
 		RESULT_ID : "result_id",
+		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
-		DATE_OF_EXAM : "date_of_exam",
-		TOTAL_MARKS : "total_marks",
-		MARKS_OBTAINED : "marks_obtained"
+		SUBJECT : "subject",
+		MARKS_OBTAINED : "marks_obtained",
+		GRADE : "grade",
+		RESULT : "result"
 	};
 	//------------------------------SESSION OBJECT--------------------------------------
 	var SESSION_OBJECT = {
@@ -335,7 +372,8 @@ var ResultScript = (function () {
 		RESULT_ID: "RESULT_ID",
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		RESULT_DATA: "RESULT_DATA",
-		RESULT_SUMMARY_DATA: "RESULT_SUMMARY_DATA"
+		RESULT_SUMMARY_DATA: "RESULT_SUMMARY_DATA",
+		STUDENT_LIST: "RESULT_STUDENT_LIST"
 	}
 	// Clear all the data which used to store in the session on click backbutton and goback from the list
 	function clearStorage(){
@@ -379,27 +417,56 @@ var ResultScript = (function () {
 	}
 
 	function validateForm(){
-		var bValid = true;
-		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
-		var noOfDigits = getOrgNoOfDigits();
-		var fv = FormValidation;
 
-/* Enable as per requirement */
-		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.RESULT_ID), G_ERROR.MSG.empty_error+LABEL.RESULT_ID);
-		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.EXAM_NAME), G_ERROR.MSG.empty_error+LABEL.EXAM_NAME);
-		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.DATE_OF_EXAM), G_ERROR.MSG.empty_error+LABEL.DATE_OF_EXAM);
-		// bValid = bValid && fv.checkDate($(FORM_FIELD.DATE_OF_EXAM), G_ERROR.MSG.invalid_date_error+LABEL.DATE_OF_EXAM);
-		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.TOTAL_MARKS), G_ERROR.MSG.empty_error+LABEL.TOTAL_MARKS);
-		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.MARKS_OBTAINED), G_ERROR.MSG.empty_error+LABEL.MARKS_OBTAINED);
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (added): Result.gs (the backend)
+		// requires studentId/exam/subject to Add or Update a Result
+		// - see DataService.js's GOOGLE_ENTITY_MAP[RESULT] comment.
+		// Validating them here, before the request is even sent,
+		// means the person sees a clear message right on the form
+		// instead of a generic backend-error toast after the round
+		// trip.
+		//
+		// NOTE: this project never actually defines FormValidation
+		// or G_ERROR anywhere (every fv.checkEmpty(...) call in
+		// Student/Category/Section.script.js is commented out for
+		// exactly this reason - calling either would throw
+		// "is not defined" and break Save entirely). Using plain
+		// jQuery + CommonUtils.showAlert() instead, the same toast
+		// already used for every other validation message in this
+		// app.
+		// --------------------------------------------------------
 
-		return bValid;
+		if( $(FORM_FIELD.STUDENT_ID).val() == "0" || $(FORM_FIELD.STUDENT_ID).val() == "" ) {
+
+			CommonUtils.showAlert( "Please select a " + LABEL.STUDENT_ID + "." );
+			return false;
+		}
+
+		if( $.trim( $(FORM_FIELD.EXAM_NAME).val() ) === "" ) {
+
+			CommonUtils.showAlert( LABEL.EXAM_NAME + " is required." );
+			return false;
+		}
+
+		if( $.trim( $(FORM_FIELD.SUBJECT).val() ) === "" ) {
+
+			CommonUtils.showAlert( LABEL.SUBJECT + " is required." );
+			return false;
+		}
+
+		return true;
 	}
 	function setFormDefaults( resultId ) {
 		$(FORM_FIELD.RESULT_ID).val(resultId);
 		$(FORM_FIELD.EXAM_NAME).val(DEFAULT.EXAM_NAME);
-		$(FORM_FIELD.DATE_OF_EXAM).val(getDefaultDateTimePattern(DEFAULT.DATE_OF_EXAM));
-		$(FORM_FIELD.TOTAL_MARKS).val(DEFAULT.TOTAL_MARKS);
+		$(FORM_FIELD.SUBJECT).val(DEFAULT.SUBJECT);
 		$(FORM_FIELD.MARKS_OBTAINED).val(DEFAULT.MARKS_OBTAINED);
+		$(FORM_FIELD.GRADE).val(DEFAULT.GRADE);
+		$(FORM_FIELD.RESULT).val(DEFAULT.RESULT);
+
+		loadStudentList( DEFAULT.STUDENT_ID );
+
 		enableSaveButton( false );
 
 		$( FORM_FIELD.DOCUMENT_DIV ).hide();
@@ -412,6 +479,54 @@ var ResultScript = (function () {
 			var errorHandlerScript = ErrorHandlerScript.getInstance();
 			errorHandlerScript.getAutoFillErrorData( "Result", parseErrorDataResponse );
 		}, 1000 );
+	}
+
+	// --------------------------------------------------------
+	// PROJECT IMPROVEMENTS (added)
+	// --------------------------------------------------------
+	// WHY: the Add/Edit Result form needs a Student picker (the
+	// backend requires studentId - see validateForm() above), the
+	// same way Student.script.js loads Category/Section lists for
+	// its own form dropdowns.
+	// WHAT: fetches every Student via DataService, bridges each one
+	// into the array-row shape StudentScript.INDEX expects, then
+	// asks StudentScript's own populateSelection() to build the
+	// <select id="student_id"> options and select selectedId.
+	// WHEN: called once from setFormDefaults() (Add) and
+	// popUpEditForm() (Edit).
+	// --------------------------------------------------------
+	function loadStudentList( selectedId ) {
+
+		DataService.getAllRecords( AppConfig.STORES.STUDENT, function( arrStudents ) {
+
+			var studentScript = StudentScript.getInstance();
+			var arrStudentRows = [];
+
+			for( var index = 0; index < arrStudents.length; index++ ) {
+
+				var objStudent = arrStudents[ index ];
+				var arrRow = [];
+
+				arrRow[ StudentScript.INDEX.STUDENT_ID ] = objStudent.student_id;
+				arrRow[ StudentScript.INDEX.NAME ] = objStudent.name;
+
+				arrStudentRows.push( arrRow );
+			}
+
+			setStorageData( arrStudentRows, SESSION_OBJECT.STUDENT_LIST );
+
+			studentScript.populateSelection( arrStudentRows, FORM_FIELD.STUDENT_ID, selectedId );
+			enableSaveButton( true );
+
+		}, function( objError ) {
+
+			CommonUtils.logError( "Result.script.js (loadStudentList)", objError );
+
+			// Keep going even if Students fail to load, so the
+			// Add/Edit form still opens (just with an empty picker).
+			setStorageData( [], SESSION_OBJECT.STUDENT_LIST );
+			enableSaveButton( true );
+		});
 	}
 
 
@@ -435,9 +550,12 @@ var ResultScript = (function () {
 	function populateFromLocalStorage( data ){
 		$( FORM_FIELD.RESULT_ID ).val( data[ INDEX.RESULT_ID ] );
 		$( FORM_FIELD.EXAM_NAME ).val( data[ INDEX.EXAM_NAME ] );
-		$( FORM_FIELD.DATE_OF_EXAM ).val( getDefaultDateTimePattern( new Date( parseInt( data[ INDEX.DATE_OF_EXAM ] ) ) ) );
-		$( FORM_FIELD.TOTAL_MARKS ).val( data[ INDEX.TOTAL_MARKS ] );
+		$( FORM_FIELD.SUBJECT ).val( data[ INDEX.SUBJECT ] );
 		$( FORM_FIELD.MARKS_OBTAINED ).val( data[ INDEX.MARKS_OBTAINED ] );
+		$( FORM_FIELD.GRADE ).val( data[ INDEX.GRADE ] );
+		$( FORM_FIELD.RESULT ).val( data[ INDEX.RESULT ] );
+
+		loadStudentList( data[ INDEX.STUDENT_ID ] );
 
 		setDocsImages( data );
 
@@ -563,9 +681,12 @@ var ResultScript = (function () {
 
 		$(FORM_FIELD.RESULT_ID).val(data[INDEX.RESULT_ID]);
 		$(FORM_FIELD.EXAM_NAME).val(data[INDEX.EXAM_NAME]);
-		$(FORM_FIELD.DATE_OF_EXAM).val(getDefaultDateTimePattern( parseInt(data[INDEX.DATE_OF_EXAM])));
-		$(FORM_FIELD.TOTAL_MARKS).val(data[INDEX.TOTAL_MARKS]);
+		$(FORM_FIELD.SUBJECT).val(data[INDEX.SUBJECT]);
 		$(FORM_FIELD.MARKS_OBTAINED).val(data[INDEX.MARKS_OBTAINED]);
+		$(FORM_FIELD.GRADE).val(data[INDEX.GRADE]);
+		$(FORM_FIELD.RESULT).val(data[INDEX.RESULT]);
+
+		loadStudentList( data[INDEX.STUDENT_ID] );
 
 		setDocsImages( data );
 
@@ -607,28 +728,32 @@ var ResultScript = (function () {
 	function getFormDataAsJson( mode ) {
 		var jsonData = {};
 		jsonData[ JSON_KEY.RESULT_ID ] = ( $(FORM_FIELD.RESULT_ID).val() );
+		jsonData[ JSON_KEY.STUDENT_ID ] = ( $(FORM_FIELD.STUDENT_ID).val() );
 		jsonData[ JSON_KEY.EXAM_NAME ] = ( $(FORM_FIELD.EXAM_NAME).val() );
-		jsonData[ JSON_KEY.DATE_OF_EXAM ] = DateTimeToSaveTime( $(FORM_FIELD.DATE_OF_EXAM).val() );
-		jsonData[ JSON_KEY.TOTAL_MARKS ] = ( $(FORM_FIELD.TOTAL_MARKS).val() );
+		jsonData[ JSON_KEY.SUBJECT ] = ( $(FORM_FIELD.SUBJECT).val() );
 		jsonData[ JSON_KEY.MARKS_OBTAINED ] = ( $(FORM_FIELD.MARKS_OBTAINED).val() );
+		jsonData[ JSON_KEY.GRADE ] = ( $(FORM_FIELD.GRADE).val() );
+		jsonData[ JSON_KEY.RESULT ] = ( $(FORM_FIELD.RESULT).val() );
 
 /*
 		// used for file upload
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
 
-
-		if( mode == UPDATE_DATA ) { // Edit/Update
-
-			var data = getSelectedData();
-
-			jsonData[ JSON_KEY.RESULT_ID ] = data[ INDEX.RESULT_ID ];
-			jsonData[ JSON_KEY.EXAM_NAME ] = data[ INDEX.EXAM_NAME ];
-			jsonData[ JSON_KEY.DATE_OF_EXAM ] = data[ INDEX.DATE_OF_EXAM ];
-			jsonData[ JSON_KEY.TOTAL_MARKS ] = data[ INDEX.TOTAL_MARKS ];
-			jsonData[ JSON_KEY.MARKS_OBTAINED ] = data[ INDEX.MARKS_OBTAINED ];
-
-		}
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
+		// --------------------------------------------------------
+		// WHY: this used to re-read every field from
+		// getSelectedData() (the OLD, pre-edit record) and overwrite
+		// what was just read from the form above - so clicking Save
+		// on an Edit silently re-saved the record unchanged, no
+		// matter what the person had typed. This is the actual
+		// cause of "my edits aren't showing up" for Results.
+		// result_id does not need to be re-read here - it already
+		// comes from the hidden, readonly #result_id field, which
+		// popUpEditForm() already populated from the record being
+		// edited.
+		// --------------------------------------------------------
 
 		if( mUploadedImage.length > 0 ) {
 
@@ -845,22 +970,23 @@ var ResultScript = (function () {
 
 			var arrRow = [];
 			arrRow[ INDEX.RESULT_ID ] = objResult.result_id;
+			arrRow[ INDEX.STUDENT_ID ] = objResult.student_id;
 			arrRow[ INDEX.EXAM_NAME ] = objResult.exam_name;
-			arrRow[ INDEX.DATE_OF_EXAM ] = objResult.date_of_exam;
-			arrRow[ INDEX.TOTAL_MARKS ] = objResult.total_marks;
+			arrRow[ INDEX.SUBJECT ] = objResult.subject;
 			arrRow[ INDEX.MARKS_OBTAINED ] = objResult.marks_obtained;
+			arrRow[ INDEX.GRADE ] = objResult.grade;
+			arrRow[ INDEX.RESULT ] = objResult.result;
 
 			arrResultRows.push( arrRow );
 		}
 
 		// WHY/WHAT: bridge the plain DataService object(s) into the
-		// same array-row shape ([ result_id, exam_name, date_of_exam, total_marks, marks_obtained ]) that
-		// getSelectedData() reads via INDEX.* positions - matching
-		// the fix already applied in Category.script.js. Without
-		// this, SESSION_OBJECT.RESULT_DATA held plain objects while
-		// getSelectedData() looked them up with obj[0]/obj[1]/...,
-		// which never matched, so the Edit form and Info popup
-		// always rendered blank/undefined fields.
+		// same array-row shape that getSelectedData() reads via
+		// INDEX.* positions - matching the fix already applied in
+		// Category.script.js. Without this, SESSION_OBJECT.RESULT_DATA
+		// held plain objects while getSelectedData() looked them up
+		// with obj[0]/obj[1]/..., which never matched, so the Edit
+		// form and Info popup always rendered blank/undefined fields.
 		setStorageData( arrResultRows, SESSION_OBJECT.RESULT_DATA );
 
 		hideLoader();
@@ -939,16 +1065,45 @@ var ResultScript = (function () {
 		// ReferenceError: onLoadCacheManager is not defined"
 		// right here, which stopped execution before
 		// getListData() (a few lines below) ever ran, so no
-		// request was ever sent to the backend. The Result page
-		// has no lookup-list dropdown of its own to pre-load, so
-		// this simply calls getListData() directly - the same fix
-		// already applied to Category.script.js.
-		// WHAT: fetches the Result list via DataService.
+		// request was ever sent to the backend.
+		// WHAT: now that Result cards show the Student's name (see
+		// createHtmlListItem()), this pre-loads the Student list
+		// first - same "load lookup lists, then the entity list"
+		// order Student.script.js already uses for Category +
+		// Section - so the name is available on first paint instead
+		// of only after the Add/Edit form has opened once.
 		// WHEN: runs once, right when the Result list page
 		// finishes loading.
 		// --------------------------------------------------
 
-		getListData();
+		DataService.getAllRecords( AppConfig.STORES.STUDENT, function( arrStudents ) {
+
+			var arrStudentRows = [];
+
+			for( var index = 0; index < arrStudents.length; index++ ) {
+
+				var objStudent = arrStudents[ index ];
+				var arrRow = [];
+
+				arrRow[ StudentScript.INDEX.STUDENT_ID ] = objStudent.student_id;
+				arrRow[ StudentScript.INDEX.NAME ] = objStudent.name;
+
+				arrStudentRows.push( arrRow );
+			}
+
+			setStorageData( arrStudentRows, SESSION_OBJECT.STUDENT_LIST );
+
+			getListData();
+
+		}, function( objError ) {
+
+			CommonUtils.logError( "Result.script.js (onLoadCacheManager)", objError );
+
+			// Keep going even if Students fail to load, so the
+			// Result list itself can still load.
+			setStorageData( [], SESSION_OBJECT.STUDENT_LIST );
+			getListData();
+		});
 	}
 
 	function getListData() {
@@ -1316,27 +1471,21 @@ var ResultScript = (function () {
 		hideLoader();
 
 		// --------------------------------------------------
-		// WHY: DataService.getAllRecords() returns plain objects
-		// (e.g. { resultId, examName, dateOfExam, totalMarks,
-		// marksObtained }), matching the same bridge already used
-		// in Category.script.js/parseListResponse(). The rest of
-		// this file (doFilterResultList(), createHtmlListItem(),
+		// WHY: DataService.getAllRecords() resolves through
+		// getEntityApiConfig(RESULT).fromBackendFields() (see
+		// DataService.js), which returns result_id, student_id,
+		// exam_name, subject, marks_obtained, grade, result -
+		// matching the real "Results" Google Sheet columns
+		// (confirmed against the live sheet: resultId, studentId,
+		// exam, subject, marks, grade, result). The rest of this
+		// file (doFilterResultList(), createHtmlListItem(),
 		// showFilteredList(), etc.) was written for the old
 		// SQLite row format, where each Result is a plain array
-		// read using SUMMARY_INDEX.RESULT_ID / EXAM_NAME /
-		// DATE_OF_EXAM / TOTAL_MARKS / MARKS_OBTAINED as array
-		// positions.
+		// read using SUMMARY_INDEX.* as array positions.
 		// WHAT: convert each DataService object into that same
 		// array-row shape, in this one place only, so every
 		// function below this point keeps working exactly as it
 		// already did - nothing past this bridge needs to change.
-		//
-		// NOTE: these field names are this project's best current
-		// guess at the real field names your Google Apps Script
-		// returns, matching the naming style already confirmed for
-		// Category. If your Results sheet/response actually uses
-		// different field names, this is the one place to correct
-		// them.
 		// WHEN: runs every time the Result list is loaded or
 		// refreshed from DataService.
 		// --------------------------------------------------
@@ -1349,24 +1498,13 @@ var ResultScript = (function () {
 
 			var arrRow = [];
 
-			// FIELD NAME FIX: DataService.getAllRecords() resolves
-			// through getEntityApiConfig(RESULT).fromBackendFields()
-			// (see DataService.js), which returns result_id,
-			// student_id, exam_name, subject, marks_obtained, grade,
-			// result - NOT resultId/examName/dateOfExam/totalMarks/
-			// marksObtained as this bridge previously guessed.
-			// date_of_exam and total_marks are not returned here at
-			// all, because Result.gs's Sheet has no columns for them
-			// yet (see the comment on toBackendFields/fromBackendFields
-			// for RESULT in DataService.js) - they default to ""
-			// below instead of showing "undefined" until those
-			// columns are added.
-
 			arrRow[ SUMMARY_INDEX.RESULT_ID ] = objResult.result_id;
+			arrRow[ SUMMARY_INDEX.STUDENT_ID ] = objResult.student_id;
 			arrRow[ SUMMARY_INDEX.EXAM_NAME ] = objResult.exam_name;
-			arrRow[ SUMMARY_INDEX.DATE_OF_EXAM ] = objResult.date_of_exam || "";
-			arrRow[ SUMMARY_INDEX.TOTAL_MARKS ] = objResult.total_marks || "";
+			arrRow[ SUMMARY_INDEX.SUBJECT ] = objResult.subject;
 			arrRow[ SUMMARY_INDEX.MARKS_OBTAINED ] = objResult.marks_obtained;
+			arrRow[ SUMMARY_INDEX.GRADE ] = objResult.grade;
+			arrRow[ SUMMARY_INDEX.RESULT ] = objResult.result;
 
 			arrResultRows.push( arrRow );
 		}
@@ -1567,9 +1705,10 @@ var ResultScript = (function () {
 			// Total Marks/Marks Obtained were never actually searched.
 			var searchableText = [
 				resultData[ SUMMARY_INDEX.EXAM_NAME ],
-				resultData[ SUMMARY_INDEX.DATE_OF_EXAM ],
-				resultData[ SUMMARY_INDEX.TOTAL_MARKS ],
-				resultData[ SUMMARY_INDEX.MARKS_OBTAINED ]
+				resultData[ SUMMARY_INDEX.SUBJECT ],
+				resultData[ SUMMARY_INDEX.MARKS_OBTAINED ],
+				resultData[ SUMMARY_INDEX.GRADE ],
+				resultData[ SUMMARY_INDEX.RESULT ]
 			].join( " " ).toUpperCase();
 
 			if( searchableText.indexOf( filter ) > -1 ) {
@@ -1699,7 +1838,7 @@ var ResultScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response.id );
-			message = "Result has been added successfully";
+			message = "Result saved successfully.";
 			
 			resultList.push( result );
 
@@ -1711,7 +1850,7 @@ var ResultScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
-			message = "Result has been updated successfully";
+			message = "Result updated successfully.";
 
 			for ( var i = 0; i < resultList.length; i++ ) {
 
@@ -1751,10 +1890,12 @@ var ResultScript = (function () {
 		var data = [];
 
 		data[ SUMMARY_INDEX.RESULT_ID ] = mJsonData[ SUMMARY_JSON_KEY.RESULT_ID ];
+		data[ SUMMARY_INDEX.STUDENT_ID ] = mJsonData[ SUMMARY_JSON_KEY.STUDENT_ID ];
 		data[ SUMMARY_INDEX.EXAM_NAME ] = mJsonData[ SUMMARY_JSON_KEY.EXAM_NAME ];
-		data[ SUMMARY_INDEX.DATE_OF_EXAM ] = mJsonData[ SUMMARY_JSON_KEY.DATE_OF_EXAM ];
-		data[ SUMMARY_INDEX.TOTAL_MARKS ] = mJsonData[ SUMMARY_JSON_KEY.TOTAL_MARKS ];
+		data[ SUMMARY_INDEX.SUBJECT ] = mJsonData[ SUMMARY_JSON_KEY.SUBJECT ];
 		data[ SUMMARY_INDEX.MARKS_OBTAINED ] = mJsonData[ SUMMARY_JSON_KEY.MARKS_OBTAINED ];
+		data[ SUMMARY_INDEX.GRADE ] = mJsonData[ SUMMARY_JSON_KEY.GRADE ];
+		data[ SUMMARY_INDEX.RESULT ] = mJsonData[ SUMMARY_JSON_KEY.RESULT ];
 
 		return data;
 	}
@@ -1819,7 +1960,7 @@ var ResultScript = (function () {
 
 			parseListFromStorage();
 
-			showOperationMessage( "Selected Result(s) has been deleted successfully", "Success", null );
+			showOperationMessage( "Result deleted successfully.", "Success", null );
 		}
 	}
 	function getSelectedId() {
@@ -2163,24 +2304,50 @@ var ResultScript = (function () {
 	function createHtmlListItem( data, index ) {
 
 		// --------------------------------------------------
-		// WHY: this read data[ SUMMARY_INDEX.FIRST_FILL_IN ] and
-		// data[ SUMMARY_INDEX._FILL_IN ] - neither key exists in
-		// SUMMARY_INDEX (RESULT_ID, EXAM_NAME, DATE_OF_EXAM,
-		// TOTAL_MARKS, MARKS_OBTAINED do). Same unfinished
-		// code-generation placeholder already fixed in
-		// Category.script.js's createHtmlListItem(), never applied
-		// here - this is why every Result card rendered as
-		// "1) undefined".
-		// WHAT: point the card's title at the Exam Name and the
-		// subtitle at the Date of Exam, the two most identifying
-		// fields for a Result.
+		// PROJECT IMPROVEMENTS (Final UX Polish pass - redesigned)
+		// --------------------------------------------------
+		// WHY: the old card showed the exam name as the title and
+		// the (nonexistent) Date Of Exam as the subtitle. Per the
+		// request: "the subject should be in the upper side, and
+		// then the lower side ... first terminal examination or
+		// whatever the examination result is".
+		// WHAT: title = Subject, subtitle = Exam name (e.g. "First
+		// Term Examination"). A third line adds the Student's name
+		// plus a colour-coded Pass/Fail badge with marks/grade, so
+		// the card is useful at a glance without opening Info.
 		// WHEN: runs once per Result card, every time the list is
 		// drawn.
 		// --------------------------------------------------
 
-		var name = data[ SUMMARY_INDEX.EXAM_NAME ];
-		var fillInData = data[ SUMMARY_INDEX.DATE_OF_EXAM ];
+		var subject = data[ SUMMARY_INDEX.SUBJECT ];
+		var examName = data[ SUMMARY_INDEX.EXAM_NAME ];
+		var marks = data[ SUMMARY_INDEX.MARKS_OBTAINED ];
+		var grade = data[ SUMMARY_INDEX.GRADE ];
+		var resultStatus = data[ SUMMARY_INDEX.RESULT ];
+		var studentId = data[ SUMMARY_INDEX.STUDENT_ID ];
 		var seqNumber = index + 1 +') ';
+
+		var studentName = '';
+		var studentList = getStorageData( SESSION_OBJECT.STUDENT_LIST );
+		if( studentList != null ) {
+
+			for( var s = 0; s < studentList.length; s++ ) {
+
+				if( studentList[ s ][ StudentScript.INDEX.STUDENT_ID ] == studentId ) {
+
+					studentName = studentList[ s ][ StudentScript.INDEX.NAME ] || '';
+					break;
+				}
+			}
+		}
+
+		var isPass = ( ( resultStatus || '' ).toString().toLowerCase().indexOf( 'pass' ) === 0 );
+		var badgeClass = isPass ? 'badge-success' : 'badge-danger';
+		var badgeText = resultStatus ? resultStatus : ( isPass ? 'Pass' : 'Fail' );
+		var marksAndGradeHtml = '';
+		if( marks !== undefined && marks !== null && marks !== '' ) {
+			marksAndGradeHtml += String( marks ) + ( grade ? ' (' + String( grade ) + ')' : '' ) + ' &middot; ';
+		}
 
 		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="ResultScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
@@ -2189,17 +2356,12 @@ var ResultScript = (function () {
 			editIconHtml = '<span class="icon-btn icon-btn-edit" onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
-		// --------------------------------------------------
-		// WHY/WHAT: same inline-shadow removal + shared .icon-btn /
-		// .list-card-title / .list-card-subtitle classes as
-		// Category/Section/Student.script.js's createHtmlListItem(),
-		// so every list page shares one consistent card look.
-		// --------------------------------------------------
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							editIconHtml +
 							'<div id="list_item" class="list-item">' +
-							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
-							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
+							'<li class="list-card-title">'+ seqNumber + subject + '</li>' +
+							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + examName + ( studentName ? ' &middot; ' + studentName : '' ) + '</span></li>' +
+							'<li class="list-card-subtitle"><span>' + marksAndGradeHtml + '<span class="badge ' + badgeClass + '">' + badgeText + '</span></span></li>' +
 							'</div>' +
 							'</ul>';
 
@@ -2248,10 +2410,12 @@ var ResultScript = (function () {
 
 		var query = 'CREATE TABLE IF NOT EXISTS ' + TABLE_NAME + ' (' +
 			DB_FIELD.RESULT_ID + ' INTEGER ,' +
+			DB_FIELD.STUDENT_ID + ' INTEGER ,' +
 			DB_FIELD.EXAM_NAME + ' TEXT ,' +
-			DB_FIELD.DATE_OF_EXAM + ' INTEGER ,' +
-			DB_FIELD.TOTAL_MARKS + ' INTEGER ,' +
-			DB_FIELD.MARKS_OBTAINED + ' INTEGER' +
+			DB_FIELD.SUBJECT + ' TEXT ,' +
+			DB_FIELD.MARKS_OBTAINED + ' INTEGER ,' +
+			DB_FIELD.GRADE + ' TEXT ,' +
+			DB_FIELD.RESULT + ' TEXT' +
 			')';
 
 		executeQuery( query, callback );
@@ -2263,11 +2427,13 @@ var ResultScript = (function () {
 		var query = 'INSERT INTO ' + TABLE_NAME + '(' +
 
 			DB_FIELD.RESULT_ID + ',' +
+			DB_FIELD.STUDENT_ID + ',' +
 			DB_FIELD.EXAM_NAME + ',' +
-			DB_FIELD.DATE_OF_EXAM + ',' +
-			DB_FIELD.TOTAL_MARKS + ',' +
-			DB_FIELD.MARKS_OBTAINED +
-			') VALUES (?, ?, ?, ?, ?)';
+			DB_FIELD.SUBJECT + ',' +
+			DB_FIELD.MARKS_OBTAINED + ',' +
+			DB_FIELD.GRADE + ',' +
+			DB_FIELD.RESULT +
+			') VALUES (?, ?, ?, ?, ?, ?, ?)';
 		return query;
 	}
 
@@ -2275,10 +2441,12 @@ var ResultScript = (function () {
 
 		var query = 'UPDATE ' + TABLE_NAME + ' SET ' +
 			DB_FIELD.RESULT_ID + '=?, ' +
+			DB_FIELD.STUDENT_ID + '=?, ' +
 			DB_FIELD.EXAM_NAME + '=?, ' +
-			DB_FIELD.DATE_OF_EXAM + '=?, ' +
-			DB_FIELD.TOTAL_MARKS + '=?, ' +
-			DB_FIELD.MARKS_OBTAINED +' =? WHERE ' +
+			DB_FIELD.SUBJECT + '=?, ' +
+			DB_FIELD.MARKS_OBTAINED + '=?, ' +
+			DB_FIELD.GRADE + '=?, ' +
+			DB_FIELD.RESULT +' =? WHERE ' +
 			DB_FIELD.RESULT_ID + '=' + getSelectedId();
 
 		return query;
@@ -2338,10 +2506,12 @@ var ResultScript = (function () {
 
 			var arrRow = [];
 			arrRow[ INDEX.RESULT_ID ] = objResult.result_id;
+			arrRow[ INDEX.STUDENT_ID ] = objResult.student_id;
 			arrRow[ INDEX.EXAM_NAME ] = objResult.exam_name;
-			arrRow[ INDEX.DATE_OF_EXAM ] = objResult.date_of_exam;
-			arrRow[ INDEX.TOTAL_MARKS ] = objResult.total_marks;
+			arrRow[ INDEX.SUBJECT ] = objResult.subject;
 			arrRow[ INDEX.MARKS_OBTAINED ] = objResult.marks_obtained;
+			arrRow[ INDEX.GRADE ] = objResult.grade;
+			arrRow[ INDEX.RESULT ] = objResult.result;
 
 			arrResultRows.push( arrRow );
 		}
@@ -2363,9 +2533,30 @@ var ResultScript = (function () {
 		mEditIconClicked = false;
 		$(FORM_FIELD_INFO.LBL_RESULT_ID).text( data[INDEX.RESULT_ID] );
 		$(FORM_FIELD_INFO.LBL_EXAM_NAME).text( data[INDEX.EXAM_NAME] );
-		$(FORM_FIELD_INFO.LBL_DATE_OF_EXAM).text( getShowDateTimePattern( parseInt( data[INDEX.DATE_OF_EXAM] ) ) );
-		$(FORM_FIELD_INFO.LBL_TOTAL_MARKS).text( data[INDEX.TOTAL_MARKS] );
+		$(FORM_FIELD_INFO.LBL_SUBJECT).text( data[INDEX.SUBJECT] );
 		$(FORM_FIELD_INFO.LBL_MARKS_OBTAINED).text( data[INDEX.MARKS_OBTAINED] );
+		$(FORM_FIELD_INFO.LBL_GRADE).text( data[INDEX.GRADE] );
+		$(FORM_FIELD_INFO.LBL_RESULT).text( data[INDEX.RESULT] );
+
+		// PROJECT IMPROVEMENTS (added): resolve and show the
+		// Student's name, same lookup used by createHtmlListItem().
+		var studentName = '';
+		var studentList = getStorageData( SESSION_OBJECT.STUDENT_LIST );
+		if( studentList != null ) {
+
+			for( var s = 0; s < studentList.length; s++ ) {
+
+				if( studentList[ s ][ StudentScript.INDEX.STUDENT_ID ] == data[INDEX.STUDENT_ID] ) {
+
+					studentName = studentList[ s ][ StudentScript.INDEX.NAME ] || '';
+					break;
+				}
+			}
+		}
+		if( $(FORM_FIELD_INFO.LBL_STUDENT_NAME).length > 0 ) {
+
+			$(FORM_FIELD_INFO.LBL_STUDENT_NAME).text( studentName );
+		}
 
 		// --------------------------------------------------
 		// WHY: INDEX.PHOTO_PATH / INDEX.DOCUMENT_PATH are not

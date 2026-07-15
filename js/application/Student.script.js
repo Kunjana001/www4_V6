@@ -2394,7 +2394,7 @@ function parseListResponse(arrStudents)
 			}
 			
 			var result = getAddEditResultArray( response.id );
-			message = "Student has been added successfully";
+			message = "Student saved successfully.";
 			
 			studentList.push( result );
 
@@ -2406,7 +2406,7 @@ function parseListResponse(arrStudents)
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
-			message = "Student has been updated successfully";
+			message = "Student updated successfully.";
 
 			for ( var i = 0; i < studentList.length; i++ ) {
 
@@ -2543,9 +2543,8 @@ function parseListResponse(arrStudents)
 			 */
 			var numDeleted = mSelectedIdList.length;
 			var strStudentWord = ( numDeleted === 1 ) ? "Student" : "Students";
-			var strVerb = ( numDeleted === 1 ) ? "has" : "have";
 
-			showOperationMessage( "Selected " + strStudentWord + " " + strVerb + " been deleted successfully", "Success", null );
+			showOperationMessage( strStudentWord + " deleted successfully.", "Success", null );
 		}
 	}
 	function getSelectedId() {

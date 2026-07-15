@@ -228,9 +228,25 @@ var SectionScript = (function () {
 
 	var value = 0;
 
+	// --------------------------------------------------------
+	// PROJECT IMPROVEMENTS (Final UX Polish pass - added)
+	// --------------------------------------------------------
+	// WHY: Section.gs (the backend) requires categoryId to Add or
+	// Update a Section - already documented in DataService.js's
+	// GOOGLE_ENTITY_MAP[SECTION].toBackendFields comment - but this
+	// form never collected one, so every Section Add/Update reached
+	// Google and came back with "Category is required.", which is
+	// why new/edited Sections never actually showed up.
+	// WHAT: CATEGORY_ID added to INDEX/SUMMARY_INDEX/LABEL/DEFAULT/
+	// FORM_FIELD/FORM_FIELD_INFO/JSON_KEY/SUMMARY_JSON_KEY/DB_FIELD,
+	// the same shape already used for CATEGORY_ID everywhere else
+	// in this project (e.g. Student.script.js).
+	// --------------------------------------------------------
+
 	var INDEX = {
 		SECTION_ID : value++,		// 1
-		NAME : value++,		// 2		// 2
+		NAME : value++,		// 2
+		CATEGORY_ID : value++,		// 3
 	};
 
 	//--------------Summary row index:-----------------
@@ -239,7 +255,8 @@ var SectionScript = (function () {
 
 	var SUMMARY_INDEX = {
 		SECTION_ID : value++,		// 1
-		NAME : value++,		// 2		// 2
+		NAME : value++,		// 2
+		CATEGORY_ID : value++,		// 3
 	};
 
 	//-------------Table Header Label----------------------
@@ -247,7 +264,8 @@ var SectionScript = (function () {
 	var LABEL = {
 
 		SECTION_ID : "Section",
-		NAME : "Name"
+		NAME : "Name",
+		CATEGORY_ID : "Category"
 	};
 
 	//-----------------------------Default values------------------------------------
@@ -261,7 +279,8 @@ var SectionScript = (function () {
 	var DEFAULT = {
 
 		SECTION_ID : 0,
-		NAME : ""
+		NAME : "",
+		CATEGORY_ID : 0
 	};
 
 	//-----------------------------Form Elements------------------------------------
@@ -269,6 +288,7 @@ var SectionScript = (function () {
 
 		SECTION_ID : '#section_id',
 		NAME : '#name',
+		CATEGORY_ID : '#category_id',
 		DOCUMENT_DIV : '#file_div',
 		DOCUMENTS_PATH : '#file_id',
 		PHOTO_DIV : '#image_div',
@@ -279,28 +299,32 @@ var SectionScript = (function () {
 	var FORM_FIELD_INFO = { 		// For Show Info Screen
 
 		LBL_SECTION_ID : '#lbl_section_id',
-		LBL_NAME : '#lbl_name'
+		LBL_NAME : '#lbl_name',
+		LBL_CATEGORY_ID : '#lbl_category_id'
 	};
 
 	//-----------------------------JSON Key------------------------------------
 	var JSON_KEY = {
 
 		SECTION_ID : "section_id",
-		NAME : "name"
+		NAME : "name",
+		CATEGORY_ID : "category_id"
 	};
 
 	//-----------------------------SUMMARY JSON Key------------------------------------
 	var SUMMARY_JSON_KEY = {
 
 		SECTION_ID : "section_id",
-		NAME : "name"
+		NAME : "name",
+		CATEGORY_ID : "category_id"
 	};
 
 	//-----------------------------DB Table Fields------------------------------------
 	var DB_FIELD = {
 
 		SECTION_ID : "section_id",
-		NAME : "name"
+		NAME : "name",
+		CATEGORY_ID : "category_id"
 	};
 	//------------------------------SESSION OBJECT--------------------------------------
 	var SESSION_OBJECT = {
@@ -308,7 +332,8 @@ var SectionScript = (function () {
 		SECTION_ID: "SECTION_ID",
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		SECTION_DATA: "SECTION_DATA",
-		SECTION_SUMMARY_DATA: "SECTION_SUMMARY_DATA"
+		SECTION_SUMMARY_DATA: "SECTION_SUMMARY_DATA",
+		CATEGORY_LIST: "SECTION_CATEGORY_LIST"
 	}
 	// Clear all the data which used to store in the session on click backbutton and goback from the list
 	function clearStorage(){
@@ -353,9 +378,22 @@ var SectionScript = (function () {
 
 	function validateForm(){
 		var bValid = true;
-		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
-		var noOfDigits = getOrgNoOfDigits();
-		var fv = FormValidation;
+
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (added): Section.gs (the backend)
+		// requires categoryId to Add or Update a Section - see the
+		// CATEGORY_ID comment above. FormValidation/G_ERROR are
+		// never defined anywhere in this project (every fv.checkEmpty
+		// call below is commented out for exactly that reason), so
+		// this uses plain jQuery + CommonUtils.showAlert() instead,
+		// the same toast already used for every other validation
+		// message in this app.
+		// --------------------------------------------------------
+		if( $(FORM_FIELD.CATEGORY_ID).val() == "0" || $(FORM_FIELD.CATEGORY_ID).val() == "" ) {
+
+			CommonUtils.showAlert( "Please select a " + LABEL.CATEGORY_ID + "." );
+			return false;
+		}
 
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.SECTION_ID), G_ERROR.MSG.empty_error+LABEL.SECTION_ID);
@@ -366,6 +404,9 @@ var SectionScript = (function () {
 	function setFormDefaults( sectionId ) {
 		$(FORM_FIELD.SECTION_ID).val(sectionId);
 		$(FORM_FIELD.NAME).val(DEFAULT.NAME);
+
+		loadCategoryListForForm( DEFAULT.CATEGORY_ID );
+
 		enableSaveButton( false );
 
 		$( FORM_FIELD.DOCUMENT_DIV ).hide();
@@ -378,6 +419,53 @@ var SectionScript = (function () {
 			var errorHandlerScript = ErrorHandlerScript.getInstance();
 			errorHandlerScript.getAutoFillErrorData( "Section", parseErrorDataResponse );
 		}, 1000 );
+	}
+
+	// --------------------------------------------------------
+	// PROJECT IMPROVEMENTS (added)
+	// --------------------------------------------------------
+	// WHY: the Add/Edit Section form needs a Category picker (the
+	// backend requires categoryId - see validateForm() above), the
+	// same way Student.script.js loads its own Category dropdown.
+	// WHAT: fetches every Category via DataService, bridges each
+	// into the array-row shape CategoryScript.INDEX expects, then
+	// asks CategoryScript's own populateSelection() to build the
+	// <select id="category_id"> options and select selectedId.
+	// WHEN: called from setFormDefaults() (Add) and popUpEditForm()
+	// (Edit).
+	// --------------------------------------------------------
+	function loadCategoryListForForm( selectedId ) {
+
+		DataService.getAllRecords( AppConfig.STORES.CATEGORY, function( arrCategories ) {
+
+			var categoryScript = CategoryScript.getInstance();
+			var arrCategoryRows = [];
+
+			for( var index = 0; index < arrCategories.length; index++ ) {
+
+				var objCategory = arrCategories[ index ];
+				var arrRow = [];
+
+				arrRow[ CategoryScript.INDEX.CATEGORY_ID ] = objCategory.category_id;
+				arrRow[ CategoryScript.INDEX.NAME ] = objCategory.name;
+
+				arrCategoryRows.push( arrRow );
+			}
+
+			setStorageData( arrCategoryRows, SESSION_OBJECT.CATEGORY_LIST );
+
+			categoryScript.populateSelection( arrCategoryRows, FORM_FIELD.CATEGORY_ID, selectedId );
+			enableSaveButton( true );
+
+		}, function( objError ) {
+
+			CommonUtils.logError( "Section.script.js (loadCategoryListForForm)", objError );
+
+			// Keep going even if Categories fail to load, so the
+			// Add/Edit form still opens (just with an empty picker).
+			setStorageData( [], SESSION_OBJECT.CATEGORY_LIST );
+			enableSaveButton( true );
+		});
 	}
 
 
@@ -401,6 +489,8 @@ var SectionScript = (function () {
 	function populateFromLocalStorage( data ){
 		$( FORM_FIELD.SECTION_ID ).val( data[ INDEX.SECTION_ID ] );
 		$( FORM_FIELD.NAME ).val( data[ INDEX.NAME ] );
+
+		loadCategoryListForForm( data[ INDEX.CATEGORY_ID ] );
 
 		setDocsImages( data );
 
@@ -527,6 +617,8 @@ var SectionScript = (function () {
 		$(FORM_FIELD.SECTION_ID).val(data[INDEX.SECTION_ID]);
 		$(FORM_FIELD.NAME).val(data[INDEX.NAME]);
 
+		loadCategoryListForForm( data[INDEX.CATEGORY_ID] );
+
 		setDocsImages( data );
 
 		enableSaveButton( false );
@@ -568,21 +660,27 @@ var SectionScript = (function () {
 		var jsonData = {};
 		jsonData[ JSON_KEY.SECTION_ID ] = ( $(FORM_FIELD.SECTION_ID).val() );
 		jsonData[ JSON_KEY.NAME ] = ( $(FORM_FIELD.NAME).val() );
+		jsonData[ JSON_KEY.CATEGORY_ID ] = ( $(FORM_FIELD.CATEGORY_ID).val() );
 
 /*
 		// used for file upload
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
 
-
-		if( mode == UPDATE_DATA ) { // Edit/Update
-
-			var data = getSelectedData();
-
-			jsonData[ JSON_KEY.SECTION_ID ] = data[ INDEX.SECTION_ID ];
-			jsonData[ JSON_KEY.NAME ] = data[ INDEX.NAME ];
-
-		}
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
+		// --------------------------------------------------------
+		// WHY: this used to re-read every field from
+		// getSelectedData() (the OLD, pre-edit record) and overwrite
+		// what was just read from the form above - so clicking Save
+		// on an Edit silently re-saved the record unchanged, no
+		// matter what the person had typed. This is the actual
+		// cause of "my edits aren't showing up" for Sections.
+		// section_id does not need to be re-read here - it already
+		// comes from the hidden, readonly #section_id field, which
+		// the Edit form population already set from the record
+		// being edited.
+		// --------------------------------------------------------
 
 		if( mUploadedImage.length > 0 ) {
 
@@ -799,6 +897,7 @@ var SectionScript = (function () {
 			var arrRow = [];
 			arrRow[ INDEX.SECTION_ID ] = objSection.section_id;
 			arrRow[ INDEX.NAME ] = objSection.name;
+			arrRow[ INDEX.CATEGORY_ID ] = objSection.category_id;
 
 			arrSectionRows.push( arrRow );
 		}
@@ -889,18 +988,46 @@ var SectionScript = (function () {
 		// "Uncaught ReferenceError: onLoadCacheManager is not
 		// defined" right here, which stopped execution before
 		// getListData() (a few lines below) ever ran, so no
-		// request was ever sent to the backend. The Section page
-		// has no lookup-list dropdown of its own to pre-load
-		// (unlike Student, which needs Category + Section lists
-		// before showing its Add/Edit form), so this simply calls
-		// getListData() directly - the same fix already applied
-		// to Category.script.js.
-		// WHAT: fetches the Section list via DataService.
+		// request was ever sent to the backend.
+		// WHAT: now that Section cards show their parent Category's
+		// name (see createHtmlListItem()), this pre-loads the
+		// Category list first - the same "load lookup lists, then
+		// the entity list" order Student.script.js already uses for
+		// Category + Section - so the name is available on first
+		// paint instead of only after the Add/Edit form has opened
+		// once.
 		// WHEN: runs once, right when the Section list page
 		// finishes loading.
 		// --------------------------------------------------
 
-		getListData();
+		DataService.getAllRecords( AppConfig.STORES.CATEGORY, function( arrCategories ) {
+
+			var arrCategoryRows = [];
+
+			for( var index = 0; index < arrCategories.length; index++ ) {
+
+				var objCategory = arrCategories[ index ];
+				var arrRow = [];
+
+				arrRow[ CategoryScript.INDEX.CATEGORY_ID ] = objCategory.category_id;
+				arrRow[ CategoryScript.INDEX.NAME ] = objCategory.name;
+
+				arrCategoryRows.push( arrRow );
+			}
+
+			setStorageData( arrCategoryRows, SESSION_OBJECT.CATEGORY_LIST );
+
+			getListData();
+
+		}, function( objError ) {
+
+			CommonUtils.logError( "Section.script.js (onLoadCacheManager)", objError );
+
+			// Keep going even if Categories fail to load, so the
+			// Section list itself can still load.
+			setStorageData( [], SESSION_OBJECT.CATEGORY_LIST );
+			getListData();
+		});
 	}
 
 	function getListData() {
@@ -1308,6 +1435,7 @@ var SectionScript = (function () {
 
 			arrRow[ SUMMARY_INDEX.SECTION_ID ] = objSection.section_id;
 			arrRow[ SUMMARY_INDEX.NAME ] = objSection.name;
+			arrRow[ SUMMARY_INDEX.CATEGORY_ID ] = objSection.category_id;
 
 			arrSectionRows.push( arrRow );
 		}
@@ -1638,7 +1766,7 @@ var SectionScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response.id );
-			message = "Section has been added successfully";
+			message = "Section saved successfully.";
 			
 			sectionList.push( result );
 
@@ -1650,7 +1778,7 @@ var SectionScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
-			message = "Section has been updated successfully";
+			message = "Section updated successfully.";
 
 			for ( var i = 0; i < sectionList.length; i++ ) {
 
@@ -1755,7 +1883,7 @@ var SectionScript = (function () {
 
 			parseListFromStorage();
 
-			showOperationMessage( "Selected Section(s) has been deleted successfully", "Success", null );
+			showOperationMessage( "Section deleted successfully.", "Success", null );
 		}
 	}
 	function getSelectedId() {
@@ -2115,7 +2243,31 @@ var SectionScript = (function () {
 		// --------------------------------------------------
 
 		var name = data[ SUMMARY_INDEX.NAME ];
+
+		// --------------------------------------------------------
+		// PROJECT IMPROVEMENTS (added): show which Category this
+		// Section belongs to instead of a blank subtitle line, now
+		// that CATEGORY_ID actually exists on this row (see the
+		// CATEGORY_ID comment near INDEX above). The Category list
+		// is already cached in session storage by
+		// loadCategoryListForForm() the first time the Add/Edit form
+		// opens; if that has not happened yet this pass, it simply
+		// falls back to the blank line it already showed before.
+		// --------------------------------------------------------
+		var categoryId = data[ SUMMARY_INDEX.CATEGORY_ID ];
 		var fillInData = '';
+		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST );
+		if( categoryList != null ) {
+
+			for( var c = 0; c < categoryList.length; c++ ) {
+
+				if( categoryList[ c ][ CategoryScript.INDEX.CATEGORY_ID ] == categoryId ) {
+
+					fillInData = categoryList[ c ][ CategoryScript.INDEX.NAME ] || '';
+					break;
+				}
+			}
+		}
 		var seqNumber = index + 1 +') ';
 
 		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="SectionScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
@@ -2266,6 +2418,7 @@ var SectionScript = (function () {
 			var arrRow = [];
 			arrRow[ INDEX.SECTION_ID ] = objSection.section_id;
 			arrRow[ INDEX.NAME ] = objSection.name;
+			arrRow[ INDEX.CATEGORY_ID ] = objSection.category_id;
 
 			arrSectionRows.push( arrRow );
 		}
@@ -2287,6 +2440,26 @@ var SectionScript = (function () {
 		mEditIconClicked = false;
 		$(FORM_FIELD_INFO.LBL_SECTION_ID).text( data[INDEX.SECTION_ID] );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
+
+		// PROJECT IMPROVEMENTS (added): resolve and show the parent
+		// Category's name, same lookup used by createHtmlListItem().
+		var categoryName = '';
+		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST );
+		if( categoryList != null ) {
+
+			for( var c = 0; c < categoryList.length; c++ ) {
+
+				if( categoryList[ c ][ CategoryScript.INDEX.CATEGORY_ID ] == data[INDEX.CATEGORY_ID] ) {
+
+					categoryName = categoryList[ c ][ CategoryScript.INDEX.NAME ] || '';
+					break;
+				}
+			}
+		}
+		if( $(FORM_FIELD_INFO.LBL_CATEGORY_ID).length > 0 ) {
+
+			$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( categoryName );
+		}
 
 		// --------------------------------------------------
 		// WHY: INDEX.PHOTO_PATH / INDEX.DOCUMENT_PATH are not

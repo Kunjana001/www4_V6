@@ -176,32 +176,48 @@
 
 	<div class="form-group">
 
-		<label class="form-control-label" >Exam Name</label>
+		<label class="form-control-label" >Student</label>
 
-		<input type="text" id="exam_name" class="form-control" placeholder="Please Enter Exam Name" required>
+		<select id = "student_id" class = "form-control" ></select>
 	</div>
 
-<!-- Date-time -->
-		<div class = "form-group" >
-	
-			<label class = "form-control-label">Date Of Exam</label>
-	
-			<input class = "form-control" type = "datetime-local" id = "date_of_exam" placeholder = "Please Select Date Of Exam" />
-		</div>
+	<div class="form-group">
 
+		<label class="form-control-label" >Exam</label>
+
+		<input type="text" id="exam_name" class="form-control" placeholder="e.g. First Term Examination" required>
+	</div>
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Subject</label>
+
+		<input type="text" id="subject" class="form-control" placeholder="Please Enter Subject" required>
+	</div>
 
 	<div class="form-group" >
 
-		<label class="form-control-label" >Total Marks</label>
+		<label class="form-control-label" >Marks</label>
 
-		<input type="text" id="total_marks" class="form-control" value="0" >
+		<input type="number" id="marks_obtained" class="form-control" value="0" >
 	</div>
 
 	<div class="form-group" >
 
-		<label class="form-control-label" >Marks Obtained</label>
+		<label class="form-control-label" >Grade</label>
 
-		<input type="text" id="marks_obtained" class="form-control" value="0" >
+		<input type="text" id="grade" class="form-control" placeholder="e.g. A, A+, B" >
+	</div>
+
+	<div class="form-group">
+
+		<label class="form-control-label" >Result</label>
+
+		<select id = "result_status" class = "form-control" >
+			<option value="">-- Select --</option>
+			<option value="Pass">Pass</option>
+			<option value="Fail">Fail</option>
+		</select>
 	</div>
 
 			</div>
@@ -316,17 +332,23 @@
 												<p id="result_result_id" style="font-weight: 500;"> <span>
 													<span style="font-weight: 800;">Result: </span> <span id="lbl_result_id"></span> </span> </p>
 
+												<p id="result_student_name" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Student: </span> <span id="lbl_student_name"></span> </span> </p>
+
 												<p id="result_exam_name" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Exam Name: </span> <span id="lbl_exam_name"></span> </span> </p>
+													<span style="font-weight: 800;">Exam: </span> <span id="lbl_exam_name"></span> </span> </p>
 
-												<p id="result_date_of_exam" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Date Of Exam: </span> <span id="lbl_date_of_exam"></span> </span> </p>
-
-												<p id="result_total_marks" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Total Marks: </span> <span id="lbl_total_marks"></span> </span> </p>
+												<p id="result_subject" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Subject: </span> <span id="lbl_subject"></span> </span> </p>
 
 												<p id="result_marks_obtained" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Marks Obtained: </span> <span id="lbl_marks_obtained"></span> </span> </p>
+													<span style="font-weight: 800;">Marks: </span> <span id="lbl_marks_obtained"></span> </span> </p>
+
+												<p id="result_grade" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Grade: </span> <span id="lbl_grade"></span> </span> </p>
+
+												<p id="result_result_status" style="font-weight: 500;"> <span>
+													<span style="font-weight: 800;">Result: </span> <span id="lbl_result"></span> </span> </p>
 
 											</div>
 										</div>
@@ -404,6 +426,8 @@ document.getElementById("btnDashboard").onclick = function () {
 <script src="../addedFiles/common/session.js"></script>
 
 <script src="../addedFiles/common/register-sw.js"></script>
+
+<script src="../js/application/Student.script.js"></script>
 
 <script src="../js/application/Result.script.js"></script>
 
