@@ -900,27 +900,105 @@ var DataService = (function ()
                         }
                     });
 
-                    callGoogleGet(buildGoogleUrl(objEntity.listAction, {}), function (objResponse)
+                    /* --------------------------------------------------
+                       PAGINATION FIX
+
+                       Every list action on the backend (Category.gs,
+                       Student.gs, Section.gs, Result.gs, Session.gs -
+                       see getResults()/getStudents()/etc.) has always
+                       paginated its response: it reads e.parameter.page
+                       (default 1) and e.parameter.pageSize (default 10)
+                       and only returns that one page's worth of rows,
+                       plus totalPages/totalRecords describing the rest.
+
+                       This call site used to be
+                       buildGoogleUrl(objEntity.listAction, {}) - an
+                       empty params object - which means every single
+                       "load the list" request implicitly asked for
+                       page=1&pageSize=10 and never asked for anything
+                       else. With 10 or fewer rows in the Sheet this was
+                       invisible; with 11+ rows, only the first 10 ever
+                       reached the UI, silently, with no error anywhere,
+                       because the backend was doing exactly what it was
+                       asked to do.
+
+                       Fix: fetchAllPagesFromGoogle() below now walks
+                       page=1, page=2, page=3, ... (PAGE_SIZE rows each)
+                       and concatenates every page's rows together
+                       before this function's own row-conversion /
+                       cache / fnSuccess logic runs, so the rest of the
+                       pipeline (per-row try/catch, cacheListLocally,
+                       fnSuccess) is completely unchanged below - it now
+                       just receives the full list instead of one page
+                       of it. If any single page request fails, the
+                       already-collected pages are dropped and this
+                       falls back to arrExistingRecords, same as the
+                       original single-request failure path did.
+                       -------------------------------------------------- */
+
+                    var PAGE_SIZE = 10;
+
+                    var arrAllRawRecords = [];
+
+                    var fetchAllPagesFromGoogle = function (intPage)
                     {
-                        if (!objResponse || objResponse.success !== true)
+                        callGoogleGet(buildGoogleUrl(objEntity.listAction, { page: intPage, pageSize: PAGE_SIZE }), function (objResponse)
                         {
-                            CommonUtils.logError(
-                                "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
-                                objResponse ? objResponse.message : "no response body"
-                            );
+                            if (!objResponse || objResponse.success !== true)
+                            {
+                                CommonUtils.logError(
+                                    "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
+                                    objResponse ? objResponse.message : "no response body"
+                                );
+
+                                fnSuccess(arrExistingRecords);
+
+                                return;
+                            }
+
+                            var arrPageRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
+
+                            if (!Array.isArray(arrPageRecords))
+                            {
+                                arrPageRecords = [];
+                            }
+
+                            arrAllRawRecords = arrAllRawRecords.concat(arrPageRecords);
+
+                            /* totalPages comes straight from the
+                               backend's pagination envelope (see
+                               getCategories()/getStudents()/etc. in the
+                               .gs files: { totalRecords, page, pageSize,
+                               totalPages, <entity list> }). Keep asking
+                               for the next page until we've reached (or
+                               passed) it, or until a page comes back
+                               with fewer rows than PAGE_SIZE (belt and
+                               braces in case totalPages is ever missing
+                               or wrong on the backend). */
+
+                            var intTotalPages = (objResponse.data && objResponse.data.totalPages) || 1;
+
+                            var bMorePagesRemain = (intPage < intTotalPages) && (arrPageRecords.length === PAGE_SIZE);
+
+                            if (bMorePagesRemain)
+                            {
+                                fetchAllPagesFromGoogle(intPage + 1);
+
+                                return;
+                            }
+
+                            finishGoogleLoad(arrAllRawRecords);
+                        },
+                        function (objError)
+                        {
+                            CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
 
                             fnSuccess(arrExistingRecords);
+                        });
+                    };
 
-                            return;
-                        }
-
-                        var arrRawRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
-
-                        if (!Array.isArray(arrRawRecords))
-                        {
-                            arrRawRecords = [];
-                        }
-
+                    var finishGoogleLoad = function (arrRawRecords)
+                    {
                         /* STUDENT LOADING FIX (root cause):
                            This used to be a plain arrRawRecords.map(...).
                            Array.prototype.map() has no per-item error
@@ -976,13 +1054,9 @@ var DataService = (function ()
                         cacheListLocally(strStoreName, arrRecords);
 
                         fnSuccess(arrRecords);
-                    },
-                    function (objError)
-                    {
-                        CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
+                    };
 
-                        fnSuccess(arrExistingRecords);
-                    });
+                    fetchAllPagesFromGoogle(1);
                 })
                 .catch(fnError);
 
