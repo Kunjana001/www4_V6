@@ -1,351 +1,303 @@
-<!DOCTYPE html>
-<html lang="en">
-<!-- --------------------------------------------------------
-     CONNECTION FIX (mobile/desktop rendering): this page had
-     no DOCTYPE and no opening html tag at all (it started
-     straight at the head section), which makes browsers render
-     it in "quirks mode" instead of standards mode - a common
-     cause of inconsistent sizing/spacing between phone and
-     desktop browsers. Added the standard, empty HTML5
-     boilerplate here; nothing inside the head or body below
-     was reordered or removed.
-     -------------------------------------------------------- -->
-<!-- ==========================================================
-     CONNECTION FIX - what changed in this pass (folder
-     structure was NOT changed; only the references below)
-     ==========================================================
+////////////////////////////////////////////////////////////////////////////
 
-     1. Every <script src="../js/application/...">, <script
-        src="../common/...">, <link href="../common/common.css">
-        and <link rel="manifest" href="../manifest.json"> on
-        this page pointed one folder too shallow. Config.js,
-        StorageService.js, common.js, theme.js, navigation.js,
-        session.js, register-sw.js, manifest.json and
-        common.css actually live under www4/addedFiles/, not
-        directly under www4/ - so every one of those tags 404'd
-        and none of that shared code ever ran. Fixed by pointing
-        each tag at ../addedFiles/... instead, without moving a
-        single file.
+/* ==========================================================
+   ROUND 2 FIX - Invisible action-menu popup titles
+   ----------------------------------------------------------
 
-     2. Added <script src=".../js/application/DataService.js">
-        - this file did not exist anywhere in the project, so
-        every DataService.* call on this page (loading the
-        list, saving, deleting) threw "DataService is not
-        defined" as soon as it ran. See DataService.js itself
-        for the fix.
+   "Select an Option" / "Select an option" / "Share by" titles
+   had an inline style="color: var(--app-theme-color)" on the
+   <h2>. common.css also paints .modal-header's BACKGROUND with
+   that same --app-theme-color variable, so the title text was
+   the same color as the bar behind it - effectively invisible
+   (this is the blank blue header seen in the Show Info / Add /
+   Edit / Delete popup). Removed the inline color so the title
+   falls back to common.css's .modal-title { color: white; },
+   which is readable against the theme-color header on every
+   theme.
+   ========================================================== */
 
-     3. Added jQuery and Bootstrap's JS bundle (matching the
-        Bootstrap 4.6.2 CSS already linked above). This page's
-        own script uses $(...) selectors and Bootstrap's
-        .modal('show')/.modal('hide') for the Add/Edit/Filter/
-        Info popups, but neither library was ever linked here.
-     ========================================================== -->
+// FileName CategoryHTML.script.js: Category Javascript file for Cordova project
 
-<head>
-	<meta charset="UTF-8">
-
-	<link rel="manifest" href="../addedFiles/manifest.json">
-
-    <!-- --------------------------------------------------------
-         CONNECTION FIX (mobile): this page had no viewport meta
-         tag at all, so phones rendered it at a fixed ~980px
-         desktop width and zoomed out to fit it - buttons and text
-         were tiny and hard to tap. Added the same viewport tag
-         already used on dashboard/login/profile/settings/signup
-         so this page scales correctly on a phone too.
-         -------------------------------------------------------- -->
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta name="theme-color" content="#123b8d">
-
-    <link rel="stylesheet" href="../addedFiles/common/common.css">
-
-    <!-- ------------------------------------------------------------
-         Bootstrap and Font Awesome were never linked on this page,
-         even though the markup below uses their classes (card,
-         container-fluid, form-control, modal, fa-arrow-down, etc).
-         Linking them here is the CSS fix for this page - no classes
-         in the HTML below were changed.
-         ------------------------------------------------------------ -->
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-
-<body onload="onBackPress();">
-
-<!-- ------------------------------------------------------------
-     CONNECTION FIX: this button used to sit between </head> and
-     <body> - not valid HTML anywhere, and with no CSS class at
-     all. Browsers "fix" invalid markup like that by moving it to
-     be the very first thing inside <body>, unstyled. On this
-     page that accidentally ended up hidden behind the header
-     below (the header uses position:fixed and happens to sit in
-     exactly the same spot), but on a page where the header failed
-     to load for any reason, this button was the ONLY thing
-     visible - a plain, unstyled "Dashboard" box and nothing else.
-     Moved inside <body> (which is valid) and given the same
-     .btn/.btn-primary classes already used elsewhere, fixed to
-     the bottom-left corner so it never overlaps the header, the
-     Add button, or the existing bottom-right controls. The click
-     handler (goDashboard(), wired further down this file) was not
-     changed. -->
-
-<button id="btnDashboard" class="btn btn-primary"
-    style="position:fixed; left:16px; bottom:16px; z-index:950;">
-    Dashboard
-</button>
+// Author : JRC
+// Description : codegen
 
 
-  <main class="main-container" style="width: 100%; height: 100%">
+////////////////////////////////////////////////////////////////////////////
+
+
+// used to upload files
+var mFile = null;
+
+function onBackPress() {
+
+	// CONNECTION FIX: "backbutton" is a Cordova-only event and
+	// never fires in a browser or an installed PWA, so
+	// onBackKeyDown() below never ran when the mobile back
+	// button (or a desktop browser's Back) was pressed. The real
+	// mobile/browser equivalent is the standard "popstate" event
+	// - see the identical fix and full explanation in
+	// StudentHTML.script.js/onBackPress(). onBackPress() and
+	// onBackKeyDown() themselves are unchanged.
+	history.pushState( { app: true }, "" );
+
+	window.addEventListener( "popstate", function () {
+
+		onBackKeyDown();
+
+		history.pushState( { app: true }, "" );
+	});
+}
+
+function onBackKeyDown() {
+
+	var categoryScript = CategoryScript.getInstance();
+	categoryScript.onClickListBackButton();
+
+}
+
+// Wait for device API libraries to load
+//
+document.addEventListener( "DOMContentLoaded", onDeviceReady, false );
+
+// device APIs are available
+//
+function getAppMode(){
+
+	// Use local database
+	// var mode = MODE_LOCAL_DB;
+
+	// Use network database
+	var mode = MODE_NETWORK_DB;
+
+	return mode;
+}
+
+function onDeviceReady() {
+
+	// If any error occur then add the error details into the error log
+	setErrorHandler( "Category" );
+
+	$(".main-container").prepend( categorySearchBar );
+	$(".main-container").prepend( categoryHeader );
+
+	$("#activity_title").text( "Category" );
+
+	// Filter
+	addFilter();
+
+	if( getAppMode() == MODE_LOCAL_DB ){
+
+		// Open local database : we should call it in every page. Can't keep globally
+		openDatabase();
+	}
+
+	var categoryScript = CategoryScript.getInstance();
+
+	categoryScript.bindFormEventHandlers();
+
+	// Hide Banner Ads
+	// hideBanner();
+
+	categoryScript.onListDocumentReady();
+}
+
+
+// Callback after successful image file upload
+function onFileUploadSuccess() {
+
+	var categoryScript = CategoryScript.getInstance();
+
+	if( mFile != null && mUploadedFiles.length == 0 ) {
+
+		categoryScript.uploadDocuments();
+	}
+	else {
+
+		categoryScript.onConfirmNetworkSaveData();
+	}
+}
+
+function addFilter(){
+	
+	var filterParms = `
+		<div class="filter-items filter-params" id="show_all_div">
+			<h6 class="filter-items">All</h6>
+		</div>
+		<div class="filter-items filter-params" id="organization_name_div" style="display:none">
+			<h6 id="organization_name" class="filter-items"></h6>
+		</div>
+	`;
+	
+	$("#filter_params").prepend( filterParms );
+}
+
+// Header for html list
+var categoryHeader = `	<!-- header -->
+<div class="header" data-theme="a" style="position: fixed;" id="header_id">
+	<ul class="header-items">
+		<!-- Back Button -->
+		<li>
+			<a href="#" onClick="onBackKeyDown();" class="header-icons-L">
+			<i class="fas fa-angle-left"></i>
+			</a>
+		</li>
+		<!-- /Back Button -->
+		<!-- Page Heading -->
+		<span class="heading-text" id="activity_title"></span>
+		<!-- Page Heading -->
+		<!-- Add Details Button -->
+		<li id="btn_add" class="float-right">
+			<a href="#" class="header-icons-L">
+			<i class="fas fa-plus"></i>
+			</a>
+		</li>
+		<!-- Add Details Button -->
+		<!-- Refresh Button -->
+		<li id="btn_refresh" class="float-right">
+			<a href="#" class="header-icons-L">
+			<i class="fas fa-redo-alt"></i>
+			</a>
+		</li>
+		<!-- /Refresh Button -->
+		
+		<!-- Multi-select Menu Button -->
+		<li class="float-right">
+			<a href="#" id="btn_multiselect_option" class="header-icons-L" style="display: none;">
+			<i class="fas fa-ellipsis-v"></i>
+			</a>
+		</li>
+		<!-- /Multi-select Menu Button -->
+		<!-- Select All Check Mark button -->
+		<li class="float-right">
+			<a href="#" id="btn_check_mark" class="header-icons-L" style="display: none;">
+			<i class="fas fa-check"></i>
+			</a>
+		</li>
+		<!-- /Select All Check Mark button -->
+		<!-- Deselect All Uncheck Mark Button -->
+		<li class="float-right">
+			<a href="#" id="btn_un_check_mark" class="header-icons-L"
+				style="display: none;">
+			<i class="fas fa-times"></i>
+			</a>
+		</li>
+		<!-- Deselect All Uncheck Mark Button -->
+	</ul>
+</div>
+<!-- /header -->`;
 
 
 
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------------- -->
-
-
-	<!-- List -->
-	<div id="list_id" class="list-container" style="padding-bottom: 4em !important;padding-top: 3.8rem;"></div>
-	<!-- List -->
-
-
-	<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
-
-
-
-
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-
-	<!-- Hidden Close Button to programmitically close the modals -->
-	<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true"></button>
-	<!-- Hidden Close Button to programmitically close the modals -->
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-	<!-- Floating button to navigate to top -->
-	<a href="#bottom_target_span">
-	  <div class="col-xl-auto float-button">
-		<i class="fa fa-arrow-down" style="padding-top: 22px;"></i>
-	  </div>
-	</a>
-	<!-- /Floating button to navigate to top -->
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-
-
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-	<!-- Modal for Add/Edit Details -->
-	<div class="modal editDetails fade" id="edit_details" tabindex="-1" role="dialog" aria-labelledby="edit_details">	
-	  <div class="modal-dialog" role="document">
-		<div class="modal-content">
-
-		  <!-- Modal Header -->
-		  <div class="modal-header">
-			<h4 class="modal-title" id="edit_details_title" style="font-size: x-large;">Category</h4>
-			<button type="button" class="close" aria-label="Close" id="add_edit_header_close"><span
-				aria-hidden="true">&times;</span></button>
-		  </div>
-		  <!-- Modal Header -->
-
-		  <!-- Modal Body -->
-		  <div class="modal-body">
-
-			<!-- CodeGeneration is working for the div below -->
-			<div class="popup_container">
-
-
-	<div class="form-group" hidden>
-
-		<label class="form-control-label" >Category Id</label>
-
-		<input type="text" id="category_id" class="form-control" value="0" readonly>
-	</div>
-
-	<div class="form-group">
-
-		<label class="form-control-label" >Name</label>
-
-		<input type="text" id="name" class="form-control" placeholder="Please Enter Name" required>
-	</div>
-
-
-	<div class="form-group">
-
-		<label class="form-control-label" >Organization Id</label>
-
-		<input type="text" id="organization_id" class="form-control" placeholder="Please Enter Organization Id" required>
-	</div>
-
-
+// Search Bar for html list
+var categorySearchBar = `	<!-- Search Bar-->
+<div class="page-container" id="search_bar">
+	<!-- Search Input -->
+	<div class="form-group" style="margin: -8px;">
+		<div class="input-group mb-4">
+			<div class="input-group-prepend">
+				<span class="input-group-text"><i class="fas fa-search"></i></span>
 			</div>
-
-		  </div>
-		  <!-- /Modal Body -->
-			<!-- Modal Footer -->
-			<div class="modal-footer" style="display: block; padding-bottom: 0;">
-				<!-- Save and Close Fixed Row -->
-				<div class="row">
-					<div class="col" id="save_div" style="display: none;">
-						<div class="form-group">
-							<button style="background-color: var(--app-theme-color);
-									  color: aliceblue;
-									  font-weight: bolder;" class="form-control" data-theme="a" id="save_data">Save </button>
-						</div>
-					</div>
-					<div class="col">
-						<div class="form-group">
-							<button style="background-color: var(--app-theme-color);
-									  color: aliceblue;
-									  font-weight: bolder;" class="form-control" id="add_edit_footer_close">Close </button>
-						</div>
-					</div>
-				</div>
-				<!-- /Save and Close Fixed Row -->
+			<input class="form-control" placeholder="Search" id="search" type="text">
+		</div>
+	</div>
+	<!-- /Search Input -->
+	<!-- Displaying number of Records in the list and filter parameters  -->
+	<div class="row pt-2 mr-0 ml-0" style="width: 100%; max-height: 100px; min-height: max-content;">
+		
+		<div class="row" style="margin-left: 5px; margin-top: 3px; padding-bottom: 10px;">
+			<!-- Displaying number of records -->
+			<h5 id="records" style="padding-top: 2px;"></h5>
+			<!-- /Displaying number of records -->			
+			<!-- Filter Button -->
+			<a id="filter_icon" onclick="" class="header-icons-L" style="margin-left: 5px; margin-right: 5px;">
+			<i class="fa fa-filter"></i>
+			</a>
+			<!-- /Filter Button -->
+			<!-- Filter Parameters -->
+			<div id="filter_params" style="display: flex;">
 			</div>
-			<!-- /Modal Footer -->
+			<!-- /Filter Parameters -->
+		</div>
+		
+	</div>
+	<!-- /Displaying number of Records and filter parameters  -->
+</div>
+<!-- /Search Bar -->`;
 
-		</div><!-- /modal-content -->
-	  </div><!-- /modal-dialog -->
-	</div><!-- /modal -->
-	<!-- /Modal for Edit Details -->
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-<!-- Modal for Filter -->
-<div class="modal fade" id="modal_filter" tabindex="-1" role="dialog" aria-labelledby="modal-notification">
+var singleClickMenu = `	<!-- Single Click Menu -->
+<div class="modal fade" id="modal_single_select" tabindex="-1" role="dialog" aria-labelledby="modal_single_select">
 	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
 		<div class="modal-content bg-white">
 			<!-- Modal Header -->
-			<div class="modal-header" style="border-bottom: solid;
-			border-bottom-color: #dee2e6;">
-				<h2 class="modal-title" id="settings-title" style="color: #181a63;">Filter Categorys</h2>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span> </button>
-			</div>
-			<!-- Modal Header -->
-		  <div class="modal-body" style="padding-top: 5px; padding-bottom: 0;">
-
-
-			<div class="form-group">
-			  <p class="form-control-label m-b-5 filter-modal-label">Organization</p>
-			  <select id="filter_organization_id" class="form-control">
-				<option value="0">Select All</option>
-			  </select>
-			</div>
-
-		  </div>
-		  <!-- Modal Footer -->
-		  <div class="modal-footer" style="justify-content: center; padding: 0.5rem;">
-
-			<div class="row" style="width: 95%;">
-			  <div class="col">
-				<div class="form-group">
-				  <button style="background-color: var(--app-theme-color);
-					  color: aliceblue;
-					  font-weight: bolder;" class="form-control" id="btn_filter">Apply
-				  </button>
-				</div>
-			  </div>
-			</div>
-		  </div>
-		  <!-- Modal Footer -->
-
-		</div>
-	  </div>
-	</div>
-	<!-- Modal for Filter -->
-	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
-
-
-
-<!-- ------------------------------------------------------------------------------------------------ -->
-<!-- Modal for Show Info -->
-<div class="modal adDetails fade" id="list_details" tabindex="-1" role="dialog" aria-labelledby="list_details">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<!-- Modal Header -->
-			<div class="modal-header">
-				<h4 class="modal-title" id="list_details_title" style="font-size: x-large;">Category Info</h4>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="modal_single_select_title">Select an Option</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span>
+				</button>
 			</div>
 			<!-- /Modal Header -->
 			<!-- Modal Body -->
-			<div class="modal-body" style="padding: 20px;">
-				<div class="info-card">
-
-					<div class="info-card-row" id="category_category_id">
-						<span class="info-card-icon"><i class="fa-solid fa-hashtag"></i></span>
-						<span class="info-card-text">
-							<span class="info-card-label">Category</span>
-							<span class="info-card-value" id="lbl_category_id"></span>
-						</span>
-					</div>
-
-					<div class="info-card-row" id="category_name">
-						<span class="info-card-icon"><i class="fa-solid fa-tag"></i></span>
-						<span class="info-card-text">
-							<span class="info-card-label">Name</span>
-							<span class="info-card-value" id="lbl_name"></span>
-						</span>
-					</div>
-
-					<div class="info-card-row" id="category_organization_id">
-						<span class="info-card-icon"><i class="fa-solid fa-building-columns"></i></span>
-						<span class="info-card-text">
-							<span class="info-card-label">Organization</span>
-							<span class="info-card-value" id="lbl_organization_id"></span>
-						</span>
-					</div>
-
-					<!-- --------------------------------------------------
-					     WHY: Category.gs's getCategoryById response only
-					     ever included categoryId/categoryName/organization/
-					     description - no createdDate/lastUpdated field
-					     exists on the Sheet, so a "Created Date" / "Last
-					     Updated" row here would have nothing real to show
-					     and would have to be hardcoded/fabricated, which
-					     the brief explicitly says not to do.
-					     WHAT: Description IS part of the real backend
-					     response but was never wired up on this page at
-					     all (Category.script.js's INDEX/FORM_FIELD_INFO
-					     had no entry for it) - added it here instead,
-					     since it's actual backend data rather than a
-					     fabricated field.
-					     -------------------------------------------------- -->
-					<div class="info-card-row" id="category_description">
-						<span class="info-card-icon"><i class="fa-solid fa-align-left"></i></span>
-						<span class="info-card-text">
-							<span class="info-card-label">Description</span>
-							<span class="info-card-value" id="lbl_description"></span>
-						</span>
-					</div>
-
-				</div>
+			<div class="modal-body" style="padding-top: 5px;">
+				<ul class="navbar-nav">
+					<li class="nav-item" id="category_show_info">
+						<a class="nav-link">
+						<i class="fa fa-info-circle text-info"></i> Show Info
+						</a>
+					</li>
+					<li class="nav-item" id="category_add">
+						<a class=" nav-link active">
+						<i class="fa fa-plus-square text-info"></i> Add New Category
+						</a>
+					</li>
+					<li class="nav-item"  id="category_edit">
+						<a class="nav-link">
+						<i class="fa fa-edit text-info"></i> Edit Category
+						</a>
+					</li>
+					<li class="nav-item" id="category_delete">
+						<a class="nav-link">
+						<i class="fa fa-trash-alt text-info"></i> Delete Category
+						</a>
+					</li>
+				</ul>
 			</div>
 			<!-- /Modal Body -->
 			<!-- Modal Footer -->
-			<div class="modal-footer" style="display: block; padding-bottom: 0;">
-				<div class="row">
-					<div class="col">
-						<div class="form-group">
-							<button style="background-color: var(--app-theme-color);
-						  color: aliceblue;
-						  font-weight: bolder;" class="form-control" onclick="$('#list_details').modal('hide');">Close </button>
-						</div>
-					</div>
-				</div>
+			<div class="modal-footer" style="justify-content: center; padding: 0.5rem;"></div>
+			<!-- /Modal footer -->
+		</div>
+		<!-- /modal-content -->
+	</div>
+	<!-- /modal-dialog -->
+</div>
+<!-- /modal -->
+<!-- /Single Click Menu -->`;
+
+var multi_select_modal = `
+<!-- Multi Select Menu -->
+<div class="modal fade" id="modal_multiselect" tabindex="-1" role="dialog" aria-labelledby="modal_multiselect">
+	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
+		<div class="modal-content bg-white">
+			<!-- Modal Header -->
+			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="modal_multiselect_title">Select an Option</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span> </button>
 			</div>
+			<!-- /Modal Header -->
+			<!-- Modal Body -->
+			<div class="modal-body" style="padding-top: 5px;">
+				<ul class="navbar-nav">
+					<li class="nav-item" id="multi_delete">
+						<a class="nav-link " > <i class="fa fa-trash-alt text-info"></i> Delete Category(s)</a>
+					</li>
+					<li class="nav-item" id="multi_share">
+						<a class="nav-link " > <i class="fas fa-share text-info"></i> Share Category(s)</a>
+					</li>
+				</ul>
+			</div>
+			<!-- /Modal Body -->
+			<!-- Modal Footer -->
+			<div class="modal-footer" style="justify-content: center; padding: 0.5rem;"></div>
 			<!-- /Modal Footer -->
 		</div>
 		<!-- /modal-content -->
@@ -353,56 +305,89 @@
 	<!-- /modal-dialog -->
 </div>
 <!-- /modal -->
-<!-- /Modal for Show Info -->
-<!-- ------------------------------------------------------ -->
+<!-- Multi Select Menu -->`;
 
-	<!-- This span is for scroll down button target -->
-	<span id="bottom_target_span"></span>
-  </main>
-</body>
 
-<!-- Navigate to Dashboard using the shared navigation helper (no direct window.location.href) -->
-<script>
+var photo_modal = `
+<div class="modal fade" id="photo_select_modal" tabindex="-1" role="dialog" aria-labelledby="photo_select_modal">
+	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
+		<div class="modal-content bg-white">
+			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="photo_select_modal_title">Select an option</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span> </button>
+			</div>
+			<div class="modal-body" style="padding-top: 5px;">
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class=" nav-link active" id="gallery_photo"> <i class="fa fa-images text-danger"></i> Gallery </a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link " id="camera_photo"> <i class="fa fa-camera text-primary"></i> Camera </a>
+					</li>
+				</ul>
+			</div>
+			<div class="modal-footer" style="justify-content: center; padding: 0.5rem;"></div>
+		</div>
+	</div>
+</div>`;
 
-document.getElementById("btnDashboard").onclick = function () {
-    goDashboard();
-};
-</script>
+var file_modal = `
+<div class="modal fade" id="file_select_modal" tabindex="-1" role="dialog" aria-labelledby="file_select_modal">
+	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
+		<div class="modal-content bg-white">
+			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="file_select_modal_title">Select an option</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span> </button>
+			</div>
+			<div class="modal-body" style="padding-top: 5px;">
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class=" nav-link active" id="choose_file"> <i class="fa fa-images text-danger"></i> Choose File </a>
+					</li>
+				</ul>
+			</div>
+			<div class="modal-footer" style="justify-content: center; padding: 0.5rem;"></div>
+		</div>
+	</div>
+</div>`;
 
-<!-- ------------------------------------------------------------
-     CONNECTION FIX: this page's own script ($ selectors,
-     .modal('show')/.modal('hide') for the Add/Edit/Filter/Info
-     popups) has always required jQuery and Bootstrap's JS, but
-     neither was ever linked here (only the Bootstrap CSS was).
-     Adding them, in the same 4.6.2 version as the Bootstrap CSS
-     already linked above, before any other page script runs.
-     ------------------------------------------------------------ -->
+var shareMenu = `	
+<!-- Share Menu -->
+<div class="modal fade" id="modal_share" tabindex="-1" role="dialog" aria-labelledby="modal_share">
+	<div class="modal-dialog modal-danger modal-dialog-centered modal-10" role="document">
+		<div class="modal-content bg-white">
+			<!-- Modal Header -->
+			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
+				<h2 class="modal-title" id="modal_share_title">Share by</h2>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true" style="color: black; font-size: xx-large;">�</span>
+				</button>
+			</div>
+			<!-- /Modal Header -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+			<!-- Modal Body -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+			<div class="modal-body" style="padding-top: 5px;">
+				<ul class="navbar-nav">
+					<li class="nav-item" id="share_email">
+						<a class="nav-link " >
+						<i class="far fa-envelope text-info"></i> Email
+						</a>
+					</li>
+					<li class="nav-item" id="share_whatsapp">
+						<a class=" nav-link active" >
+						<i class="fab fa-whatsapp text-info"></i> WhatsApp
+						</a>
+					</li>
+				</ul>
+			</div>
+			<!-- /Modal Body -->
 
-<script src="../addedFiles/js/Config.js"></script>
+			<!-- Modal Footer -->
+			<div class="modal-footer" style="justify-content: center; padding: 0.5rem;"></div>
+			<!-- /Modal footer -->
 
-<script src="../addedFiles/js/StorageService.js"></script>
-
-<script src="../addedFiles/js/DataService.js"></script>
-
-<script src="../addedFiles/common/common.js"></script>
-
-<script src="../addedFiles/common/theme.js"></script>
-
-<script src="../addedFiles/common/settings.js"></script>
-
-<script src="../addedFiles/common/navigation.js"></script>
-
-<script src="../addedFiles/common/session.js"></script>
-
-<script src="../addedFiles/common/register-sw.js"></script>
-
-<script src="../js/application/Category.script.js"></script>
-
-<script src="../addedFiles/js/LegacyCompatShim.js"></script>
-<script src="../js/application/CategoryHTML.script.js"></script>
-
-</html> 
+		</div><!-- /modal-content -->
+	</div><!-- /modal-dialog -->
+</div><!-- /modal -->
+<!-- /Share Menu -->`;
