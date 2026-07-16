@@ -1626,17 +1626,13 @@ var DataService = (function ()
        before writing the new one - it cannot be bypassed by
        editing the page.
 
-       NOTE: like createAccount(), this requires a matching
-       `changePassword` action to exist in the Apps Script
-       project (alongside the existing `login`/`createAccount`
-       actions) that: 1) looks up the row by username, 2)
-       rejects the request if strCurrentPassword does not match
-       what is stored, 3) otherwise overwrites that row's
-       password with strNewPassword, 4) responds with the same
-       { success, message, data } shape login()/createAccount()
-       already use. That server-side action lives outside this
-       repo (Apps Script project) - see chat for the exact
-       snippet to paste into Login.gs/Code.gs.
+       NOTE: matches the real Login.gs, which reads
+       e.parameter.oldPassword (not currentPassword) - see the
+       buildGoogleUrl() call below. Sending the wrong key here
+       was the actual cause of "All fields are required.": the
+       backend's own validation checks oldPassword specifically,
+       and got undefined for it on every request regardless of
+       what the user typed, so it always fell into that error.
 
        strUsername        : the logged-in user (Session.getUsername())
        strCurrentPassword  : typed into the "Current Password" field
@@ -1657,7 +1653,7 @@ var DataService = (function ()
 
         callGoogleGet(buildGoogleUrl("changePassword", {
             username: strUsername,
-            currentPassword: strCurrentPassword,
+            oldPassword: strCurrentPassword,
             newPassword: strNewPassword
         }), function (objResponse)
         {

@@ -204,59 +204,12 @@
 
     </section>
 
-    <!-- ================= Change Password ================= -->
-
-    <section class="profile-card">
-
-        <h2 class="profile-card-title">Change Password</h2>
-
-        <!-- ------------------------------------------------
-             Frontend only for now, per Task 3. There is no
-             real backend yet, so submitting only validates
-             the fields and shows a message - no password is
-             actually changed anywhere.
-             ------------------------------------------------ -->
-
-        <div class="profile-form-group">
-
-            <label for="txtCurrentPassword">Current Password</label>
-
-            <input
-                type="password"
-                id="txtCurrentPassword"
-                placeholder="Enter current password">
-
-        </div>
-
-        <div class="profile-form-group">
-
-            <label for="txtNewPassword">New Password</label>
-
-            <input
-                type="password"
-                id="txtNewPassword"
-                placeholder="Enter new password">
-
-        </div>
-
-        <div class="profile-form-group">
-
-            <label for="txtConfirmPassword">Confirm New Password</label>
-
-            <input
-                type="password"
-                id="txtConfirmPassword"
-                placeholder="Re-enter new password">
-
-        </div>
-
-        <button type="button" id="btnChangePassword">
-
-            Change Password
-
-        </button>
-
-    </section>
+    <!-- ================= Change Password =================
+         Moved to Settings (Profile -> Settings restructure):
+         Profile is user info / login history / activity /
+         user management only. Change Password now lives on
+         the Settings page, in Settings.script.js, next to
+         Theme and Font Size. -->
 
 </div>
 

@@ -969,68 +969,17 @@ button.form-control
 
 /*==========================================================
     MODAL
+
+    NOTE: this used to be a full second copy of the modal
+    rules below (.modal-content/.modal-header/.modal-title/
+    .modal-body/.modal-footer), which the later "Bootstrap
+    Modal Improvements" block always overrode anyway since it
+    comes after this one in the cascade. Two competing rule
+    sets for the same selectors was exactly the kind of thing
+    that made popup sizing behave inconsistently, so this is
+    now just the one real definition - see "Bootstrap Modal
+    Improvements" further down for the actual rules.
 ==========================================================*/
-
-.modal-content
-{
-    border:none;
-
-    border-radius:14px;
-
-    overflow:hidden;
-
-    box-shadow:0 15px 40px rgba(0,0,0,.20);
-}
-
-
-/*==========================================================
-    MODAL HEADER
-==========================================================*/
-
-.modal-header
-{
-    background:var(--app-theme-color);
-
-    color:white;
-
-    border-bottom:none;
-}
-
-.modal-header .close
-{
-    color:white;
-
-    opacity:1;
-}
-
-.modal-title
-{
-    color:white;
-
-    font-weight:bold;
-}
-
-
-/*==========================================================
-    MODAL BODY
-==========================================================*/
-
-.modal-body
-{
-    background:var(--app-card-bg);
-}
-
-
-/*==========================================================
-    MODAL FOOTER
-==========================================================*/
-
-.modal-footer
-{
-    background:#fafafa;
-
-    border-top:1px solid var(--app-border);
-}
 
 
 /*==========================================================
@@ -1637,6 +1586,64 @@ button:hover
     background: var(--color-surface);
 
     border-top: 1px solid var(--color-border);
+}
+
+
+/* ----------------------------------------------------------
+   Add / Edit Popup (.editDetails) - Sizing Fix
+
+   WHY: the modal-body in the Add/Edit popup (categoryList.html,
+   sectionList.html, resultList.html, studentList.html) used to
+   carry an inline style="overflow: scroll;", which forces a
+   visible scrollbar at all times - even for a short form that
+   fits on screen with room to spare - and does not stop at the
+   viewport edge, so on a tall form it just kept growing the
+   modal instead of scrolling internally. Combined with
+   .modal-content's overflow:hidden above (needed for the
+   rounded corners), that is what produced "extra scrollbars"
+   on short forms and clipped fields on tall ones.
+
+   WHAT: .modal-dialog is capped to a sensible viewport-relative
+   height, .modal-content becomes a column flex box so the
+   header/footer stay put, and only .modal-body scrolls - and
+   only once its content actually needs more room than that.
+---------------------------------------------------------- */
+
+.editDetails .modal-dialog
+{
+    max-height: calc(100vh - 40px);
+
+    display: flex;
+}
+
+.editDetails .modal-content
+{
+    display: flex;
+
+    flex-direction: column;
+
+    max-height: calc(100vh - 40px);
+}
+
+.editDetails .modal-body
+{
+    overflow-y: auto;
+
+    overflow-x: hidden;
+}
+
+@media (max-width: 576px)
+{
+    .editDetails .modal-dialog,
+    .editDetails .modal-content
+    {
+        max-height: calc(100vh - 16px);
+    }
+
+    .editDetails .modal-dialog
+    {
+        margin: 8px;
+    }
 }
 
 

@@ -26,6 +26,52 @@ var StorageService = (function () {
 
     var objDatabase = null;
 
+    /* ------------------------------------------------------
+       ADD DIALOG / "Unable to load ..." FIX (root cause)
+
+       WHY: every CRUD function below (getAllRecords, addRecord,
+       getRecordById, updateRecord, deleteRecordById,
+       clearStoreRecords) called getObjectStore(), which threw
+       synchronously ("IndexedDB is not ready yet") whenever
+       objDatabase was still null. indexedDB.open() in
+       initializeDatabase() is asynchronous, so there was a real
+       race: common.js calls initializeDatabase() once per page
+       load, but nothing made later calls to
+       DataService.getAllRecords() / addRecord() / etc. WAIT for
+       that promise to resolve first - they just assumed the
+       database was already open. Losing that race is exactly
+       what produced the "Unable to load Students/Sections/
+       Category/Result" toast (and, right after, a Save/Add that
+       silently failed to reach the local cache), and it explains
+       why it happened identically on every entity page - they
+       all share this one file.
+
+       WHAT: initializeDatabase() now remembers the Promise it
+       returns (objDbReadyPromise) instead of a new caller
+       re-opening the database, and getObjectStore() awaits that
+       same Promise before touching objDatabase. Every public
+       CRUD function already funnels through getObjectStore(), so
+       this one change fixes the race everywhere without altering
+       any of their individual logic.
+       ------------------------------------------------------ */
+
+    var objDbReadyPromise = null;
+
+    function getDatabaseReady() {
+
+        if (objDatabase !== null) {
+
+            return Promise.resolve(objDatabase);
+        }
+
+        if (objDbReadyPromise === null) {
+
+            objDbReadyPromise = initializeDatabase();
+        }
+
+        return objDbReadyPromise;
+    }
+
 
 
     /* ======================================================
@@ -162,7 +208,12 @@ var StorageService = (function () {
            onerror logic below is unchanged.
            -------------------------------------------------- */
 
-        return new Promise(function (fnResolve, fnReject) {
+        if (objDbReadyPromise !== null) {
+
+            return objDbReadyPromise;
+        }
+
+        objDbReadyPromise = new Promise(function (fnResolve, fnReject) {
 
         var objRequest = indexedDB.open(
 
@@ -250,11 +301,18 @@ var StorageService = (function () {
 
             CommonUtils.logError("StorageService.initializeDatabase (onerror)", objEvent.target.error);
 
+            /* let a later call retry instead of every future
+               getObjectStore() call being stuck against a
+               permanently-rejected promise */
+            objDbReadyPromise = null;
+
             fnReject(objEvent.target.error);
 
         };
 
         });
+
+        return objDbReadyPromise;
 
     }
 
@@ -538,6 +596,10 @@ function clearOfflineStore()
 
 function getObjectStore(strStoreName, strMode)
 {
+    /* callers now go through getDatabaseReady() first (see the
+       CRUD functions below), so objDatabase is guaranteed to be
+       set by the time this runs - this check stays only as a
+       last-resort guard, not the normal path. */
     if (objDatabase == null)
     {
         throw new Error(
@@ -565,26 +627,30 @@ function addRecord(strStoreName, objRecord)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readwrite");
-
-            var objRequest = objStore.add(objRecord);
-
-            objRequest.onsuccess = function (objEvent)
+            try
             {
-                fnResolve(objEvent.target.result);
-            };
+                var objStore = getObjectStore(strStoreName, "readwrite");
 
-            objRequest.onerror = function (objEvent)
+                var objRequest = objStore.add(objRecord);
+
+                objRequest.onsuccess = function (objEvent)
+                {
+                    fnResolve(objEvent.target.result);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 
@@ -602,26 +668,30 @@ function getAllRecords(strStoreName)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readonly");
-
-            var objRequest = objStore.getAll();
-
-            objRequest.onsuccess = function (objEvent)
+            try
             {
-                fnResolve(objEvent.target.result);
-            };
+                var objStore = getObjectStore(strStoreName, "readonly");
 
-            objRequest.onerror = function (objEvent)
+                var objRequest = objStore.getAll();
+
+                objRequest.onsuccess = function (objEvent)
+                {
+                    fnResolve(objEvent.target.result);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 
@@ -688,28 +758,32 @@ function getRecordById(strStoreName, numId)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readonly");
-
-            var objRequest = objStore.get(numId);
-
-            objRequest.onsuccess = function (objEvent)
+            try
             {
-                var objResult = objEvent.target.result;
+                var objStore = getObjectStore(strStoreName, "readonly");
 
-                fnResolve(objResult === undefined ? null : objResult);
-            };
+                var objRequest = objStore.get(numId);
 
-            objRequest.onerror = function (objEvent)
+                objRequest.onsuccess = function (objEvent)
+                {
+                    var objResult = objEvent.target.result;
+
+                    fnResolve(objResult === undefined ? null : objResult);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 
@@ -729,26 +803,30 @@ function updateRecord(strStoreName, objRecord)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readwrite");
-
-            var objRequest = objStore.put(objRecord);
-
-            objRequest.onsuccess = function (objEvent)
+            try
             {
-                fnResolve(objEvent.target.result);
-            };
+                var objStore = getObjectStore(strStoreName, "readwrite");
 
-            objRequest.onerror = function (objEvent)
+                var objRequest = objStore.put(objRecord);
+
+                objRequest.onsuccess = function (objEvent)
+                {
+                    fnResolve(objEvent.target.result);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 
@@ -767,26 +845,30 @@ function deleteRecordById(strStoreName, numId)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readwrite");
-
-            var objRequest = objStore.delete(numId);
-
-            objRequest.onsuccess = function ()
+            try
             {
-                fnResolve(true);
-            };
+                var objStore = getObjectStore(strStoreName, "readwrite");
 
-            objRequest.onerror = function (objEvent)
+                var objRequest = objStore.delete(numId);
+
+                objRequest.onsuccess = function ()
+                {
+                    fnResolve(true);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 
@@ -805,26 +887,30 @@ function clearStoreRecords(strStoreName)
 {
     return new Promise(function (fnResolve, fnReject)
     {
-        try
+        getDatabaseReady().then(function ()
         {
-            var objStore = getObjectStore(strStoreName, "readwrite");
-
-            var objRequest = objStore.clear();
-
-            objRequest.onsuccess = function ()
+            try
             {
-                fnResolve(true);
-            };
+                var objStore = getObjectStore(strStoreName, "readwrite");
 
-            objRequest.onerror = function (objEvent)
+                var objRequest = objStore.clear();
+
+                objRequest.onsuccess = function ()
+                {
+                    fnResolve(true);
+                };
+
+                objRequest.onerror = function (objEvent)
+                {
+                    fnReject(objEvent.target.error);
+                };
+            }
+            catch (objError)
             {
-                fnReject(objEvent.target.error);
-            };
-        }
-        catch (objError)
-        {
-            fnReject(objError);
-        }
+                fnReject(objError);
+            }
+        })
+        .catch(fnReject);
     });
 }
 

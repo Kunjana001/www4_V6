@@ -34,7 +34,16 @@
      AppConfig.APP_VERSION (read-only - the version is set in
      one place, Config.js, not typed in twice)
 
-   Version: 3.0
+   ----------------------------------------------------------
+   ROUND 4 IMPROVEMENTS (this pass)
+   ----------------------------------------------------------
+   ✓ Change Password moved here from Profile (brief item 5).
+     Same fields, same handleChangePassword() logic, same
+     DataService.changePassword() call - only hidden until
+     Session.isLoggedIn() is true, since Settings is also
+     reachable before login.
+
+   Version: 4.0
    ========================================================== */
 
 "use strict";
@@ -58,6 +67,12 @@ var txtLogoUrl = document.getElementById("txtLogoUrl");
 var txtVersion = document.getElementById("txtVersion");
 
 var btnSaveSettings = document.getElementById("btnSaveSettings");
+
+/* Change Password (moved here from Profile - brief item 5) */
+var txtCurrentPassword = document.getElementById("txtCurrentPassword");
+var txtNewPassword = document.getElementById("txtNewPassword");
+var txtConfirmPassword = document.getElementById("txtConfirmPassword");
+var btnChangePassword = document.getElementById("btnChangePassword");
 
 
 
@@ -112,6 +127,28 @@ function initializeSettingsPage()
     populateApplicationSettingsFields();
 
     btnSaveSettings.onclick = handleSaveSettings;
+
+    /* --------------------------------------------------
+       Change Password only makes sense for a logged-in
+       user (it changes Session.getUsername()'s password),
+       and Settings is also reachable pre-login (see the
+       Back button comment above) - so the whole card is
+       hidden until there is a real session, the same way
+       Profile hid the User Management section for non-Admins.
+       -------------------------------------------------- */
+
+    var sectionChangePassword = document.getElementById("changePasswordSection");
+
+    if (Session.isLoggedIn() === true)
+    {
+        sectionChangePassword.style.display = "";
+
+        btnChangePassword.onclick = handleChangePassword;
+    }
+    else
+    {
+        sectionChangePassword.style.display = "none";
+    }
 }
 
 
@@ -300,4 +337,115 @@ function handleFontSizeSelected(strSizeId)
     {
         CommonUtils.showToast("Font size updated.", "success");
     }
+}
+
+
+/* ==========================================================
+   Handle Change Password Button Click
+
+   Moved here from Profile.script.js (brief item 5 - "Change
+   Password belongs inside Settings"). Logic is unchanged:
+   validates the form, then hands off to
+   DataService.changePassword(), which is the only place that
+   can check the current password against the real Users
+   sheet before writing the new one.
+   ========================================================== */
+
+function handleChangePassword()
+{
+    var strCurrentPassword = txtCurrentPassword.value.trim();
+    var strNewPassword = txtNewPassword.value.trim();
+    var strConfirmPassword = txtConfirmPassword.value.trim();
+
+    /* ---------- Validation ---------- */
+
+    if (strCurrentPassword === "")
+    {
+        CommonUtils.showAlert("Please enter your current password.");
+
+        txtCurrentPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword === "")
+    {
+        CommonUtils.showAlert("Please enter a new password.");
+
+        txtNewPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword.length < 6)
+    {
+        CommonUtils.showAlert("New password must be at least 6 characters long.");
+
+        txtNewPassword.focus();
+
+        return;
+    }
+
+    if (strConfirmPassword === "")
+    {
+        CommonUtils.showAlert("Please confirm your new password.");
+
+        txtConfirmPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword !== strConfirmPassword)
+    {
+        CommonUtils.showAlert("New password and confirm password do not match.");
+
+        txtConfirmPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword === strCurrentPassword)
+    {
+        CommonUtils.showAlert("New password must be different from the current password.");
+
+        txtNewPassword.focus();
+
+        return;
+    }
+
+    /* ------------------------------------------------------
+       All fields look good - hand off to the backend, which
+       is the only place that can actually verify the current
+       password against the Users sheet. See DataService.js
+       for the changePassword() function - it sends
+       oldPassword (not currentPassword) to match Login.gs's
+       own e.parameter name, which was the actual cause of the
+       old "All fields are required." error.
+       ------------------------------------------------------ */
+
+    showLoader("Changing password...");
+
+    DataService.changePassword(
+        Session.getUsername(),
+        strCurrentPassword,
+        strNewPassword,
+        function ()
+        {
+            hideLoader();
+
+            CommonUtils.showAlert("Password changed successfully.", "success");
+
+            ActivityLog.logActivity("Password Changed");
+
+            txtCurrentPassword.value = "";
+            txtNewPassword.value = "";
+            txtConfirmPassword.value = "";
+        },
+        function (objError)
+        {
+            hideLoader();
+
+            CommonUtils.showAlert((objError && objError.message) || "Could not change password.");
+        }
+    );
 }

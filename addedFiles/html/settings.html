@@ -140,6 +140,65 @@
 
     </section>
 
+    <!-- ================= Change Password Card =================
+         Moved here from Profile (brief item 5 - "Change
+         Password belongs inside Settings"). Same three fields
+         and button as before; wired up in Settings.script.js,
+         which now also owns handleChangePassword(). -->
+
+    <section class="settings-card" id="changePasswordSection" style="margin-bottom: 20px;">
+
+            <div>
+
+                <h3>Change Password</h3>
+
+                <p>Update the password for your account.</p>
+
+            </div>
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtCurrentPassword">Current Password</label>
+
+            <input
+                type="password"
+                id="txtCurrentPassword"
+                placeholder="Enter current password">
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtNewPassword">New Password</label>
+
+            <input
+                type="password"
+                id="txtNewPassword"
+                placeholder="Enter new password">
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="txtConfirmPassword">Confirm New Password</label>
+
+            <input
+                type="password"
+                id="txtConfirmPassword"
+                placeholder="Re-enter new password">
+
+        </div>
+
+        <button type="button" id="btnChangePassword" class="settings-save-btn">
+
+            Change Password
+
+        </button>
+
+    </section>
+
     <!-- ================= Theme Card ================= -->
 
     <section class="settings-card" style="margin-bottom: 20px;">
@@ -216,6 +275,8 @@
 <script src="../common/theme.js"></script>
 
 <script src="../common/settings.js"></script>
+
+<script src="../common/activity.js"></script>
 
 <script src="../js/Settings.script.js"></script>
 
