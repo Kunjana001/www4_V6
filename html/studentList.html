@@ -523,7 +523,19 @@ document.getElementById("btnDashboard").onclick = function () {
 <script src="../addedFiles/js/Config.js"></script>
 
 <script>
-document.getElementById("pageTitle").textContent = AppConfig.TEXT.student.title;
+/* CONSOLE ERROR FIX: no element with id="pageTitle" exists
+   anywhere in this page - the visible "Student" header is
+   actually injected at runtime by StudentHTML.script.js
+   further down (see the CONNECTION FIX comment above), not by
+   this line. Calling .textContent directly on the null result
+   of getElementById("pageTitle") was throwing an uncaught
+   TypeError on every single page load. Guarded with a null
+   check so this becomes a harmless no-op instead - the real
+   header injected later is unaffected either way. */
+var elPageTitle = document.getElementById("pageTitle");
+if (elPageTitle) {
+    elPageTitle.textContent = AppConfig.TEXT.student.title;
+}
 </script>
 
 <script src="../addedFiles/js/StorageService.js"></script>
