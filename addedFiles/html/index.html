@@ -129,11 +129,9 @@
 
                 </label>
 
-                <a href="#">
-
-                    Forgot Password?
-
-                </a>
+                <a href="javascript:void(0);" id="forgotPasswordLink">
+                      Forgot Password?
+               </a>
 
             </div>
 
@@ -161,6 +159,88 @@
         </div>
 
     </div>
+
+
+    <!-- ===========================================
+     Forgot Password Popup
+=========================================== -->
+
+<div id="forgotPasswordOverlay" class="popup-overlay" style="display:none;">
+
+    <div class="popup-card">
+
+        <button
+            type="button"
+            id="btnCloseForgotPassword"
+            class="popup-close">
+            ✕
+        </button>
+
+        <h2>Forgot Password</h2>
+
+        <!-- Step 1 -->
+
+        <div id="fpStepUsername">
+
+            <p>Enter your username</p>
+
+            <input
+                type="text"
+                id="fpUsername"
+                placeholder="Username">
+
+            <br><br>
+
+            <button
+                type="button"
+                id="btnFpVerifyUsername">
+                Verify Username
+            </button>
+
+            <button
+                type="button"
+                id="btnCancelForgotPassword">
+                Cancel
+            </button>
+
+        </div>
+
+        <!-- Step 2 -->
+
+        <div id="fpStepPassword" style="display:none;">
+
+            <p>
+
+                Username:
+                <strong id="fpVerifiedUsername"></strong>
+
+            </p>
+
+            <input
+                type="password"
+                id="fpNewPassword"
+                placeholder="New Password">
+
+            <br><br>
+
+            <input
+                type="password"
+                id="fpConfirmPassword"
+                placeholder="Confirm Password">
+
+            <br><br>
+
+            <button
+                type="button"
+                id="btnFpResetPassword">
+                Reset Password
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
     <!-- JavaScript -->
     <!-- Common dependencies load first so login.js can use Session.login() / Session.logout() -->
