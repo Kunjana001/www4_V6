@@ -102,6 +102,36 @@ Changes:
     "Add New Student" tooltip. No new Add/Edit/Delete logic -
     the existing onClickAdd()/Add Student workflow is reused
     unchanged.
+13. Pagination / Loading Performance pass:
+    - ROOT CAUSE (real bug, not just missing 100/page): getListData()
+      already called DataService.getRecordsPage() for one page at
+      a time, but parseListResponse() was declared as
+      parseListResponse(arrStudents) and treated the returned
+      { records, totalRecords, totalPages, page, pageSize } object
+      as if it WERE the bare records array. arrStudents.length was
+      undefined, so the row-building loop never ran, and
+      mCurrentPage/mTotalPages/mTotalRecords were never updated
+      past their initial 1/1/0. There was also no Prev/Next control
+      anywhere on this page. Net effect: paging past the first
+      screen was impossible no matter how many Students existed.
+    - FIX: parseListResponse(objPageResult) now reads
+      objPageResult.records and updates mCurrentPage/mTotalPages/
+      mTotalRecords correctly. showFilteredList() now appends a
+      Prev/Next pagination bar (buildPaginationBarHtml()/
+      bindPaginationBarListeners(), same pattern as
+      Category.script.js) and shows the real backend-reported
+      total instead of comparing against a stale stored count.
+    - mPageSize was already 100 (this file was the reference
+      Category.script.js/Section.script.js/Result.script.js were
+      brought in line with).
+    - Search: unchanged - still instant, client-side, current-page
+      only (there is no searchStudents backend action); no
+      debounce was needed since it's pure DOM filtering with no
+      network call.
+    - Lookup caching (Category/Section dropdown data): no change
+      needed here - see DataService.js's getAllRecords() cache,
+      used automatically by this file's existing
+      DataService.getAllRecords(CATEGORY/SECTION, ...) calls.
 
 Architecture:
 - No architecture changes.
@@ -348,6 +378,20 @@ var StudentScript = (function () {
 
 	// Save the Filtered main list
 	var mSelectedDataList = [];
+
+	// --------------------------------------------------
+	// Real pagination state (100 students per page, per request).
+	// Same pattern as Category.script.js - see the WHY/WHAT there
+	// for the full explanation. getListData()/parseListResponse()
+	// below ask the backend for exactly one page at a time instead
+	// of the entire Students table.
+	// --------------------------------------------------
+	var mCurrentPage = 1;
+	var mPageSize = 100;
+	var mTotalPages = 1;
+	var mTotalRecords = 0;
+	var mCurrentSearchKeyword = "";
+	var mSearchDebounceTimer = null;
 
 	// --------------------------------------------------
 	// Confirmation Dialogs: this was referenced by every
@@ -1278,7 +1322,7 @@ var StudentScript = (function () {
 
 ========================================================== */
 
-function getListData()
+function getListData( iRequestedPage )
 {
     // --------------------------------------------------
     // WHY: nothing told the user a fetch was in progress,
@@ -1288,18 +1332,28 @@ function getListData()
     // overlay before this runs - this just hides it once
     // the DataService callback (success or error) fires, so
     // a failed fetch does not leave it stuck on screen.
-    // WHEN: runs every time the Student list is (re)loaded.
+    // WHEN: runs every time the Student list is (re)loaded -
+    // now for exactly one 100-row page at a time, not the
+    // whole table.
     // --------------------------------------------------
 
-    DataService.getAllRecords(
+    if( iRequestedPage ) {
+
+        mCurrentPage = iRequestedPage;
+    }
+
+    DataService.getRecordsPage(
 
         AppConfig.STORES.STUDENT,
+        mCurrentPage,
+        mPageSize,
+        mCurrentSearchKeyword,
 
-        function(arrStudents)
+        function(objPageResult)
         {
             hideLoader();
 
-            parseListResponse(arrStudents);
+            parseListResponse(objPageResult);
         },
 
         function(objError)
@@ -1798,17 +1852,45 @@ function getListData()
    Saves the student list and refreshes the UI.
 ========================================================== */
 
-function parseListResponse(arrStudents)
+function parseListResponse(objPageResult)
 {
-    if (!arrStudents)
+    if (!objPageResult)
     {
-        arrStudents = [];
+        objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
     }
 
     hideLoader();
 
+    var arrStudents = objPageResult.records || [];
+
     // --------------------------------------------------
-    // WHY: DataService.getAllRecords() returns plain objects
+    // PAGINATION FIX (this pass) - ROOT CAUSE: getListData()
+    // (above) already asked DataService.getRecordsPage() for
+    // exactly one page and got back { records, totalRecords,
+    // totalPages, page, pageSize } - but this function used to
+    // be declared as parseListResponse(arrStudents) and treated
+    // that whole object as if it WERE the bare records array.
+    // objPageResult.length is undefined, so the for loop below
+    // never ran, mCurrentPage/mTotalPages/mTotalRecords were
+    // never updated past their initial declaration (1/1/0), and
+    // there was no Prev/Next control anywhere on this page - so
+    // paging past the first screen was simply impossible no
+    // matter how many Students existed. Reading
+    // objPageResult.records (with the same object/array-of-rows
+    // bridge already used by Category.script.js) and updating
+    // mCurrentPage/mTotalPages/mTotalRecords from the rest of
+    // objPageResult fixes both: the page actually renders, and
+    // the new Prev/Next bar (buildPaginationBarHtml()/
+    // bindPaginationBarListeners(), see showFilteredList() below)
+    // now has real page numbers to work from.
+    // --------------------------------------------------
+
+    mCurrentPage = objPageResult.page || 1;
+    mTotalPages = objPageResult.totalPages || 1;
+    mTotalRecords = objPageResult.totalRecords || arrStudents.length;
+
+    // --------------------------------------------------
+    // WHY: DataService.getRecordsPage() returns plain objects
     // (e.g. { studentId, categoryId, sectionId, name,
     // rollNumber, mobile, email, parentMobile, telegram,
     // parentEmail }), matching the same bridge already used in
@@ -1830,8 +1912,8 @@ function parseListResponse(arrStudents)
     // Category. If your Students sheet/response actually uses
     // different field names, this is the one place to correct
     // them.
-    // WHEN: runs every time the Student list is loaded or
-    // refreshed from DataService.
+    // WHEN: runs every time a page of the Student list is loaded,
+    // refreshed, or paged through.
     // --------------------------------------------------
 
     var arrStudentRows = [];
@@ -1842,7 +1924,7 @@ function parseListResponse(arrStudents)
 
         var arrRow = [];
 
-        // FIELD NAME FIX: DataService.getAllRecords() actually
+        // FIELD NAME FIX: DataService.getRecordsPage() actually
         // resolves through getEntityApiConfig(STUDENT).fromBackendFields()
         // (see DataService.js), which returns student_id, name,
         // mobile, email, telegram, organization_id, category_id,
@@ -3381,23 +3463,72 @@ function parseListResponse(arrStudents)
 			htmlContent += createHtmlListItem( data, i );
 		}
 
-		var list = getStorageData( SESSION_OBJECT.STUDENT_SUMMARY_DATA );
-		var totalCount = list ? list.length : 0;
+		// --------------------------------------------------
+		// PAGINATION FIX (this pass): appends a Prev/Next bar
+		// (buildPaginationBarHtml()/bindPaginationBarListeners()
+		// below, same pattern as Category.script.js) - there was
+		// no pagination control anywhere on this page before,
+		// which combined with the parseListResponse() bug fixed
+		// above meant paging past page 1 was impossible no matter
+		// how many Students existed. Shows the real backend-
+		// reported total (mTotalRecords - see parseListResponse())
+		// instead of comparing this page's length against a
+		// stored "full table" that was never actually being kept
+		// up to date with the real total.
+		// --------------------------------------------------
 
+		htmlContent += buildPaginationBarHtml();
 
-		// Displaying No. of Records
-		var totalRecords = response.length;
+		var records = "Total: " + mTotalRecords;
 
-		var records = "Total: " + totalRecords;
-		if( totalRecords < totalCount ) {
-
-			records += "/" + totalCount;
-		}
-		
 		document.getElementById( "records" ).innerText = records;
 
 		setListToView( htmlContent );
+
+		bindPaginationBarListeners();
 	}
+
+	// --------------------------------------------------
+	// Small, self-contained Prev/Next bar - same pattern as
+	// Category.script.js/buildPaginationBarHtml(), so Page 1 =
+	// records 1-100, Page 2 = 101-200, etc, and Prev/Next always
+	// ask the backend for exactly that one page (Task 1).
+	// --------------------------------------------------
+	function buildPaginationBarHtml() {
+
+		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
+		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
+
+		return (
+			'<div id="pagination_bar" style="display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 0;">' +
+				'<button type="button" id="btn_page_prev" class="btn btn-sm btn-outline-primary" ' + strPrevDisabled + '>Prev</button>' +
+				'<span id="page_indicator">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
+				'<button type="button" id="btn_page_next" class="btn btn-sm btn-outline-primary" ' + strNextDisabled + '>Next</button>' +
+			'</div>'
+		);
+	}
+
+	function bindPaginationBarListeners() {
+
+		$( "#btn_page_prev" ).off().on( "click", function() {
+
+			if( mCurrentPage > 1 ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage - 1 );
+			}
+		});
+
+		$( "#btn_page_next" ).off().on( "click", function() {
+
+			if( mCurrentPage < mTotalPages ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage + 1 );
+			}
+		});
+	}
+
 
 
 	function showFilter() {

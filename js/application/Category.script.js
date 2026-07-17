@@ -49,6 +49,28 @@
    removed or renamed; architecture unchanged.
    ---------------------------------------------------------- */
 
+/* ----------------------------------------------------------
+   Project Improvements (Pagination / Loading Performance pass)
+   ----------------------------------------------------------
+   ✓ mPageSize changed from 20 to 100 - this page already used
+     real server-side pagination via DataService.getRecordsPage()
+     (Prev/Next, debounced search, "refresh only this page"),
+     it was just requesting 20 rows per page instead of the
+     required 100 (Page 1 = records 1-100, Page 2 = 101-200,
+     etc, matching Student.script.js). No other logic here
+     changed - getListData()/parseListResponse()/
+     buildPaginationBarHtml() already did the right thing.
+   ✓ The "Category List stuck on Please Wait" symptom itself is
+     fixed in DataService.js, not here: getAllRecords() (used
+     by OTHER pages as a Category lookup for their own
+     dropdowns) now caches the full table in memory instead of
+     re-downloading it from Google on every page open - see
+     DataService.js's "Pagination / Loading Performance pass"
+     note for the full explanation. This page's own list load
+     was already a single getRecordsPage() call and did not
+     need that change.
+   ---------------------------------------------------------- */
+
 /*/* ==========================================================
    PWA MIGRATION NOTES
    Category.script.js
@@ -209,9 +231,14 @@ var CategoryScript = (function () {
 	// DataService.getRecordsPage(), and these variables track
 	// which page/search is currently showing so Prev/Next and a
 	// debounced search can ask for the right one next.
+	//
+	// PAGINATION FIX (this pass): mPageSize was 20, not the
+	// required 100 records/page (see Student.script.js, which
+	// already used 100) - changed so Student/Category/Section/
+	// Result all page 1-100, 101-200, 201-300... consistently.
 	// -------------------------------------------------- 
 	var mCurrentPage = 1;
-	var mPageSize = 20;
+	var mPageSize = 100;
 	var mTotalPages = 1;
 	var mTotalRecords = 0;
 	var mCurrentSearchKeyword = "";

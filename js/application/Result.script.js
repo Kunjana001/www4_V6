@@ -9,6 +9,47 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /* ----------------------------------------------------------
+   Project Improvements (Pagination / Loading Performance pass)
+   ----------------------------------------------------------
+   ✓ ROOT CAUSE: getListData() called DataService.getAllRecords(
+     AppConfig.STORES.RESULT, ...) - one request asking the
+     backend for the ENTIRE Result table (via DataService.js's
+     internal LIST_ALL_PAGE_SIZE=100000), then held/rendered/
+     filtered all of it client-side through
+     doFilterResultList()/showFilteredList(). That is exactly
+     the "fetch every Google Sheet page into memory" bug this
+     pass removes.
+   ✓ FIX: getListData()/parseListResponse() now ask the backend
+     for exactly one 100-row page at a time via
+     DataService.getRecordsPage() (?page=N&pageSize=100), the
+     same real-pagination pattern already used by
+     Category.script.js/Student.script.js. Added mCurrentPage/
+     mPageSize/mTotalPages/mTotalRecords state, a Prev/Next
+     pagination bar (buildPaginationBarHtml()/
+     bindPaginationBarListeners(), appended by showFilteredList()),
+     and updated onClickRefresh() to reload only the page
+     currently on screen (Task 2), not the whole table.
+   ✓ SEARCH: there is no searchResults backend action, so -
+     exactly like Student.script.js - searchList() keeps
+     filtering only the currently loaded page, instantly,
+     client-side; enableSearch() now wraps that in the same
+     250ms debounce Category.script.js uses for its search
+     (Task 6).
+   ✓ Lookup caching (Task 5): this file's own onLoadCacheManager()
+     calls DataService.getAllRecords(STUDENT, ...) purely as a
+     lookup (Result cards showing the Student's name) - that
+     call is now served from DataService's shared in-memory
+     cache instead of hitting the network every time this page
+     opens. See DataService.js's "Pagination / Loading
+     Performance pass" note for the full explanation.
+   No function renamed, no file/folder moved, no architecture
+   change - only getListData()/parseListResponse()/
+   doFilterResultList()/showFilteredList()/enableSearch()/
+   onClickRefresh() above, all already-existing functions, were
+   modified.
+   ---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
    Final QA Pass - Back Button / Share Modal Fix (added)
    ----------------------------------------------------------
    Fixed a broken Back-button/reset check in Result.script.js:
@@ -196,6 +237,37 @@ var ResultScript = (function () {
 
 	// Save the Filtered main list
 	var mSelectedDataList = [];
+
+	// --------------------------------------------------
+	// PAGINATION FIX (this pass) - real pagination state.
+	// WHY: this page used to call DataService.getAllRecords()
+	// (see the old getListData() below) - one single request
+	// asking the backend for the ENTIRE Result table, then held
+	// and rendered/filtered all of it client-side. That is
+	// exactly the "fetch every page into memory" bug this pass
+	// removes: with a real dataset (hundreds/thousands of rows)
+	// every Result List open downloaded the whole table just to
+	// show the first screen of cards.
+	// WHAT: getListData()/parseListResponse() below now ask the
+	// backend for exactly one 100-row page at a time via
+	// DataService.getRecordsPage(), the same real-pagination
+	// pattern already used by Category.script.js/Student.script.js.
+	// These variables track which page is currently showing so
+	// the Prev/Next buttons (buildPaginationBarHtml() below) and
+	// Refresh (onClickRefresh()) know which page to (re)request.
+	// mCurrentSearchKeyword is intentionally always "" here -
+	// there is no searchResults backend action (see
+	// DataService.js's getEntityApiConfig()), so - exactly like
+	// Student.script.js - searching stays instant/client-side
+	// against only the currently loaded page (see searchList()
+	// below), never a server round trip.
+	// --------------------------------------------------
+	var mCurrentPage = 1;
+	var mPageSize = 100;
+	var mTotalPages = 1;
+	var mTotalRecords = 0;
+	var mCurrentSearchKeyword = "";
+	var mSearchDebounceTimer = null;
 
 	// --------------------------------------------------
 	// Confirmation Dialogs: this was referenced by every
@@ -1106,28 +1178,51 @@ var ResultScript = (function () {
 		});
 	}
 
-	function getListData() {
+	function getListData( iRequestedPage ) {
 
 		// --------------------------------------------------
-		// WHY: nothing told the user a fetch was in progress,
-		// so a slow/failed Google Apps Script call just
-		// looked like the page had frozen.
-		// WHAT: onListDocumentReady() already shows the loading
-		// overlay before this runs - this just hides it once
-		// the DataService callback (success or error) fires,
-		// so a failed fetch does not leave it stuck on screen.
-		// WHEN: runs every time the Result list is
-		// (re)loaded.
+		// PAGINATION FIX (this pass): this used to call
+		// DataService.getAllRecords( AppConfig.STORES.RESULT, ... ),
+		// which fetches the ENTIRE Result table in one request -
+		// exactly the "fetch every page into memory" bug described
+		// in the brief. Replaced with DataService.getRecordsPage(),
+		// asking the backend for exactly one 100-row page
+		// (?page=N&pageSize=100) at a time, same as
+		// Category.script.js/Student.script.js. iRequestedPage lets
+		// the Prev/Next buttons (bindPaginationBarListeners() below)
+		// and onClickRefresh() ask for a specific page; called with
+		// no argument (e.g. from onLoadCacheManager() on first load)
+		// it re-requests whatever mCurrentPage already is (1, on a
+		// fresh page load).
+		//
+		// WHY (loading overlay): nothing told the user a fetch was
+		// in progress, so a slow/failed Google Apps Script call
+		// just looked like the page had frozen. onListDocumentReady()
+		// already shows the loading overlay before this runs - this
+		// just hides it once the DataService callback (success or
+		// error) fires, so a failed fetch does not leave it stuck on
+		// screen.
+		// WHEN: runs every time the Result list is (re)loaded,
+		// paged, or refreshed - now for exactly one page at a time,
+		// not the whole table.
 		// --------------------------------------------------
 
-		DataService.getAllRecords(
+		if( iRequestedPage ) {
+
+			mCurrentPage = iRequestedPage;
+		}
+
+		DataService.getRecordsPage(
 
 			AppConfig.STORES.RESULT,
+			mCurrentPage,
+			mPageSize,
+			mCurrentSearchKeyword,
 
-			function( arrResults ) {
+			function( objPageResult ) {
 
 				hideLoader();
-				parseListResponse( arrResults );
+				parseListResponse( objPageResult );
 			},
 
 			function( objError ) {
@@ -1461,33 +1556,39 @@ var ResultScript = (function () {
 		});
 	}
 	// parse summary list response from server
-	function parseListResponse( arrResults ) {
+	function parseListResponse( objPageResult ) {
 
-		if( !arrResults ) {
+		if( !objPageResult ) {
 
-			arrResults = [];
+			objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
 		}
 
 		hideLoader();
 
+		var arrResults = objPageResult.records || [];
+
+		mCurrentPage = objPageResult.page || 1;
+		mTotalPages = objPageResult.totalPages || 1;
+		mTotalRecords = objPageResult.totalRecords || arrResults.length;
+
 		// --------------------------------------------------
-		// WHY: DataService.getAllRecords() resolves through
+		// WHY: DataService.getRecordsPage() resolves through
 		// getEntityApiConfig(RESULT).fromBackendFields() (see
 		// DataService.js), which returns result_id, student_id,
 		// exam_name, subject, marks_obtained, grade, result -
 		// matching the real "Results" Google Sheet columns
 		// (confirmed against the live sheet: resultId, studentId,
 		// exam, subject, marks, grade, result). The rest of this
-		// file (doFilterResultList(), createHtmlListItem(),
-		// showFilteredList(), etc.) was written for the old
-		// SQLite row format, where each Result is a plain array
-		// read using SUMMARY_INDEX.* as array positions.
+		// file (createHtmlListItem(), showFilteredList(), etc.)
+		// was written for the old SQLite row format, where each
+		// Result is a plain array read using SUMMARY_INDEX.* as
+		// array positions.
 		// WHAT: convert each DataService object into that same
 		// array-row shape, in this one place only, so every
 		// function below this point keeps working exactly as it
 		// already did - nothing past this bridge needs to change.
-		// WHEN: runs every time the Result list is loaded or
-		// refreshed from DataService.
+		// WHEN: runs every time a page of the Result list is
+		// loaded, refreshed, or paged through.
 		// --------------------------------------------------
 
 		var arrResultRows = [];
@@ -1509,9 +1610,23 @@ var ResultScript = (function () {
 			arrResultRows.push( arrRow );
 		}
 
+		// --------------------------------------------------
+		// PAGINATION FIX (this pass): this used to
+		// setStorageData(..., RESULT_SUMMARY_DATA) with the FULL
+		// table, then call doFilterResultList() -> showFilteredList(),
+		// which re-read and rendered that entire stored table.
+		// There is no full table anymore - only the current page -
+		// so this stores/renders just that page directly.
+		// RESULT_SUMMARY_DATA still holds exactly what is on
+		// screen right now (same storage key, same shape), so the
+		// rest of the existing Add/Edit/Delete flow keeps working
+		// unchanged - it only ever looks up rows that are visible
+		// on the current page anyway.
+		// --------------------------------------------------
+
 		setStorageData( arrResultRows, SESSION_OBJECT.RESULT_SUMMARY_DATA );
 
-		doFilterResultList();
+		showFilteredList( arrResultRows );
 
 		// --------------------------------------------------
 		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
@@ -1524,6 +1639,7 @@ var ResultScript = (function () {
 		if( sessionStorage.getItem( "DASHBOARD_QUICK_ADD_ACTION" ) == "result" ) {
 
 			sessionStorage.removeItem( "DASHBOARD_QUICK_ADD_ACTION" );
+
 
 			if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_RESULT ) == true ) {
 
@@ -1598,10 +1714,27 @@ var ResultScript = (function () {
 				// can miss some of those. Matches the same fix already
 				// applied to the Student List search box. The
 				// search_icon click binding right below is unchanged.
+				//
+				// SEARCH DEBOUNCE (this pass, Task 6): searchList()
+				// itself is unchanged - it still only filters the
+				// currently loaded page, instantly, client-side
+				// (there is no searchResults backend action). Wrapped
+				// here with the same 250ms debounce Category.script.js
+				// uses for its server-side search, so a fast typist
+				// does not re-run the filter on every single keystroke.
 				// --------------------------------------------------
 				document.getElementById( "search" ).oninput = function() {
 
-					searchList();
+					if( mSearchDebounceTimer ) {
+
+						clearTimeout( mSearchDebounceTimer );
+					}
+
+					mSearchDebounceTimer = setTimeout( function() {
+
+						searchList();
+
+					}, 250 );
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -1619,7 +1752,11 @@ var ResultScript = (function () {
 
 		resetFilterInfo();
 
-		getListData();
+		// PAGINATION FIX (this pass): refresh reloads exactly the
+		// page currently on screen (Task 2 - "refresh only current
+		// page"), not the whole table.
+
+		getListData( mCurrentPage );
 
 		showLoader( "Refreshing..." );
 	}
@@ -2600,24 +2737,15 @@ var ResultScript = (function () {
 	function doFilterResultList() {
 
 		clearSearch();
-		
+
+		// PAGINATION FIX (this pass): RESULT_SUMMARY_DATA now
+		// holds only the currently loaded page (see
+		// parseListResponse() above), not the full table, so the
+		// "All" filter button simply re-renders that page instead
+		// of re-fetching/re-filtering an entire in-memory table.
+
 		var list = getStorageData( SESSION_OBJECT.RESULT_SUMMARY_DATA );
 
-		// --------------------------------------------------
-		// WHY: this fetched the Result summary list into `list`
-		// but never actually did anything with it - unlike
-		// doFilterCategoryList() in Category.script.js, it never
-		// called showFilteredList(), so the freshly loaded Results
-		// were never handed to the function that builds the list
-		// HTML and writes the "Total: N" count. The backend call
-		// was succeeding the whole time; the page just never
-		// rendered what came back, which is why the Result List
-		// always looked empty.
-		// WHAT: pass the loaded list straight to showFilteredList(),
-		// same as Category/Student already do.
-		// WHEN: runs every time the Result list is loaded, filtered,
-		// or refreshed.
-		// --------------------------------------------------
 		if( list == null ) {
 
 			list = [];
@@ -2655,23 +2783,68 @@ var ResultScript = (function () {
 			htmlContent += createHtmlListItem( data, i );
 		}
 
-		var list = getStorageData( SESSION_OBJECT.RESULT_SUMMARY_DATA );
-		var totalCount = list ? list.length : 0;
+		// --------------------------------------------------
+		// PAGINATION FIX (this pass): appends the same Prev/Next
+		// bar Category.script.js/Student.script.js already use
+		// (buildPaginationBarHtml()/bindPaginationBarListeners()
+		// below), and shows the real backend-reported total
+		// (mTotalRecords - see parseListResponse()) instead of
+		// comparing this page's length against a stored "full
+		// table" that no longer exists.
+		// --------------------------------------------------
 
+		htmlContent += buildPaginationBarHtml();
 
-		// Displaying No. of Records
-		var totalRecords = response.length;
-
-		var records = "Total: " + totalRecords;
-		if( totalRecords < totalCount ) {
-
-			records += "/" + totalCount;
-		}
+		var records = "Total: " + mTotalRecords;
 		
 		document.getElementById( "records" ).innerText = records;
 
 		setListToView( htmlContent );
+
+		bindPaginationBarListeners();
 	}
+
+	// --------------------------------------------------
+	// Small, self-contained Prev/Next bar - same pattern as
+	// Category.script.js/buildPaginationBarHtml(), so Page 1 =
+	// records 1-100, Page 2 = 101-200, etc, and Prev/Next always
+	// ask the backend for exactly that one page (Task 1).
+	// --------------------------------------------------
+	function buildPaginationBarHtml() {
+
+		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
+		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
+
+		return (
+			'<div id="pagination_bar" style="display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 0;">' +
+				'<button type="button" id="btn_page_prev" class="btn btn-sm btn-outline-primary" ' + strPrevDisabled + '>Prev</button>' +
+				'<span id="page_indicator">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
+				'<button type="button" id="btn_page_next" class="btn btn-sm btn-outline-primary" ' + strNextDisabled + '>Next</button>' +
+			'</div>'
+		);
+	}
+
+	function bindPaginationBarListeners() {
+
+		$( "#btn_page_prev" ).off().on( "click", function() {
+
+			if( mCurrentPage > 1 ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage - 1 );
+			}
+		});
+
+		$( "#btn_page_next" ).off().on( "click", function() {
+
+			if( mCurrentPage < mTotalPages ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage + 1 );
+			}
+		});
+	}
+
 
 
 	function getFilterSelectionIds( key ){

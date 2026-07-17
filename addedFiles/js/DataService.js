@@ -195,7 +195,36 @@
      getAllRecords() function. No API/behavior change for the
      normal (all rows valid) case.
 
-   Version: 1.2
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Pagination / Loading Performance pass)
+   ----------------------------------------------------------
+   ✓ ADDED objListCache + invalidateListCache() - getAllRecords()
+     (the "give me the WHOLE table" call used only for lookups:
+     Section's Category dropdown, Student's Category+Section
+     dropdowns, Result's Student dropdown) was hitting the
+     network fresh on every single call, even when the exact
+     same table had just been fetched a moment earlier on
+     another page in the same session. With hundreds/thousands
+     of real rows, that repeated, uncached full-table fetch is
+     the real reason list pages "stayed on Please Wait" - not
+     the paged list call itself (see getRecordsPage(), untouched
+     by this cache). Now the first getAllRecords(store) call in
+     a session fetches and caches; every later call for that
+     same store, from any page, is served from memory instead -
+     until invalidateListCache(store) runs (wired into
+     addRecord()/updateRecord()/deleteRecord()/replayNext()
+     below), which clears just that one store's cache entry so
+     the very next getAllRecords() call for it fetches fresh
+     data again. getRecordsPage() (the real per-page list load)
+     is completely unaffected - Prev/Next and the Refresh button
+     always ask the backend for that exact page, never the
+     cache, exactly as Task 1/2 require. Settings/Permissions
+     were already "load once, reuse" before this pass - they
+     come from StorageService/local checks (settings.js /
+     LegacyCompatShim.js's checkRolePermission()), not the
+     network, so no change was needed there.
+
+   Version: 1.3
    ========================================================== */
 
 "use strict";
@@ -219,6 +248,54 @@ var DataService = (function ()
        ====================================================== */
 
     var LIST_ALL_PAGE_SIZE = 100000;
+
+    /* ======================================================
+       PAGINATION / LOADING FIX (this pass) - Lookup List Cache
+
+       WHY: getAllRecords() is the "give me the WHOLE table"
+       call used for lookups - Section's Category dropdown,
+       Student's Category+Section dropdowns, Result's Student
+       dropdown, etc. Every one of those was calling
+       getAllRecords() fresh, over the network, EVERY single
+       time its page opened, even though the same Category/
+       Section/Student table had already been fetched moments
+       earlier on a different page in the same session. With a
+       real dataset (hundreds/thousands of rows) that repeated,
+       uncached full-table fetch is what actually shows up to
+       the user as "Category takes forever to load" - it is not
+       usually the Category LIST page's own single getRecordsPage()
+       call that is slow (that already asks for one page), it is
+       every OTHER page re-downloading the entire Category table
+       as a lookup, over and over, that adds up.
+
+       WHAT: a simple in-memory cache, keyed by store name. The
+       first getAllRecords(store) call in a session hits the
+       network exactly like before and stores the result here;
+       every call after that (from any page, for the rest of the
+       session) is served from this object instead of the
+       network, until something actually changes that store
+       (see invalidateListCache(), called from addRecord()/
+       updateRecord()/deleteRecord()/replayNext() below) - at
+       which point the very next getAllRecords(store) call fetches
+       fresh data again and re-populates the cache. Settings and
+       Permissions do not need an entry here - they already come
+       from StorageService/local checks (see settings.js /
+       LegacyCompatShim.js's checkRolePermission()), not the
+       network, so they were already "load once, reuse" before
+       this pass.
+
+       This does NOT touch getRecordsPage() - real list-page
+       browsing (Task 1) always asks the backend for the exact
+       page requested, never the cache, so Prev/Next and Refresh
+       keep behaving exactly as required.
+       ====================================================== */
+
+    var objListCache = {};
+
+    function invalidateListCache(strStoreName)
+    {
+        delete objListCache[strStoreName];
+    }
 
     /* ======================================================
        Public Object
@@ -867,12 +944,35 @@ var DataService = (function ()
 
     function getAllRecords(strStoreName, fnSuccess, fnError)
     {
+        /* CACHE LOOKUP TABLES (this pass) - see the note on
+           objListCache above. Served from memory, wrapped in a
+           resolved Promise so this still calls back asynchronously
+           like every other branch of this function (callers that
+           chain more logic after fnSuccess must not run before
+           getAllRecords() "returns" here). */
+
+        if (objListCache[strStoreName])
+        {
+            var arrCachedRecords = objListCache[strStoreName];
+
+            Promise.resolve().then(function ()
+            {
+                fnSuccess(arrCachedRecords);
+            });
+
+            return;
+        }
+
         var strMode = getBackendMode();
 
         if (strMode === AppConfig.BACKEND.OFFLINE || CommonUtils.isOnline() === false)
         {
             StorageService.getAllRecords(strStoreName)
-                .then(fnSuccess)
+                .then(function (arrRecords)
+                {
+                    objListCache[strStoreName] = arrRecords;
+                    fnSuccess(arrRecords);
+                })
                 .catch(fnError);
 
             return;
@@ -1023,6 +1123,8 @@ var DataService = (function ()
 
                         cacheListLocally(strStoreName, arrRecords);
 
+                        objListCache[strStoreName] = arrRecords;
+
                         fnSuccess(arrRecords);
                     },
                     function (objError)
@@ -1044,7 +1146,11 @@ var DataService = (function ()
            delete shape as GOOGLE above). */
 
         StorageService.getAllRecords(strStoreName)
-            .then(fnSuccess)
+            .then(function (arrRecords)
+            {
+                objListCache[strStoreName] = arrRecords;
+                fnSuccess(arrRecords);
+            })
             .catch(fnError);
     }
 
@@ -1311,6 +1417,15 @@ var DataService = (function ()
 
     function addRecord(strStoreName, objRecord, fnSuccess, fnError)
     {
+        /* CACHE LOOKUP TABLES (this pass): a new row is being
+           added to this store, so the cached full-table copy
+           (if any) is now stale - see objListCache above. Cleared
+           up front so the very next getAllRecords(strStoreName)
+           call (by this page or any other) fetches fresh data
+           instead of missing the new row. */
+
+        invalidateListCache(strStoreName);
+
         var strMode = getBackendMode();
 
         var objEntity = getEntityApiConfig(strStoreName);
@@ -1415,6 +1530,11 @@ var DataService = (function ()
 
     function updateRecord(strStoreName, objRecord, fnSuccess, fnError)
     {
+        /* CACHE LOOKUP TABLES (this pass) - see the matching
+           note in addRecord() above. */
+
+        invalidateListCache(strStoreName);
+
         normalizeRecordId(strStoreName, objRecord);
 
         var strMode = getBackendMode();
@@ -1492,6 +1612,11 @@ var DataService = (function ()
 
     function deleteRecord(strStoreName, mId, fnSuccess, fnError)
     {
+        /* CACHE LOOKUP TABLES (this pass) - see the matching
+           note in addRecord() above. */
+
+        invalidateListCache(strStoreName);
+
         var strMode = getBackendMode();
 
         var objEntity = getEntityApiConfig(strStoreName);
@@ -1684,6 +1809,13 @@ var DataService = (function ()
             StorageService.removeFromSyncQueue(objQueueItem.id)
                 .then(function ()
                 {
+                    /* CACHE LOOKUP TABLES (this pass): the queued
+                       change just reached Google, so this store's
+                       cached full-table copy (if any) is stale -
+                       see objListCache above. */
+
+                    invalidateListCache(objQueueItem.storeName);
+
                     replayNext(intIndex + 1, arrQueue, fnDone);
                 })
                 .catch(function (objError)

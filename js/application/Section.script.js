@@ -9,6 +9,49 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /* ----------------------------------------------------------
+   Project Improvements (Pagination / Loading Performance pass)
+   ----------------------------------------------------------
+   ✓ ROOT CAUSE: getListData() called DataService.getAllRecords(
+     AppConfig.STORES.SECTION, ...) - one request asking the
+     backend for the ENTIRE Section table (via
+     DataService.js's internal LIST_ALL_PAGE_SIZE=100000), then
+     held/rendered/filtered all of it client-side through
+     doFilterSectionList()/showFilteredList(). That is exactly
+     the "fetch every Google Sheet page into memory" bug this
+     pass removes.
+   ✓ FIX: getListData()/parseListResponse() now ask the backend
+     for exactly one 100-row page at a time via
+     DataService.getRecordsPage() (?page=N&pageSize=100), the
+     same real-pagination pattern already used by
+     Category.script.js/Student.script.js. Added mCurrentPage/
+     mPageSize/mTotalPages/mTotalRecords state, a Prev/Next
+     pagination bar (buildPaginationBarHtml()/
+     bindPaginationBarListeners(), appended by showFilteredList()),
+     and updated onClickRefresh() to reload only the page
+     currently on screen (Task 2), not the whole table.
+   ✓ SEARCH: there is no searchSections backend action, so -
+     exactly like Student.script.js - searchList() keeps
+     filtering only the currently loaded page, instantly,
+     client-side; enableSearch() now wraps that in the same
+     250ms debounce Category.script.js uses for its search
+     (Task 6).
+   ✓ Category List loading (Task 3): the fix for "Category List
+     stuck on Please Wait" lives in DataService.js, not here -
+     see its "Pagination / Loading Performance pass" note. This
+     file's own onLoadCacheManager() already calls
+     DataService.getAllRecords(CATEGORY, ...) purely as a
+     lookup (Section cards showing their parent Category's
+     name) - that call is now served from DataService's shared
+     in-memory cache instead of hitting the network every time
+     this page opens (Task 5).
+   No function renamed, no file/folder moved, no architecture
+   change - only getListData()/parseListResponse()/
+   doFilterSectionList()/showFilteredList()/enableSearch()/
+   onClickRefresh() above, all already-existing functions, were
+   modified.
+   ---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
    Final QA Pass - Back Button / Share Modal Fix (added)
    ----------------------------------------------------------
    Fixed a broken Back-button/reset check in Section.script.js:
@@ -196,6 +239,37 @@ var SectionScript = (function () {
 
 	// Save the Filtered main list
 	var mSelectedDataList = [];
+
+	// --------------------------------------------------
+	// PAGINATION FIX (this pass) - real pagination state.
+	// WHY: this page used to call DataService.getAllRecords()
+	// (see the old getListData() below) - one single request
+	// asking the backend for the ENTIRE Section table, then held
+	// and rendered/filtered all of it client-side. That is
+	// exactly the "fetch every page into memory" bug this pass
+	// removes: with a real dataset (hundreds/thousands of rows)
+	// every Section List open downloaded the whole table just to
+	// show the first screen of cards.
+	// WHAT: getListData()/parseListResponse() below now ask the
+	// backend for exactly one 100-row page at a time via
+	// DataService.getRecordsPage(), the same real-pagination
+	// pattern already used by Category.script.js/Student.script.js.
+	// These variables track which page is currently showing so
+	// the Prev/Next buttons (buildPaginationBarHtml() below) and
+	// Refresh (onClickRefresh()) know which page to (re)request.
+	// mCurrentSearchKeyword is intentionally always "" here -
+	// there is no searchSections backend action (see
+	// DataService.js's getEntityApiConfig()), so - exactly like
+	// Student.script.js - searching stays instant/client-side
+	// against only the currently loaded page (see searchList()
+	// below), never a server round trip.
+	// --------------------------------------------------
+	var mCurrentPage = 1;
+	var mPageSize = 100;
+	var mTotalPages = 1;
+	var mTotalRecords = 0;
+	var mCurrentSearchKeyword = "";
+	var mSearchDebounceTimer = null;
 
 	// --------------------------------------------------
 	// Confirmation Dialogs: this was referenced by every
@@ -1030,28 +1104,51 @@ var SectionScript = (function () {
 		});
 	}
 
-	function getListData() {
+	function getListData( iRequestedPage ) {
 
 		// --------------------------------------------------
-		// WHY: nothing told the user a fetch was in progress,
-		// so a slow/failed Google Apps Script call just
-		// looked like the page had frozen.
-		// WHAT: onListDocumentReady() already shows the loading
-		// overlay before this runs - this just hides it once
-		// the DataService callback (success or error) fires,
-		// so a failed fetch does not leave it stuck on screen.
-		// WHEN: runs every time the Section list is
-		// (re)loaded.
+		// PAGINATION FIX (this pass): this used to call
+		// DataService.getAllRecords( AppConfig.STORES.SECTION, ... ),
+		// which fetches the ENTIRE Section table in one request -
+		// exactly the "fetch every page into memory" bug described
+		// in the brief. Replaced with DataService.getRecordsPage(),
+		// asking the backend for exactly one 100-row page
+		// (?page=N&pageSize=100) at a time, same as
+		// Category.script.js/Student.script.js. iRequestedPage lets
+		// the Prev/Next buttons (bindPaginationBarListeners() below)
+		// and onClickRefresh() ask for a specific page; called with
+		// no argument (e.g. from onLoadCacheManager() on first load)
+		// it re-requests whatever mCurrentPage already is (1, on a
+		// fresh page load).
+		//
+		// WHY (loading overlay): nothing told the user a fetch was
+		// in progress, so a slow/failed Google Apps Script call
+		// just looked like the page had frozen. onListDocumentReady()
+		// already shows the loading overlay before this runs - this
+		// just hides it once the DataService callback (success or
+		// error) fires, so a failed fetch does not leave it stuck on
+		// screen.
+		// WHEN: runs every time the Section list is (re)loaded,
+		// paged, or refreshed - now for exactly one page at a time,
+		// not the whole table.
 		// --------------------------------------------------
 
-		DataService.getAllRecords(
+		if( iRequestedPage ) {
+
+			mCurrentPage = iRequestedPage;
+		}
+
+		DataService.getRecordsPage(
 
 			AppConfig.STORES.SECTION,
+			mCurrentPage,
+			mPageSize,
+			mCurrentSearchKeyword,
 
-			function( arrSections ) {
+			function( objPageResult ) {
 
 				hideLoader();
-				parseListResponse( arrSections );
+				parseListResponse( objPageResult );
 			},
 
 			function( objError ) {
@@ -1385,38 +1482,37 @@ var SectionScript = (function () {
 		});
 	}
 	// parse summary list response from server
-	function parseListResponse( arrSections ) {
+	function parseListResponse( objPageResult ) {
 
-		if( !arrSections ) {
+		if( !objPageResult ) {
 
-			arrSections = [];
+			objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
 		}
 
 		hideLoader();
 
+		var arrSections = objPageResult.records || [];
+
+		mCurrentPage = objPageResult.page || 1;
+		mTotalPages = objPageResult.totalPages || 1;
+		mTotalRecords = objPageResult.totalRecords || arrSections.length;
+
 		// --------------------------------------------------
-		// WHY: DataService.getAllRecords() returns plain
-		// objects (e.g. { sectionId, sectionName }), matching
-		// the same bridge already used in
+		// WHY: DataService.getRecordsPage() returns plain
+		// objects (e.g. { section_id, name, category_id }),
+		// matching the same bridge already used in
 		// Category.script.js/parseListResponse(). The rest of
-		// this file (doFilterSectionList(), createHtmlListItem(),
-		// showFilteredList(), etc.) was written for the old
-		// SQLite row format, where each Section is a plain array
-		// like [ sectionId, sectionName ], read using
+		// this file (createHtmlListItem(), showFilteredList(),
+		// etc.) was written for the old SQLite row format, where
+		// each Section is a plain array like
+		// [ sectionId, sectionName ], read using
 		// SUMMARY_INDEX.SECTION_ID / NAME as array positions.
 		// WHAT: convert each DataService object into that same
 		// array-row shape, in this one place only, so every
 		// function below this point keeps working exactly as it
 		// already did - nothing past this bridge needs to change.
-		//
-		// NOTE: "sectionId"/"sectionName" are this project's best
-		// current guess at the real field names your Google Apps
-		// Script returns, matching the naming style already
-		// confirmed for Category. If your Sections sheet/response
-		// actually uses different field names, this is the one
-		// place to correct them.
-		// WHEN: runs every time the Section list is loaded or
-		// refreshed from DataService.
+		// WHEN: runs every time a page of the Section list is
+		// loaded, refreshed, or paged through.
 		// --------------------------------------------------
 
 		var arrSectionRows = [];
@@ -1427,12 +1523,6 @@ var SectionScript = (function () {
 
 			var arrRow = [];
 
-			// FIELD NAME FIX: DataService.getAllRecords() resolves
-			// through getEntityApiConfig(SECTION).fromBackendFields()
-			// (see DataService.js), which returns section_id, name,
-			// category_id, organization_id, description - NOT
-			// sectionId/sectionName as this bridge previously guessed.
-
 			arrRow[ SUMMARY_INDEX.SECTION_ID ] = objSection.section_id;
 			arrRow[ SUMMARY_INDEX.NAME ] = objSection.name;
 			arrRow[ SUMMARY_INDEX.CATEGORY_ID ] = objSection.category_id;
@@ -1440,9 +1530,25 @@ var SectionScript = (function () {
 			arrSectionRows.push( arrRow );
 		}
 
+		// --------------------------------------------------
+		// PAGINATION FIX (this pass): this used to
+		// setStorageData(..., SECTION_SUMMARY_DATA) with the
+		// FULL table, then call doFilterSectionList() ->
+		// showFilteredList(), which re-read and rendered that
+		// entire stored table. There is no full table anymore -
+		// only the current page - so this stores/renders just
+		// that page directly. SECTION_SUMMARY_DATA still holds
+		// exactly what is on screen right now (same storage key,
+		// same shape), so parseInsertUpdateResponse()/
+		// getSelectedSummaryListData() and the rest of the
+		// existing Add/Edit/Delete flow keep working unchanged -
+		// they only ever look up rows that are visible on the
+		// current page anyway.
+		// --------------------------------------------------
+
 		setStorageData( arrSectionRows, SESSION_OBJECT.SECTION_SUMMARY_DATA );
 
-		doFilterSectionList();
+		showFilteredList( arrSectionRows );
 
 		// --------------------------------------------------
 		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
@@ -1529,10 +1635,27 @@ var SectionScript = (function () {
 				// can miss some of those. Matches the same fix already
 				// applied to the Student List search box. The
 				// search_icon click binding right below is unchanged.
+				//
+				// SEARCH DEBOUNCE (this pass, Task 6): searchList()
+				// itself is unchanged - it still only filters the
+				// currently loaded page, instantly, client-side
+				// (there is no searchSections backend action). Wrapped
+				// here with the same 250ms debounce Category.script.js
+				// uses for its server-side search, so a fast typist
+				// does not re-run the filter on every single keystroke.
 				// --------------------------------------------------
 				document.getElementById( "search" ).oninput = function() {
 
-					searchList();
+					if( mSearchDebounceTimer ) {
+
+						clearTimeout( mSearchDebounceTimer );
+					}
+
+					mSearchDebounceTimer = setTimeout( function() {
+
+						searchList();
+
+					}, 250 );
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -1550,7 +1673,11 @@ var SectionScript = (function () {
 
 		resetFilterInfo();
 
-		getListData();
+		// PAGINATION FIX (this pass): refresh reloads exactly the
+		// page currently on screen (Task 2 - "refresh only current
+		// page"), not the whole table.
+
+		getListData( mCurrentPage );
 
 		showLoader( "Refreshing..." );
 	}
@@ -2503,24 +2630,15 @@ var SectionScript = (function () {
 	function doFilterSectionList() {
 
 		clearSearch();
-		
+
+		// PAGINATION FIX (this pass): SECTION_SUMMARY_DATA now
+		// holds only the currently loaded page (see
+		// parseListResponse() above), not the full table, so the
+		// "All" filter button simply re-renders that page instead
+		// of re-fetching/re-filtering an entire in-memory table.
+
 		var list = getStorageData( SESSION_OBJECT.SECTION_SUMMARY_DATA );
 
-		// --------------------------------------------------
-		// WHY: this fetched the Section summary list into `list`
-		// but never actually did anything with it - unlike the
-		// identical-shaped doFilterCategoryList() in
-		// Category.script.js, it never called showFilteredList(),
-		// so the freshly loaded Sections were never handed to the
-		// function that builds the list HTML and writes the
-		// "Total: N" count. The backend call was succeeding the
-		// whole time; the page just never rendered what came back,
-		// which is why the Section List always looked empty.
-		// WHAT: pass the loaded list straight to showFilteredList(),
-		// same as Category/Student/Result already do.
-		// WHEN: runs every time the Section list is loaded, filtered,
-		// or refreshed.
-		// --------------------------------------------------
 		if( list == null ) {
 
 			list = [];
@@ -2558,23 +2676,68 @@ var SectionScript = (function () {
 			htmlContent += createHtmlListItem( data, i );
 		}
 
-		var list = getStorageData( SESSION_OBJECT.SECTION_SUMMARY_DATA );
-		var totalCount = list ? list.length : 0;
+		// --------------------------------------------------
+		// PAGINATION FIX (this pass): appends the same Prev/Next
+		// bar Category.script.js/Student.script.js already use
+		// (buildPaginationBarHtml()/bindPaginationBarListeners()
+		// below), and shows the real backend-reported total
+		// (mTotalRecords - see parseListResponse()) instead of
+		// comparing this page's length against a stored "full
+		// table" that no longer exists.
+		// --------------------------------------------------
 
+		htmlContent += buildPaginationBarHtml();
 
-		// Displaying No. of Records
-		var totalRecords = response.length;
+		var records = "Total: " + mTotalRecords;
 
-		var records = "Total: " + totalRecords;
-		if( totalRecords < totalCount ) {
-
-			records += "/" + totalCount;
-		}
-		
 		document.getElementById( "records" ).innerText = records;
 
 		setListToView( htmlContent );
+
+		bindPaginationBarListeners();
 	}
+
+	// --------------------------------------------------
+	// Small, self-contained Prev/Next bar - same pattern as
+	// Category.script.js/buildPaginationBarHtml(), so Page 1 =
+	// records 1-100, Page 2 = 101-200, etc, and Prev/Next always
+	// ask the backend for exactly that one page (Task 1).
+	// --------------------------------------------------
+	function buildPaginationBarHtml() {
+
+		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
+		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
+
+		return (
+			'<div id="pagination_bar" style="display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 0;">' +
+				'<button type="button" id="btn_page_prev" class="btn btn-sm btn-outline-primary" ' + strPrevDisabled + '>Prev</button>' +
+				'<span id="page_indicator">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
+				'<button type="button" id="btn_page_next" class="btn btn-sm btn-outline-primary" ' + strNextDisabled + '>Next</button>' +
+			'</div>'
+		);
+	}
+
+	function bindPaginationBarListeners() {
+
+		$( "#btn_page_prev" ).off().on( "click", function() {
+
+			if( mCurrentPage > 1 ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage - 1 );
+			}
+		});
+
+		$( "#btn_page_next" ).off().on( "click", function() {
+
+			if( mCurrentPage < mTotalPages ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage + 1 );
+			}
+		});
+	}
+
 
 
 	function getFilterSelectionIds( key ){
