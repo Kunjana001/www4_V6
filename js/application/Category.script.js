@@ -2316,7 +2316,12 @@ var CategoryScript = (function () {
 
 		var name = data[ SUMMARY_INDEX.NAME ];
 		var fillInData = data[ SUMMARY_INDEX.ORGANIZATION_ID ];
-		var seqNumber = index + 1 +') ';
+		// PAGINATION FIX: seqNumber is the DISPLAYED row number and must
+		// keep counting across pages (page 2 starts at 101, not 1 again).
+		// "index" itself stays as the page-local array position, since
+		// click handlers above use it to look the row up inside this
+		// page's own cached array.
+		var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
 		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';

@@ -2462,7 +2462,12 @@ var ResultScript = (function () {
 		var grade = data[ SUMMARY_INDEX.GRADE ];
 		var resultStatus = data[ SUMMARY_INDEX.RESULT ];
 		var studentId = data[ SUMMARY_INDEX.STUDENT_ID ];
-		var seqNumber = index + 1 +') ';
+		// PAGINATION FIX: seqNumber is the DISPLAYED row number and must
+		// keep counting across pages (page 2 starts at 101, not 1 again).
+		// "index" itself stays as the page-local array position, since
+		// click handlers above use it to look the row up inside this
+		// page's own cached array.
+		var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
 		var studentName = '';
 		var studentList = getStorageData( SESSION_OBJECT.STUDENT_LIST );
