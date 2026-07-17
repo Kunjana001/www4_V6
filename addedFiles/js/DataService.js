@@ -1193,7 +1193,7 @@ var DataService = (function ()
 
     function getRecordsPage(strStoreName, iPage, iPageSize, strKeyword, fnSuccess, fnError)
     {
-        var objEntity = GOOGLE_ENTITY_MAP[strStoreName];
+        var objEntity = getEntityApiConfig(strStoreName);
 
         if (!objEntity)
         {
