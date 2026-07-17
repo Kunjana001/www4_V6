@@ -33,6 +33,29 @@ var btnEye = document.getElementById("togglePassword");
 
 var btnLoginSettings = document.getElementById("btnLoginSettings");
 
+var linkForgotPassword = document.getElementById("forgotPasswordLink");
+
+var forgotPasswordOverlay = document.getElementById("forgotPasswordOverlay");
+
+var stepFpUsername = document.getElementById("fpStepUsername");
+var stepFpPassword = document.getElementById("fpStepPassword");
+
+var txtFpUsername = document.getElementById("fpUsername");
+var lblFpVerifiedUsername = document.getElementById("fpVerifiedUsername");
+
+var txtFpNewPassword = document.getElementById("fpNewPassword");
+var txtFpConfirmPassword = document.getElementById("fpConfirmPassword");
+
+var btnCloseForgotPassword = document.getElementById("btnCloseForgotPassword");
+var btnCancelForgotPassword = document.getElementById("btnCancelForgotPassword");
+var btnFpVerifyUsername = document.getElementById("btnFpVerifyUsername");
+var btnFpResetPassword = document.getElementById("btnFpResetPassword");
+
+/* Holds the username once Step 1 has confirmed it exists, so
+   Step 2's Reset Password button does not have to re-read (or
+   trust) the Step 1 input again. */
+var strFpVerifiedUsername = "";
+
 var imgLoginLogo = document.getElementById("loginLogo");
 
 var lblLoginTitle = document.getElementById("loginTitle");
@@ -135,6 +158,31 @@ btnLogin.onclick = loginUser;
 btnSignup.onclick = goSignup;
 
 btnLoginSettings.onclick = goSettings;
+
+linkForgotPassword.onclick = function (objEvent)
+{
+    objEvent.preventDefault();
+
+    openForgotPasswordModal();
+};
+
+btnCloseForgotPassword.onclick = closeForgotPasswordModal;
+btnCancelForgotPassword.onclick = closeForgotPasswordModal;
+
+/* Clicking the dimmed backdrop (not the box itself) closes the
+   modal - same convention as CommonUtils.showConfirmDialog and
+   the Add/Edit User modal on the Profile page. */
+forgotPasswordOverlay.onclick = function (objEvent)
+{
+    if (objEvent.target === forgotPasswordOverlay)
+    {
+        closeForgotPasswordModal();
+    }
+};
+
+btnFpVerifyUsername.onclick = verifyForgotPasswordUsername;
+
+btnFpResetPassword.onclick = submitNewPassword;
 
 
 /* ==========================================================
@@ -256,5 +304,230 @@ function loginUser()
         console.log(objError);
 
         CommonUtils.showAlert((objError && objError.message) || "Invalid Username or Password.");
+    });
+}
+
+
+/* ==========================================================
+   Forgot Password
+
+   No email column exists on the Users sheet (see
+   DataService.js's User entity map), so this follows the
+   simplest academic-project flow:
+
+       Forgot Password
+             |
+       Enter Username
+             |
+       Verify Username Exists
+             |
+       Enter New Password / Confirm Password
+             |
+       Update Users Sheet
+             |
+       Password changed successfully
+             |
+       Back to Login
+
+   Both steps live in the same modal (#forgotPasswordOverlay);
+   Step 2 (fpStepPassword) only appears once Step 1 has
+   confirmed the username is real, so a new password can never
+   be sent for a username that was never checked.
+   ========================================================== */
+
+/* ==========================================================
+   Open the Modal
+
+   Always starts back on Step 1 (Username), even if it was left
+   on Step 2 the last time it was closed, so a stale verified
+   username is never carried over into a new attempt.
+   ========================================================== */
+
+function openForgotPasswordModal()
+{
+    resetForgotPasswordModal();
+
+    forgotPasswordOverlay.style.display = "flex";
+
+    txtFpUsername.focus();
+}
+
+
+
+/* ==========================================================
+   Close the Modal
+   ========================================================== */
+
+function closeForgotPasswordModal()
+{
+    forgotPasswordOverlay.style.display = "none";
+
+    resetForgotPasswordModal();
+}
+
+
+
+/* ==========================================================
+   Reset the Modal Back to Step 1
+
+   Clears every field, forgets any previously verified
+   username, and shows the Username step / "Verify Username"
+   button again while hiding the Password step / "Reset
+   Password" button.
+   ========================================================== */
+
+function resetForgotPasswordModal()
+{
+    strFpVerifiedUsername = "";
+
+    txtFpUsername.value = "";
+    txtFpNewPassword.value = "";
+    txtFpConfirmPassword.value = "";
+
+    lblFpVerifiedUsername.textContent = "";
+
+    stepFpUsername.style.display = "";
+    stepFpPassword.style.display = "none";
+
+    btnFpVerifyUsername.style.display = "";
+    btnFpResetPassword.style.display = "none";
+
+    btnFpVerifyUsername.disabled = false;
+    btnFpResetPassword.disabled = false;
+}
+
+
+
+/* ==========================================================
+   Step 1 - Verify the Username Exists
+
+   Asks the backend (Users sheet) whether this username is
+   real before ever showing a New Password field. Only on a
+   confirmed match does Step 2 appear.
+   ========================================================== */
+
+function verifyForgotPasswordUsername()
+{
+    var strUsername = txtFpUsername.value.trim();
+
+    if (strUsername === "")
+    {
+        CommonUtils.showAlert("Please enter your username.");
+
+        txtFpUsername.focus();
+
+        return;
+    }
+
+    btnFpVerifyUsername.disabled = true;
+
+    showLoader("Checking username...");
+
+    DataService.verifyUsernameExists(strUsername, function ()
+    {
+        hideLoader();
+
+        btnFpVerifyUsername.disabled = false;
+
+        strFpVerifiedUsername = strUsername;
+
+        lblFpVerifiedUsername.textContent = strUsername;
+
+        stepFpUsername.style.display = "none";
+        stepFpPassword.style.display = "";
+
+        btnFpVerifyUsername.style.display = "none";
+        btnFpResetPassword.style.display = "";
+
+        txtFpNewPassword.focus();
+    },
+    function (objError)
+    {
+        hideLoader();
+
+        btnFpVerifyUsername.disabled = false;
+
+        console.log(objError);
+
+        CommonUtils.showAlert((objError && objError.message) || "Username not found.");
+    });
+}
+
+
+
+/* ==========================================================
+   Step 2 - Set the New Password
+
+   Validates the new password / confirm password locally, then
+   asks the backend to update the Users sheet for the username
+   verified in Step 1 - never the raw (unverified) contents of
+   the Username field.
+   ========================================================== */
+
+function submitNewPassword()
+{
+    var strNewPassword = txtFpNewPassword.value.trim();
+
+    var strConfirmPassword = txtFpConfirmPassword.value.trim();
+
+    if (strNewPassword === "")
+    {
+        CommonUtils.showAlert("Please enter a new password.");
+
+        txtFpNewPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword.length < 6)
+    {
+        CommonUtils.showAlert("Password must be at least 6 characters.");
+
+        txtFpNewPassword.focus();
+
+        return;
+    }
+
+    if (strConfirmPassword === "")
+    {
+        CommonUtils.showAlert("Please confirm your new password.");
+
+        txtFpConfirmPassword.focus();
+
+        return;
+    }
+
+    if (strNewPassword !== strConfirmPassword)
+    {
+        CommonUtils.showAlert("Passwords do not match.");
+
+        txtFpConfirmPassword.focus();
+
+        return;
+    }
+
+    btnFpResetPassword.disabled = true;
+
+    showLoader("Updating password...");
+
+    DataService.resetPassword(strFpVerifiedUsername, strNewPassword, function ()
+    {
+        hideLoader();
+
+        btnFpResetPassword.disabled = false;
+
+        closeForgotPasswordModal();
+
+        CommonUtils.showAlert("Password changed successfully.", "success");
+    },
+    function (objError)
+    {
+        hideLoader();
+
+        btnFpResetPassword.disabled = false;
+
+        console.log(objError);
+
+        CommonUtils.showAlert((objError && objError.message) || "Could not update password.");
     });
 }

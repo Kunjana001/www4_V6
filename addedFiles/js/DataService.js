@@ -340,7 +340,13 @@ var DataService = (function ()
             createAccount,
 
         changePassword:
-            changePassword
+            changePassword,
+
+        verifyUsernameExists:
+            verifyUsernameExists,
+
+        resetPassword:
+            resetPassword
 
     };
 
@@ -1996,6 +2002,139 @@ var DataService = (function ()
         function (objError)
         {
             CommonUtils.logError("DataService.changePassword (GOOGLE unreachable)", objError);
+
+            fnError(objError);
+        });
+    }
+
+
+
+    /* ======================================================
+       Forgot Password - Step 1: Verify Username Exists
+
+       WHY: this project's Users sheet has no email column
+       (see the User entity map above - fromBackendFields only
+       ever reads username/fullName/role/status/lastLogin), so
+       Forgot Password can only identify an account by
+       username. Before the Forgot Password modal ever shows a
+       New Password field, it must confirm the typed username
+       is a real row in the Users sheet - otherwise anyone
+       could "reset" a password for a username that doesn't
+       exist, or silently create confusion about which account
+       just got its password changed.
+
+       NOTE: requires a `verifyUsername` action in the Apps
+       Script project (Code.gs / Login.gs), alongside the
+       existing `login` / `createAccount` / `changePassword`
+       actions, that:
+         1. searches the Users sheet for e.parameter.username,
+         2. responds { success: true, data: { exists: true,
+            username } } if found,
+         3. responds { success: false, message: "Username not
+            found." } otherwise.
+       That server-side action lives outside this repo (Apps
+       Script project) - see the matching Code.gs snippet.
+
+       strUsername : typed into the Forgot Password modal
+       fnSuccess   : function(objResult)
+       fnError     : function(objError) - includes the
+                     username-not-found case, since only the
+                     backend can see the real Users sheet
+       ====================================================== */
+
+    function verifyUsernameExists(strUsername, fnSuccess, fnError)
+    {
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to reset your password."));
+            return;
+        }
+
+        callGoogleGet(buildGoogleUrl("verifyUsername", { username: strUsername }), function (objResponse)
+        {
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error(objResponse ? objResponse.message : "Username not found."));
+                return;
+            }
+
+            fnSuccess(objResponse.data);
+        },
+        function (objError)
+        {
+            CommonUtils.logError("DataService.verifyUsernameExists (GOOGLE unreachable)", objError);
+
+            fnError(objError);
+        });
+    }
+
+
+
+    /* ======================================================
+       Forgot Password - Step 2: Reset the Password
+
+       WHY: once verifyUsernameExists() above has confirmed the
+       account is real, this actually updates the Users sheet
+       with the new password the person just chose - the last
+       step of the "no email column" Forgot Password flow
+       (Enter Username -> Verify Username Exists -> Enter New
+       Password/Confirm -> Update Users Sheet -> success ->
+       back to Login).
+
+       Deliberately does NOT ask for (or check) the current/old
+       password - that's the whole point of Forgot Password, as
+       opposed to Profile's Change Password (see
+       DataService.changePassword() above), which does require
+       it. Only login.js's Forgot Password modal is expected to
+       call this, and only ever with the exact username
+       verifyUsernameExists() already confirmed - see
+       strFpVerifiedUsername in login.js.
+
+       NOTE: requires a `resetPassword` action in the Apps
+       Script project (Code.gs / Login.gs), alongside
+       `verifyUsername` above, that:
+         1. searches the Users sheet for e.parameter.username,
+         2. responds { success: false, message: "Username not
+            found." } if it isn't there,
+         3. otherwise overwrites that row's Password column
+            with e.parameter.newPassword,
+         4. responds { success: true, message: "Password
+            updated successfully." } - matching resetPassword(
+            username, newPassword) in the chat snippet.
+
+       strUsername    : the username confirmed by
+                         verifyUsernameExists() (Step 1)
+       strNewPassword : typed into the Forgot Password modal's
+                         New Password field (Step 2)
+       fnSuccess : function(objResult)
+       fnError   : function(objError)
+       ====================================================== */
+
+    function resetPassword(strUsername, strNewPassword, fnSuccess, fnError)
+    {
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to reset your password."));
+            return;
+        }
+
+        callGoogleGet(buildGoogleUrl("resetPassword", {
+            username: strUsername,
+            newPassword: strNewPassword
+
+        }), function (objResponse)
+        {
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error(objResponse ? objResponse.message : "Could not update password."));
+                return;
+            }
+
+            fnSuccess(objResponse.data);
+        },
+        function (objError)
+        {
+            CommonUtils.logError("DataService.resetPassword (GOOGLE unreachable)", objError);
 
             fnError(objError);
         });
