@@ -2953,7 +2953,13 @@ function parseListResponse(objPageResult)
     var name = data[ SUMMARY_INDEX.NAME ];
     var mobile = data[ SUMMARY_INDEX.MOBILE ] || '';
     var email = data[ SUMMARY_INDEX.EMAIL ] || '';
-    var seqNumber = index + 1 +') ';
+    // PAGINATION FIX: seqNumber is the DISPLAYED row number and must
+    // keep counting across pages (page 2 starts at 101, not 1 again).
+    // "index" itself must stay as the page-local array position -
+    // onClickInfoIcon(index)/onClickEditIcon(index) above use it to
+    // look the row up inside this page's own mSelectedDataList/
+    // mSearchList array, so it can't be changed to a global number.
+    var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
     var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="StudentScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
     var editIconHtml = '';
