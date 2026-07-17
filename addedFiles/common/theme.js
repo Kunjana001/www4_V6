@@ -65,17 +65,26 @@ var ThemeManager = (function ()
 
     var THEME_ORANGE = "orange";
 
+    /* Added for the Phase 1 Theme System pass (brief item 5) -
+       black/white/yellow, the standard high-legibility palette
+       for low-vision users. common.css's html[data-theme="contrast"]
+       block also raises card/border contrast, not just the 3
+       brand tokens the other themes swap. */
+
+    var THEME_CONTRAST = "contrast";
+
     /* All theme names in one place, in the order they should be
        offered on the Settings page. common.css has a matching
        html[data-theme="..."] block for every one of these. */
 
     var ALL_THEMES = [
-        { id: THEME_LIGHT,  label: "Light",  swatch: "#123b8d" },
-        { id: THEME_DARK,   label: "Dark",   swatch: "#171a22" },
-        { id: THEME_BLUE,   label: "Blue",   swatch: "#1565c0" },
-        { id: THEME_GREEN,  label: "Green",  swatch: "#2e7d32" },
-        { id: THEME_PURPLE, label: "Purple", swatch: "#6a1b9a" },
-        { id: THEME_ORANGE, label: "Orange", swatch: "#ef6c00" }
+        { id: THEME_LIGHT,    label: "Light",          swatch: "#123b8d" },
+        { id: THEME_DARK,     label: "Dark",           swatch: "#171a22" },
+        { id: THEME_BLUE,     label: "Blue",           swatch: "#1565c0" },
+        { id: THEME_GREEN,    label: "Green",          swatch: "#2e7d32" },
+        { id: THEME_PURPLE,   label: "Purple",         swatch: "#6a1b9a" },
+        { id: THEME_ORANGE,   label: "Orange",         swatch: "#ef6c00" },
+        { id: THEME_CONTRAST, label: "High Contrast",  swatch: "#000000" }
     ];
 
 
@@ -109,6 +118,10 @@ var ThemeManager = (function ()
         THEME_ORANGE:
 
             THEME_ORANGE,
+
+        THEME_CONTRAST:
+
+            THEME_CONTRAST,
 
         ALL_THEMES:
 
@@ -354,13 +367,140 @@ var FontSizeManager = (function ()
 
 
 /* ==========================================================
-   Restore the Theme and Font Size Immediately
+   Font Family Manager
+
+   WHY: Phase 1 brief item 4 - "Allow switching fonts from
+   Settings" (Poppins / Inter / Nunito / Roboto). Mirrors
+   FontSizeManager's exact shape (same function names, same
+   StorageService pattern), which itself mirrors ThemeManager -
+   so this is a third instance of the same well-understood
+   pattern, not a new one.
+
+   WHAT it does: stores the chosen font under
+   AppConfig.STORAGE_KEYS.FONT_FAMILY and applies it as a
+   "data-font-family" attribute on <html>. common.css reads
+   that attribute to swap --app-font-family.
+   ========================================================== */
+
+var FontFamilyManager = (function ()
+{
+
+    var FONT_POPPINS = "poppins";
+
+    var FONT_INTER = "inter";
+
+    var FONT_NUNITO = "nunito";
+
+    var FONT_ROBOTO = "roboto";
+
+    /* All fonts in the order they should be offered on the
+       Settings page. common.css has a matching
+       html[data-font-family="..."] block for each one. */
+
+    var ALL_FONT_FAMILIES = [
+        { id: FONT_POPPINS, label: "Poppins" },
+        { id: FONT_INTER,   label: "Inter" },
+        { id: FONT_NUNITO,  label: "Nunito" },
+        { id: FONT_ROBOTO,  label: "Roboto" }
+    ];
+
+    return {
+
+        FONT_POPPINS: FONT_POPPINS,
+
+        FONT_INTER: FONT_INTER,
+
+        FONT_NUNITO: FONT_NUNITO,
+
+        FONT_ROBOTO: FONT_ROBOTO,
+
+        ALL_FONT_FAMILIES: ALL_FONT_FAMILIES,
+
+        getCurrentFontFamily: getCurrentFontFamily,
+
+        applyFontFamily: applyFontFamily,
+
+        restoreSavedFontFamily: restoreSavedFontFamily
+
+    };
+
+
+
+    /* ======================================================
+       Get the Currently Saved Font Family
+
+       Same fallback rule as the other two managers: an
+       unknown or missing value defaults to Poppins.
+       ====================================================== */
+
+    function getCurrentFontFamily()
+    {
+        var strSavedFont = StorageService.getValue(AppConfig.STORAGE_KEYS.FONT_FAMILY);
+
+        var bIsKnownFont = ALL_FONT_FAMILIES.some(function (objFont)
+        {
+            return objFont.id === strSavedFont;
+        });
+
+        if (bIsKnownFont === true)
+        {
+            return strSavedFont;
+        }
+
+        return FONT_POPPINS;
+    }
+
+
+
+    /* ======================================================
+       Apply a Font Family to the Page
+
+       strFont : one of FONT_POPPINS / FONT_INTER / FONT_NUNITO
+                 / FONT_ROBOTO
+
+       Sets "data-font-family" on <html> so common.css can swap
+       --app-font-family, and saves the choice the same way
+       applyTheme()/applyFontSize() save their own values.
+       ====================================================== */
+
+    function applyFontFamily(strFont)
+    {
+        document.documentElement.setAttribute("data-font-family", strFont);
+
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.FONT_FAMILY, strFont);
+    }
+
+
+
+    /* ======================================================
+       Restore the Last Saved Font Family
+
+       Call this as soon as a page loads, right alongside
+       ThemeManager.restoreSavedTheme() and
+       FontSizeManager.restoreSavedFontSize().
+       ====================================================== */
+
+    function restoreSavedFontFamily()
+    {
+        var strSavedFont = getCurrentFontFamily();
+
+        document.documentElement.setAttribute("data-font-family", strSavedFont);
+    }
+
+})();
+
+
+
+/* ==========================================================
+   Restore the Theme, Font Size and Font Family Immediately
 
    This runs the moment theme.js loads on any page, so the
-   saved theme and font size are applied automatically
-   everywhere, as required by Task 6 and Task 7.
+   saved theme, font size and font family are applied
+   automatically everywhere, as required by Task 6 and Task 7.
    ========================================================== */
 
 ThemeManager.restoreSavedTheme();
 
 FontSizeManager.restoreSavedFontSize();
+
+FontFamilyManager.restoreSavedFontFamily();

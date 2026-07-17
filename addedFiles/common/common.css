@@ -37,6 +37,18 @@
 
 ==========================================================*/
 
+/*==========================================================
+    PHASE 1 - MODERN UI PASS (fonts)
+
+    WHY: brief asks for switchable Poppins / Inter / Nunito /
+    Roboto fonts from Settings. Pulling all four here (instead
+    of adding <link> tags to every HTML page) keeps this a
+    CSS-only change, per the brief's "keep the same HTML" rule
+    for this pass.
+==========================================================*/
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap");
+
 
 /*==========================================================
     RESET
@@ -58,11 +70,7 @@ body
 {
     background:#f4f6fb;
 
-    font-family:
-
-        Arial,
-        Helvetica,
-        sans-serif;
+    font-family:var(--app-font-family);
 
     font-size:15px;
 
@@ -124,6 +132,26 @@ img
     --app-theme-dark:#0f3277;
 
     --app-accent:#3d7bfd;
+
+
+
+    /* --------------------------------------------------------
+       PHASE 1 - MODERN UI PASS (Font Family)
+
+       WHY: brief item 4 asks for a switchable font (Poppins /
+       Inter / Nunito / Roboto) from Settings, the same
+       "pick one of a fixed list, remember it" pattern the
+       color Theme and Font Size settings already use.
+       WHAT: one variable every element already inherits from
+       body, overridden per html[data-font-family="..."] below
+       (set by the new FontFamilyManager in theme.js). Poppins
+       is the default so a first visit (or an older saved
+       profile with no font-family choice yet) picks up the
+       new look automatically.
+       -------------------------------------------------------- */
+
+    --app-font-family:
+        "Poppins", Arial, Helvetica, sans-serif;
 
 
 
@@ -297,6 +325,54 @@ html[data-theme="orange"]
     --app-theme-dark:#d84315;
     --app-accent:#ffa726;
 }
+
+/* High Contrast - added for the Theme System Enhancement task
+   (brief item 5). Not just a recolor: black/white/yellow with
+   a heavier accent is the standard high-legibility combination
+   for low-vision users, so this intentionally does NOT follow
+   the "just swap 3 brand tokens" pattern the themes above use -
+   it also raises card/border contrast, which is why it is not
+   simply "another color option" implemented purely through
+   --app-theme-color. */
+html[data-theme="contrast"]
+{
+    --app-theme-color:#000000;
+    --app-theme-dark:#000000;
+    --app-accent:#ffd400;
+
+    --app-bg-color:#ffffff;
+    --app-card-bg:#ffffff;
+    --app-modal-bg:#ffffff;
+    --app-text-color:#000000;
+    --app-text-light:#000000;
+    --app-heading:#000000;
+    --app-border:#000000;
+
+    --color-sidebar-background:#000000;
+    --color-sidebar-hover:#242424;
+}
+
+html[data-theme="contrast"] .card,
+html[data-theme="contrast"] .list-item,
+html[data-theme="contrast"] .panel,
+html[data-theme="contrast"] .settings-card
+{
+    border:2px solid #000000;
+}
+
+/*==========================================================
+    FONT FAMILY
+
+    WHY: brief item 4 - Poppins / Inter / Nunito / Roboto,
+    selectable from Settings. Mirrors the data-theme /
+    data-font-size pattern exactly: FontFamilyManager (theme.js)
+    sets one attribute on <html>, this file swaps one variable.
+==========================================================*/
+
+html[data-font-family="poppins"] { --app-font-family:"Poppins", Arial, Helvetica, sans-serif; }
+html[data-font-family="inter"]   { --app-font-family:"Inter", Arial, Helvetica, sans-serif; }
+html[data-font-family="nunito"]  { --app-font-family:"Nunito", Arial, Helvetica, sans-serif; }
+html[data-font-family="roboto"]  { --app-font-family:"Roboto", Arial, Helvetica, sans-serif; }
 
 /*==========================================================
     FONT SIZE
