@@ -208,6 +208,19 @@ var DataService = (function ()
 {
 
     /* ======================================================
+       List Page Size
+
+       See the "LIST TRUNCATION FIX" note on getAllRecords()
+       below - the backend paginates every list action
+       (default pageSize 10) and this app has no paged list UI
+       anywhere, so every list fetch explicitly asks for one
+       page this big instead of silently accepting the
+       backend's first-10-rows default.
+       ====================================================== */
+
+    var LIST_ALL_PAGE_SIZE = 100000;
+
+    /* ======================================================
        Public Object
        ====================================================== */
 
@@ -215,6 +228,9 @@ var DataService = (function ()
 
         getAllRecords:
             getAllRecords,
+
+        getRecordsPage:
+            getRecordsPage,
 
         getRecordById:
             getRecordById,
@@ -540,6 +556,7 @@ var DataService = (function ()
         {
             listAction: "getCategories",
             listDataKey: "categories",
+            searchAction: "searchCategories",
             getByIdAction: "getCategoryById",
             addAction: "addCategory",
             updateAction: "updateCategory",
@@ -901,104 +918,57 @@ var DataService = (function ()
                     });
 
                     /* --------------------------------------------------
-                       PAGINATION FIX
+                       LIST TRUNCATION FIX (root cause of "only 10 of
+                       15 rows show up")
 
-                       Every list action on the backend (Category.gs,
-                       Student.gs, Section.gs, Result.gs, Session.gs -
-                       see getResults()/getStudents()/etc.) has always
-                       paginated its response: it reads e.parameter.page
-                       (default 1) and e.parameter.pageSize (default 10)
-                       and only returns that one page's worth of rows,
-                       plus totalPages/totalRecords describing the rest.
+                       WHY: getStudents/getCategories/getSections/
+                       getResults/getSessions in the real Apps Script
+                       backend all paginate - var iPage =
+                       parseInt(e.parameter.page || 1); var iPageSize =
+                       parseInt(e.parameter.pageSize || 10) - and this
+                       call used to send buildGoogleUrl(objEntity.
+                       listAction, {}), i.e. no page/pageSize at all.
+                       That is not "no pagination", it is "always page
+                       1 of 10", so a sheet with 15 rows only ever
+                       returned the first 10 - silently, with no error,
+                       which is why it looked like data was missing
+                       rather than failing to load.
 
-                       This call site used to be
-                       buildGoogleUrl(objEntity.listAction, {}) - an
-                       empty params object - which means every single
-                       "load the list" request implicitly asked for
-                       page=1&pageSize=10 and never asked for anything
-                       else. With 10 or fewer rows in the Sheet this was
-                       invisible; with 11+ rows, only the first 10 ever
-                       reached the UI, silently, with no error anywhere,
-                       because the backend was doing exactly what it was
-                       asked to do.
-
-                       Fix: fetchAllPagesFromGoogle() below now walks
-                       page=1, page=2, page=3, ... (PAGE_SIZE rows each)
-                       and concatenates every page's rows together
-                       before this function's own row-conversion /
-                       cache / fnSuccess logic runs, so the rest of the
-                       pipeline (per-row try/catch, cacheListLocally,
-                       fnSuccess) is completely unchanged below - it now
-                       just receives the full list instead of one page
-                       of it. If any single page request fails, the
-                       already-collected pages are dropped and this
-                       falls back to arrExistingRecords, same as the
-                       original single-request failure path did.
+                       WHAT: this app has no paged list UI anywhere
+                       (AppConfig.DEFAULT_PAGE_SIZE was defined but
+                       never once referenced before this fix) - every
+                       page renders and searches the full list
+                       client-side, so the fix is to explicitly ask
+                       for one page big enough to always contain every
+                       row, not to build real pagination end-to-end.
                        -------------------------------------------------- */
 
-                    var PAGE_SIZE = 10;
+                    callGoogleGet(buildGoogleUrl(objEntity.listAction, {
 
-                    var arrAllRawRecords = [];
+                        page: 1,
+                        pageSize: LIST_ALL_PAGE_SIZE
 
-                    var fetchAllPagesFromGoogle = function (intPage)
+                    }), function (objResponse)
                     {
-                        callGoogleGet(buildGoogleUrl(objEntity.listAction, { page: intPage, pageSize: PAGE_SIZE }), function (objResponse)
+                        if (!objResponse || objResponse.success !== true)
                         {
-                            if (!objResponse || objResponse.success !== true)
-                            {
-                                CommonUtils.logError(
-                                    "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
-                                    objResponse ? objResponse.message : "no response body"
-                                );
-
-                                fnSuccess(arrExistingRecords);
-
-                                return;
-                            }
-
-                            var arrPageRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
-
-                            if (!Array.isArray(arrPageRecords))
-                            {
-                                arrPageRecords = [];
-                            }
-
-                            arrAllRawRecords = arrAllRawRecords.concat(arrPageRecords);
-
-                            /* totalPages comes straight from the
-                               backend's pagination envelope (see
-                               getCategories()/getStudents()/etc. in the
-                               .gs files: { totalRecords, page, pageSize,
-                               totalPages, <entity list> }). Keep asking
-                               for the next page until we've reached (or
-                               passed) it, or until a page comes back
-                               with fewer rows than PAGE_SIZE (belt and
-                               braces in case totalPages is ever missing
-                               or wrong on the backend). */
-
-                            var intTotalPages = (objResponse.data && objResponse.data.totalPages) || 1;
-
-                            var bMorePagesRemain = (intPage < intTotalPages) && (arrPageRecords.length === PAGE_SIZE);
-
-                            if (bMorePagesRemain)
-                            {
-                                fetchAllPagesFromGoogle(intPage + 1);
-
-                                return;
-                            }
-
-                            finishGoogleLoad(arrAllRawRecords);
-                        },
-                        function (objError)
-                        {
-                            CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
+                            CommonUtils.logError(
+                                "DataService.getAllRecords (GOOGLE returned success:false, falling back to offline cache)",
+                                objResponse ? objResponse.message : "no response body"
+                            );
 
                             fnSuccess(arrExistingRecords);
-                        });
-                    };
 
-                    var finishGoogleLoad = function (arrRawRecords)
-                    {
+                            return;
+                        }
+
+                        var arrRawRecords = (objResponse.data && objResponse.data[objEntity.listDataKey]) || [];
+
+                        if (!Array.isArray(arrRawRecords))
+                        {
+                            arrRawRecords = [];
+                        }
+
                         /* STUDENT LOADING FIX (root cause):
                            This used to be a plain arrRawRecords.map(...).
                            Array.prototype.map() has no per-item error
@@ -1054,9 +1024,13 @@ var DataService = (function ()
                         cacheListLocally(strStoreName, arrRecords);
 
                         fnSuccess(arrRecords);
-                    };
+                    },
+                    function (objError)
+                    {
+                        CommonUtils.logError("DataService.getAllRecords (GOOGLE unreachable, falling back to offline cache)", objError);
 
-                    fetchAllPagesFromGoogle(1);
+                        fnSuccess(arrExistingRecords);
+                    });
                 })
                 .catch(fnError);
 
@@ -1072,6 +1046,154 @@ var DataService = (function ()
         StorageService.getAllRecords(strStoreName)
             .then(fnSuccess)
             .catch(fnError);
+    }
+
+
+
+    /* ======================================================
+       Get One Page of Records (real server-side pagination)
+
+       WHY: getAllRecords() above always fetches the entire
+       table (needed for dropdowns/lookups - Section's Category
+       picker, Result's Student picker, etc. genuinely need every
+       row). List *pages* do not - the Performance Optimization
+       brief calls out fetching everything on every list view as
+       the actual problem to undo. This is the real, page-at-a-
+       time replacement used by the list pages themselves.
+
+       WHAT: for a plain browse (no keyword), asks the backend
+       for exactly one page via listAction with real page/
+       pageSize params, and returns the page metadata
+       (totalRecords/totalPages) the backend already computes.
+       For a search, there is no paginated search endpoint on
+       the backend (searchCategories/searchStudents/etc. all
+       return every match at once) - so this fetches every
+       match for the keyword once, then paginates that (usually
+       much smaller) result set here on the client. That's a
+       real, intentional tradeoff: browsing the full table is
+       always a real per-page network call; searching within it
+       costs one call for all matches, then pages through those
+       in memory. Worth knowing if search ever needs to scale to
+       a keyword that matches thousands of rows.
+
+       strStoreName : AppConfig.STORES.CATEGORY / STUDENT / ...
+       iPage        : 1-based page number being requested
+       iPageSize    : rows per page
+       strKeyword   : search text, or "" / null for a plain browse
+       fnSuccess    : function({ records, totalRecords, totalPages,
+                                  page, pageSize })
+       fnError      : function(objError)
+       ====================================================== */
+
+    function getRecordsPage(strStoreName, iPage, iPageSize, strKeyword, fnSuccess, fnError)
+    {
+        var objEntity = GOOGLE_ENTITY_MAP[strStoreName];
+
+        if (!objEntity)
+        {
+            fnError(new Error("No paging configuration for '" + strStoreName + "'."));
+            return;
+        }
+
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to load this list."));
+            return;
+        }
+
+        var blnIsSearch = !!(strKeyword && strKeyword.trim() !== "");
+
+        /* Performance Optimization brief, Priority 5: log how long
+           the backend call and the row conversion each take, so
+           slow spots are visible instead of guessed at. Development-
+           only - this is console.log, not user-facing UI. */
+        var dRequestStartedAt = new Date().getTime();
+
+        var fnHandleResponse = function (objResponse)
+        {
+            var dBackendElapsedMs = new Date().getTime() - dRequestStartedAt;
+
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error((objResponse && objResponse.message) || ("Failed to load " + strStoreName + ".")));
+                return;
+            }
+
+            var dConvertStartedAt = new Date().getTime();
+
+            var arrRawRecords, iTotalRecords, iTotalPages, iActualPage;
+
+            if (blnIsSearch)
+            {
+                var arrAllMatches = Array.isArray(objResponse.data) ? objResponse.data : [];
+
+                iTotalRecords = arrAllMatches.length;
+                iTotalPages = Math.max(1, Math.ceil(iTotalRecords / iPageSize));
+                iActualPage = Math.min(Math.max(1, iPage), iTotalPages);
+
+                var iSliceStart = (iActualPage - 1) * iPageSize;
+
+                arrRawRecords = arrAllMatches.slice(iSliceStart, iSliceStart + iPageSize);
+            }
+            else
+            {
+                var objPageData = objResponse.data || {};
+
+                arrRawRecords = Array.isArray(objPageData[objEntity.listDataKey]) ? objPageData[objEntity.listDataKey] : [];
+                iTotalRecords = objPageData.totalRecords || arrRawRecords.length;
+                iTotalPages = objPageData.totalPages || 1;
+                iActualPage = objPageData.page || iPage;
+            }
+
+            var arrRecords = [];
+
+            for (var intRowIndex = 0; intRowIndex < arrRawRecords.length; intRowIndex++)
+            {
+                try
+                {
+                    arrRecords.push(normalizeRecordId(strStoreName, objEntity.fromBackendFields(arrRawRecords[intRowIndex], {})));
+                }
+                catch (objRowError)
+                {
+                    CommonUtils.logError(
+                        "DataService.getRecordsPage (skipping one malformed " + strStoreName + " row, row index " + intRowIndex + ")",
+                        objRowError
+                    );
+                }
+            }
+
+            var dConvertElapsedMs = new Date().getTime() - dConvertStartedAt;
+
+            console.log(
+                "[Perf] " + strStoreName + " page " + iActualPage + " - " +
+                "backend: " + dBackendElapsedMs + "ms, " +
+                "rendering prep: " + dConvertElapsedMs + "ms, " +
+                "records: " + arrRecords.length + "/" + iTotalRecords
+            );
+
+            fnSuccess({
+                records: arrRecords,
+                totalRecords: iTotalRecords,
+                totalPages: iTotalPages,
+                page: iActualPage,
+                pageSize: iPageSize
+            });
+        };
+
+        if (blnIsSearch)
+        {
+            if (!objEntity.searchAction)
+            {
+                fnError(new Error("Search is not available for this list yet."));
+                return;
+            }
+
+            callGoogleGet(buildGoogleUrl(objEntity.searchAction, { keyword: strKeyword }), fnHandleResponse, fnError);
+        }
+        else
+        {
+            callGoogleGet(buildGoogleUrl(objEntity.listAction, { page: iPage, pageSize: iPageSize }), fnHandleResponse, fnError);
+        }
     }
 
 

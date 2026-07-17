@@ -198,6 +198,26 @@ var CategoryScript = (function () {
 	var mSelectedDataList = [];
 
 	// --------------------------------------------------
+	// Performance Optimization Phase - real pagination state.
+	// WHY: this page used to fetch and hold the ENTIRE Category
+	// table in sessionStorage/memory, then filter/page it purely
+	// client-side (see the old doFilterCategoryList()/
+	// showFilteredList() below). That doesn't scale past a few
+	// hundred rows and defeats the point of pagination entirely.
+	// WHAT: getListData()/parseListResponse() below now ask the
+	// backend for exactly one page at a time via
+	// DataService.getRecordsPage(), and these variables track
+	// which page/search is currently showing so Prev/Next and a
+	// debounced search can ask for the right one next.
+	// -------------------------------------------------- 
+	var mCurrentPage = 1;
+	var mPageSize = 20;
+	var mTotalPages = 1;
+	var mTotalRecords = 0;
+	var mCurrentSearchKeyword = "";
+	var mSearchDebounceTimer = null;
+
+	// --------------------------------------------------
 	// Confirmation Dialogs: this was referenced by every
 	// showConfirmationAlert(...) call below but never declared
 	// anywhere in the project - reading an undeclared bare
@@ -952,7 +972,7 @@ var CategoryScript = (function () {
 	// --------------------------------------------------
 
 	// get Summary Data for List
-	function getListData() {
+	function getListData( iRequestedPage ) {
 
 		// --------------------------------------------------
 		// WHY: nothing told the user a fetch was in progress,
@@ -963,17 +983,26 @@ var CategoryScript = (function () {
 		// the DataService callback (success or error) fires,
 		// so a failed fetch does not leave it stuck on screen.
 		// WHEN: runs every time the Category list is
-		// (re)loaded.
+		// (re)loaded - now for exactly one page at a time
+		// (Performance Optimization Phase), not the whole table.
 		// --------------------------------------------------
 
-		DataService.getAllRecords(
+		if( iRequestedPage ) {
+
+			mCurrentPage = iRequestedPage;
+		}
+
+		DataService.getRecordsPage(
 
 			AppConfig.STORES.CATEGORY,
+			mCurrentPage,
+			mPageSize,
+			mCurrentSearchKeyword,
 
-			function( arrCategories ) {
+			function( objPageResult ) {
 
 				hideLoader();
-				parseListResponse( arrCategories );
+				parseListResponse( objPageResult );
 			},
 
 			function( objError ) {
@@ -1327,33 +1356,38 @@ var CategoryScript = (function () {
 
 		getListData();
 	}
-	// parse summary list response from server
-	function parseListResponse( arrCategories ) {
+	// parse one page of the list response from server
+	function parseListResponse( objPageResult ) {
 
-		if( !arrCategories ) {
+		if( !objPageResult ) {
 
-			arrCategories = [];
+			objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
 		}
 
 		hideLoader();
 
+		var arrCategories = objPageResult.records || [];
+
+		mCurrentPage = objPageResult.page || 1;
+		mTotalPages = objPageResult.totalPages || 1;
+		mTotalRecords = objPageResult.totalRecords || arrCategories.length;
+
 		// --------------------------------------------------
-		// WHY: DataService.getAllRecords() returns plain
-		// objects, e.g. { categoryId, categoryName, organization }.
-		// The rest of this file (doFilterCategoryList(),
-		// createHtmlListItem(), showFilteredList(), etc.) was
-		// written for the old SQLite row format, where each
-		// Category was a plain array like
-		// [ categoryId, categoryName, organizationId ], read
-		// using SUMMARY_INDEX.CATEGORY_ID / NAME / ORGANIZATION_ID
-		// as array positions.
+		// WHY: DataService.getRecordsPage() returns plain
+		// objects, e.g. { category_id, name, organization_id }.
+		// The rest of this file (createHtmlListItem(),
+		// onSingleClickListener(), etc.) was written for the old
+		// SQLite row format, where each Category was a plain
+		// array like [ categoryId, categoryName, organizationId ],
+		// read using SUMMARY_INDEX.CATEGORY_ID / NAME /
+		// ORGANIZATION_ID as array positions.
 		// WHAT: convert each DataService object into that same
 		// array-row shape, in this one place only, so every
 		// function below this point keeps working exactly as
 		// it already did - nothing past this bridge needs to
 		// change.
-		// WHEN: runs every time the Category list is loaded or
-		// refreshed from DataService.
+		// WHEN: runs every time a page of the Category list is
+		// loaded, refreshed, searched, or paged through.
 		// --------------------------------------------------
 
 		var arrCategoryRows = [];
@@ -1364,13 +1398,6 @@ var CategoryScript = (function () {
 
 			var arrRow = [];
 
-			// FIELD NAME FIX: DataService.getAllRecords() resolves
-			// through getEntityApiConfig(CATEGORY).fromBackendFields()
-			// (see DataService.js), which returns category_id, name,
-			// organization_id, description - NOT categoryId/
-			// categoryName/organization as this bridge previously
-			// guessed.
-
 			arrRow[ SUMMARY_INDEX.CATEGORY_ID ] = objCategory.category_id;
 			arrRow[ SUMMARY_INDEX.NAME ] = objCategory.name;
 			arrRow[ SUMMARY_INDEX.ORGANIZATION_ID ] = objCategory.organization_id;
@@ -1378,23 +1405,21 @@ var CategoryScript = (function () {
 			arrCategoryRows.push( arrRow );
 		}
 
-		setStorageData( arrCategoryRows, SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
-
 		// --------------------------------------------------
-		// WHY: loadOrganizationList() needs real Category data
-		// to know which Organizations exist, so it can only
-		// run after the list above has been loaded and
-		// bridged into row format.
-		// WHAT: builds the Organization filter list from the
-		// Category rows we just loaded (no extra network call
-		// - see loadOrganizationList() for details).
-		// WHEN: runs every time the Category list is loaded or
-		// refreshed.
+		// Performance Optimization Phase: this used to call
+		// doFilterCategoryList() -> showFilteredList(), which
+		// filtered/rendered against the FULL table already
+		// sitting in sessionStorage (SESSION_OBJECT.
+		// CATEGORY_SUMMARY_DATA). There is no full table in
+		// memory anymore - only the current page - so this
+		// renders that page directly instead. The Organization
+		// filter modal's dropdown (built from every Category's
+		// organization) is a known, accepted limitation of
+		// real pagination: it can only reflect organizations
+		// seen on already-loaded pages, not the whole table.
 		// --------------------------------------------------
 
-		loadOrganizationList( arrCategoryRows );
-
-		doFilterCategoryList();
+		renderCurrentPage( arrCategoryRows );
 
 		// --------------------------------------------------
 		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
@@ -1414,6 +1439,91 @@ var CategoryScript = (function () {
 			}
 		}
 	}
+
+	// --------------------------------------------------
+	// Renders exactly one already-fetched page of Categories -
+	// the real-pagination replacement for showFilteredList(),
+	// which used to render against the entire table. Builds the
+	// same per-card HTML (createHtmlListItem is unchanged), then
+	// appends a Prev/Next pagination bar below the list so this
+	// stays a single self-contained change (no categoryList.html
+	// edits needed).
+	// --------------------------------------------------
+	function renderCurrentPage( arrCategoryRows ) {
+
+		mSearchList = arrCategoryRows;
+		mSelectedDataList = arrCategoryRows; // Initializing the Selected data array
+		mMultiSelectedList = []; // Initializing the Selected data array
+
+		var htmlContent = "";
+
+		if( arrCategoryRows.length === 0 ) {
+
+			htmlContent = CommonUtils.getEmptyStateHtml( "Categories", "fa-solid fa-list" );
+		}
+
+		for( var i = 0; i < arrCategoryRows.length; i++ ) {
+
+			htmlContent += createHtmlListItem( arrCategoryRows[ i ], i );
+		}
+
+		htmlContent += buildPaginationBarHtml();
+
+		var records = "Total: " + mTotalRecords;
+
+		if( mCurrentSearchKeyword ) {
+
+			records += " (search: \"" + mCurrentSearchKeyword + "\")";
+		}
+
+		document.getElementById( "records" ).innerText = records;
+
+		setListToView( htmlContent );
+
+		bindPaginationBarListeners();
+	}
+
+	// --------------------------------------------------
+	// Small, self-contained Prev/Next bar - plain HTML/inline
+	// styling so it works without any new CSS file, matching
+	// this app's existing pattern (see CommonUtils.
+	// getEmptyStateHtml for the same approach).
+	// --------------------------------------------------
+	function buildPaginationBarHtml() {
+
+		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
+		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
+
+		return (
+			'<div id="pagination_bar" style="display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 0;">' +
+				'<button type="button" id="btn_page_prev" class="btn btn-sm btn-outline-primary" ' + strPrevDisabled + '>Prev</button>' +
+				'<span id="page_indicator">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
+				'<button type="button" id="btn_page_next" class="btn btn-sm btn-outline-primary" ' + strNextDisabled + '>Next</button>' +
+			'</div>'
+		);
+	}
+
+	function bindPaginationBarListeners() {
+
+		$( "#btn_page_prev" ).off().on( "click", function() {
+
+			if( mCurrentPage > 1 ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage - 1 );
+			}
+		});
+
+		$( "#btn_page_next" ).off().on( "click", function() {
+
+			if( mCurrentPage < mTotalPages ) {
+
+				showLoader( "Please wait..." );
+				getListData( mCurrentPage + 1 );
+			}
+		});
+	}
+
 
 	// --------------------------------------------------
 	// WHY: this used to ask the server for a separate list of
@@ -1498,6 +1608,8 @@ var CategoryScript = (function () {
 	function clearSearch() {
 
 		$("#search").val("");
+
+		mCurrentSearchKeyword = "";
 	}
 
 	function enableSearch( mode ) {
@@ -1533,7 +1645,9 @@ var CategoryScript = (function () {
 
 		resetFilterInfo();
 
-		getListData();
+		mCurrentPage = 1;
+
+		getListData( 1 );
 
 		showLoader( "Refreshing..." );
 	}
@@ -1590,65 +1704,33 @@ var CategoryScript = (function () {
 		showConfirmationAlert( "Do you want to delete selected Category?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
+	// --------------------------------------------------
+	// Performance Optimization Phase, Priority 3 ("Debounce
+	// Search"): this used to filter/hide the already-rendered
+	// <ul> elements on every single keystroke, against whatever
+	// page was currently in memory - so it could only ever
+	// search the current page, not the whole table. Now waits
+	// 250ms after typing stops, then asks the backend to search
+	// every matching row (searchCategories), resetting to page 1
+	// - see DataService.getRecordsPage()'s "blnIsSearch" branch
+	// for how that result gets paginated.
+	// --------------------------------------------------
 	function searchList() {
 
-		var list = document.getElementById("list_id");
-		var listItems = list.getElementsByTagName("ul");
+		if( mSearchDebounceTimer ) {
 
-		var input = document.getElementById("search");
-		var filter = input.value.toUpperCase();
-
-		// Rebuilt fresh on every keystroke so it always matches exactly
-		// what's currently visible - previously this only ever grew
-		// (never cleared), which corrupted the row lookup used by
-		// multi-select (mMultiSelectedList) the longer someone typed.
-		mSearchList = [];
-
-		for( var i = 0; i < listItems.length; i++ ) {
-
-			var categoryData = mSelectedDataList[ i ];
-
-			if( categoryData == null ) {
-
-				continue;
-			}
-
-			// Every field the Category List should be searchable by -
-			// previously this only ever checked the rendered Name text
-			// in the card's first <li>, so Category ID/Organization Id
-			// were never actually searched.
-			var searchableText = [
-				categoryData[ SUMMARY_INDEX.CATEGORY_ID ],
-				categoryData[ SUMMARY_INDEX.NAME ],
-				categoryData[ SUMMARY_INDEX.ORGANIZATION_ID ]
-			].join( " " ).toUpperCase();
-
-			if( searchableText.indexOf( filter ) > -1 ) {
-
-				mSearchList[ mSearchList.length ] = categoryData;
-
-				listItems[i].style.display = "";
-			} else {
-
-				listItems[i].style.display = "none";
-			}
+			clearTimeout( mSearchDebounceTimer );
 		}
 
-		// Displaying No. of Records
-		var totalRecordsLength = listItems.length;
-		var searchRecordsLength = $( "ul:visible" ).length - 1;
-		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
-		var totalRecords = "Total: " + totalRecordsLength;
-		var searchInput = document.getElementById( "search" ).value;
+		mSearchDebounceTimer = setTimeout( function() {
 
-		if( searchInput == "" ) {
+			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
+			mCurrentPage = 1;
 
-			document.getElementById( "records" ).innerText = totalRecords;
-		}
-		else {
+			showLoader( "Searching..." );
+			getListData( 1 );
 
-			document.getElementById( "records" ).innerText = searchRecords;
-		}
+		}, 250 );
 	}
 	function onClickListBackButton() {
 
@@ -2441,40 +2523,22 @@ var CategoryScript = (function () {
 	}
 	function doFilterCategoryList() {
 
-		clearSearch();
-		
-		var list = getStorageData( SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
+		// --------------------------------------------------
+		// Performance Optimization Phase: this used to filter
+		// against the full Category table kept in
+		// SESSION_OBJECT.CATEGORY_SUMMARY_DATA. Real pagination
+		// means that full table no longer lives in memory (only
+		// the current page does), so filtering by Organization
+		// across the whole table isn't something this page can
+		// do anymore without fetching everything again - which
+		// is exactly what this phase is meant to stop doing.
+		// Closing the modal with a note instead of silently
+		// showing wrong/empty results.
+		// --------------------------------------------------
 
-		var organizationId = parseInt( $('#filter_organization_id').val() );
-		var organizationName = $( "#filter_organization_id option:selected" ).text();
+		CommonUtils.showAlert( "Filtering by Organization isn't available with paginated lists yet - try Search instead." );
 
-
-		// Set selected Ids to Session storage
-		sessionStorage.setItem( SESSION_OBJECT.ORGANIZATION_ID, organizationId );
-
-		if( list == null || list.length <= 0 ){
-
-			showFilteredList( "" );
-		}
-		else if(  organizationId == 0 ){
-
-			showFilteredList( list );
-		}
-		else {
-
-			var data = [];
-
-			data = list.filter( item =>  
-				( (organizationId > 0)? item[SUMMARY_INDEX.ORGANIZATION_ID] == organizationId : ( item[SUMMARY_INDEX.ORGANIZATION_ID] != organizationId || item[SUMMARY_INDEX.ORGANIZATION_ID] == 0 ) )
-			);
-			
-			showFilteredList( data );
-		}
-		
-
-
-		showFilterInfo( organizationName );
-		closeFilterMenu();					
+		closeFilterMenu();
 	}
 	function showFilteredList( response ) {
 
