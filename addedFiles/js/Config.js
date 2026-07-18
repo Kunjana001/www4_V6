@@ -192,7 +192,10 @@ API: {
 
     REQUEST_TIMEOUT: 30000,
 
-    SEARCH_DELAY: 300
+    // GLOBAL SEARCH IMPROVEMENTS: aligned to the same ~250ms
+    // debounce used by Student/Category/Section/Result's own
+    // list-page search (was 300ms - fine, but inconsistent).
+    SEARCH_DELAY: 250
 
 },
 

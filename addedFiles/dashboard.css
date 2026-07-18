@@ -1,6 +1,13 @@
 /* ==========================================
    Student Management System
    Dashboard Style Sheet
+
+   Consolidated final version - merges:
+   - Glassmorphism cards/panels
+   - Colored icon backgrounds (sidebar menu + quick stats)
+   - Corrected CSS-variable fallbacks (accent color, search tag)
+   - Sidebar overlay with fade + slide animation (tap-outside /
+     swipe-to-close support)
    ========================================== */
 
 /* ---------- Reset ---------- */
@@ -112,11 +119,11 @@ body {
 
 /* Active page: blue background + a thin bright indicator bar
    on the left edge, so the current page is unmistakable even
-   at a glance (Phase 1 sidebar brief - "Blue active indicator"). */
+   at a glance. */
 
 .menu .active {
 
-    background: var(--app-accent, #3d7bfd);
+    background: var(--app-accent, #3B82F6);
 }
 
 .menu .active::before {
@@ -224,10 +231,10 @@ body {
     font-size: 14px;
 }
 
-/* Settings gear button (Round 2 improvement #4: Dashboard ->
-   Settings, moved out from behind Profile). Pushed to the far
-   right of the topbar so it reads like a page-level action,
-   not part of the title block. */
+/* Settings gear button - lives directly on the Dashboard
+   (Dashboard -> Settings) instead of behind Profile. Pushed to
+   the far right of the topbar so it reads like a page-level
+   action, not part of the title block. */
 
 .topbar-settings-btn {
 
@@ -506,6 +513,35 @@ body {
     color: var(--app-theme-color);
 }
 
+/* Icon badges for Quick Stats, reusing the same gradient colors
+   already assigned to #studentCard/#categoryCard/#sectionCard/
+   #resultCard i above so the two sections read as one consistent
+   color system. */
+.stat-icon {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    color: #ffffff;
+
+    margin-bottom: 10px;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+}
+
+.stat-icon-students   { background: linear-gradient(135deg, #34c17c, #2e9e5b); }
+.stat-icon-categories { background: linear-gradient(135deg, #a463f2, #8e44ec); }
+.stat-icon-sections   { background: linear-gradient(135deg, #f7a05c, #f0883e); }
+.stat-icon-results    { background: linear-gradient(135deg, #ef6a6e, #e5484d); }
+
 .stat-label {
 
     font-size: 12.5px;
@@ -521,7 +557,7 @@ body {
     letter-spacing: .04em;
 }
 
-/* ---------- Live Search Results (Phase 4) ---------- */
+/* ---------- Live Search Results ---------- */
 
 .search-results {
 
@@ -586,7 +622,7 @@ body {
 
     border-radius: 999px;
 
-    background: var(--app-theme-color-light, rgba(18,59,141,.08));
+    background: var(--app-theme-color-light, color-mix(in srgb, var(--app-theme-color) 8%, transparent));
 
     color: var(--app-theme-color) !important;
 
@@ -636,7 +672,7 @@ body {
     text-align: center;
 }
 
-/* ---------- Shortcuts (Phase 4) ---------- */
+/* ---------- Shortcuts ---------- */
 
 .shortcuts-grid {
 
@@ -783,15 +819,15 @@ body {
 }
 
 /* ==========================================================
-   PRIORITY 1 FIX (Sidebar Navigation - #2 tap outside / swipe
-   to close)
-   ----------------------------------------------------------
-   Dark overlay behind the mobile sidebar drawer. Sits just
-   under the sidebar's own z-index (1000) so the sidebar still
-   renders on top of it, and above everything else on the page.
-   Kept at display:none outside the mobile breakpoint below so
-   toggling its "show" class on desktop (where the sidebar is
-   not an overlay at all) has no visual effect.
+   Sidebar Overlay
+
+   Dark tap-to-close backdrop behind the mobile sidebar drawer.
+   Sits just under the sidebar's own z-index (1000) so the
+   sidebar still renders on top of it, and above everything
+   else on the page. Fades in/out together with the sidebar's
+   slide, and stays fully hidden (display:none, not just
+   transparent) while closed so it never intercepts clicks on
+   the rest of the page.
    ========================================================== */
 
 .sidebar-overlay {
@@ -805,9 +841,20 @@ body {
     right: 0;
     bottom: 0;
 
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, .45);
 
     z-index: 999;
+
+    opacity: 0;
+
+    transition: opacity .3s ease;
+}
+
+.sidebar-overlay.show {
+
+    display: block;
+
+    opacity: 1;
 }
 
 /* ---------- Responsive ---------- */
@@ -832,11 +879,6 @@ body {
     .sidebar.show {
 
         left: 0;
-    }
-
-    .sidebar-overlay.show {
-
-        display: block;
     }
 
     #menuBtn {

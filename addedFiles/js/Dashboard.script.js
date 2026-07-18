@@ -584,48 +584,86 @@ function runDashboardSearch(strKeyword)
         }
     });
 
+    /* ==========================================================
+       FIELD-NAME FIX (this pass): every block below was rewritten
+       against the real .gs schemas (Student.gs/Section.gs/
+       Result.gs), which the person provided directly. The
+       previous version of this whole function guessed at field
+       names (name, roll_number, mobile, category_id, section_id,
+       exam_name, marks_obtained, student_id...) that turn out to
+       not exist on any of these records at all - meaning Student/
+       Result search on the Dashboard has been silently matching
+       almost nothing this whole time (Category/Section search
+       for Students matched literally nothing, since
+       category_id/section_id are undefined - there is no such
+       column; Student.gs calls it plain "category"/"section").
+       Only Email happened to work by coincidence, since that one
+       field name was guessed correctly.
+       ========================================================== */
+
     /* ---------- Category/Section id -> name lookups ----------
-       Student records only store category_id/section_id, so a
-       query like "10A" needs these maps to match against the
-       actual Section/Category *name*. ---------- */
+       Category.gs's own field naming wasn't provided, so this
+       tries both the "categoryName" convention every other
+       camelCase module here uses (sectionName, studentName,
+       resultId...) and a plain "name" fallback, whichever the
+       cached records actually have. ---------- */
 
     var objCategoryNameById = {};
 
     arrCachedCategories.forEach(function (objCategory)
     {
-        objCategoryNameById[objCategory.category_id] = objCategory.name || "";
+        var strCategoryId = objCategory.categoryId || objCategory.category_id;
+
+        objCategoryNameById[strCategoryId] = objCategory.categoryName || objCategory.name || "";
     });
 
     var objSectionNameById = {};
 
     arrCachedSections.forEach(function (objSection)
     {
-        objSectionNameById[objSection.section_id] = objSection.name || "";
+        var strSectionId = objSection.sectionId || objSection.section_id;
+
+        objSectionNameById[strSectionId] = objSection.sectionName || objSection.name || "";
     });
 
-    /* ---------- Students ---------- */
+    /* ---------- Students ----------
+       Student.gs's real fields: studentId, studentName, phone,
+       email, telegram, organization, category, section, status,
+       rollNumber, parentMobile, parentEmail. There is no separate
+       categoryId/sectionId column - "category"/"section" are the
+       whole thing, and it isn't confirmed here whether they hold
+       an id or already the display name. Matched both ways below
+       (as raw text, and resolved through the id->name maps above)
+       so it works either way. ---------- */
 
     arrCachedStudents.forEach(function (objStudent)
     {
-        var strName = String(objStudent.name || "").toLowerCase();
-        var strRollNumber = String(objStudent.roll_number || "").toLowerCase();
-        var strMobile = String(objStudent.mobile || "").toLowerCase();
+        var strName = String(objStudent.studentName || "").toLowerCase();
+        var strRollNumber = String(objStudent.rollNumber || "").toLowerCase();
+        var strPhone = String(objStudent.phone || "").toLowerCase();
         var strEmail = String(objStudent.email || "").toLowerCase();
-        var strCategoryName = String(objCategoryNameById[objStudent.category_id] || "").toLowerCase();
-        var strSectionName = String(objSectionNameById[objStudent.section_id] || "").toLowerCase();
+        var strOrganization = String(objStudent.organization || "").toLowerCase();
+
+        var strCategoryRaw = String(objStudent.category || "").toLowerCase();
+        var strSectionRaw = String(objStudent.section || "").toLowerCase();
+        var strCategoryResolved = String(objCategoryNameById[objStudent.category] || "").toLowerCase();
+        var strSectionResolved = String(objSectionNameById[objStudent.section] || "").toLowerCase();
 
         if (strName.indexOf(strLowerKeyword) > -1 ||
             strRollNumber.indexOf(strLowerKeyword) > -1 ||
-            strMobile.indexOf(strLowerKeyword) > -1 ||
+            strPhone.indexOf(strLowerKeyword) > -1 ||
             strEmail.indexOf(strLowerKeyword) > -1 ||
-            strCategoryName.indexOf(strLowerKeyword) > -1 ||
-            strSectionName.indexOf(strLowerKeyword) > -1)
+            strOrganization.indexOf(strLowerKeyword) > -1 ||
+            strCategoryRaw.indexOf(strLowerKeyword) > -1 ||
+            strSectionRaw.indexOf(strLowerKeyword) > -1 ||
+            strCategoryResolved.indexOf(strLowerKeyword) > -1 ||
+            strSectionResolved.indexOf(strLowerKeyword) > -1)
         {
             arrResults.push({
 
                 type: "Student",
-                label: objStudent.name || "Unnamed",
-                sublabel: strSectionName ? "Section " + objSectionNameById[objStudent.section_id] : (objStudent.mobile || objStudent.email || ""),
+                label: objStudent.studentName || "Unnamed",
+                sublabel: (strSectionResolved || strSectionRaw) ? "Section " + (objSectionNameById[objStudent.section] || objStudent.section) : (objStudent.phone || objStudent.email || ""),
                 action: openStudentList
 
             });
@@ -636,14 +674,14 @@ function runDashboardSearch(strKeyword)
 
     arrCachedCategories.forEach(function (objCategory)
     {
-        var strName = String(objCategory.name || "").toLowerCase();
+        var strName = String(objCategory.categoryName || objCategory.name || "").toLowerCase();
 
         if (strName.indexOf(strLowerKeyword) > -1)
         {
             arrResults.push({
 
                 type: "Category",
-                label: objCategory.name || "Unnamed",
+                label: objCategory.categoryName || objCategory.name || "Unnamed",
                 sublabel: "Category",
                 action: openCategoryList
 
@@ -655,14 +693,14 @@ function runDashboardSearch(strKeyword)
 
     arrCachedSections.forEach(function (objSection)
     {
-        var strName = String(objSection.name || "").toLowerCase();
+        var strName = String(objSection.sectionName || objSection.name || "").toLowerCase();
 
         if (strName.indexOf(strLowerKeyword) > -1)
         {
             arrResults.push({
 
                 type: "Section",
-                label: objSection.name || "Unnamed",
+                label: objSection.sectionName || objSection.name || "Unnamed",
                 sublabel: "Section",
                 action: openSectionList
 
@@ -670,21 +708,64 @@ function runDashboardSearch(strKeyword)
         }
     });
 
-    /* ---------- Results ---------- */
+    /* ---------- Results ----------
+       Result.gs's real fields: resultId, studentId, exam,
+       subject, marks, grade, result (not exam_name/
+       marks_obtained/student_id as this used to assume). If
+       Result.gs has been updated per its own Global Search
+       Improvements pass, getResults()/searchResults() already
+       return studentName/rollNumber/categoryName/sectionName
+       directly - used first below when present, falling back to
+       resolving the same thing here from the Student/Category/
+       Section caches otherwise, so this keeps working either way. ---------- */
+
+    var objStudentById = {};
+
+    arrCachedStudents.forEach(function (objStudentLookup)
+    {
+        objStudentById[objStudentLookup.studentId] = objStudentLookup;
+    });
 
     arrCachedResults.forEach(function (objResult)
     {
-        var strExamName = String(objResult.exam_name || "").toLowerCase();
+        var strExamName = String(objResult.exam || "").toLowerCase();
         var strSubject = String(objResult.subject || "").toLowerCase();
+        var strMarks = String(objResult.marks || "").toLowerCase();
+        var strGrade = String(objResult.grade || "").toLowerCase();
+
+        var objRelatedStudent = objStudentById[objResult.studentId] || {};
+
+        var strStudentName = String(objResult.studentName || objRelatedStudent.studentName || "").toLowerCase();
+        var strRollNumber = String(objResult.rollNumber || objRelatedStudent.rollNumber || "").toLowerCase();
+
+        var strResultCategoryName = String(
+            objResult.categoryName ||
+            objCategoryNameById[objRelatedStudent.category] ||
+            objRelatedStudent.category ||
+            ""
+        ).toLowerCase();
+
+        var strResultSectionName = String(
+            objResult.sectionName ||
+            objSectionNameById[objRelatedStudent.section] ||
+            objRelatedStudent.section ||
+            ""
+        ).toLowerCase();
 
         if (strExamName.indexOf(strLowerKeyword) > -1 ||
-            strSubject.indexOf(strLowerKeyword) > -1)
+            strSubject.indexOf(strLowerKeyword) > -1 ||
+            strMarks.indexOf(strLowerKeyword) > -1 ||
+            strGrade.indexOf(strLowerKeyword) > -1 ||
+            strStudentName.indexOf(strLowerKeyword) > -1 ||
+            strRollNumber.indexOf(strLowerKeyword) > -1 ||
+            strResultCategoryName.indexOf(strLowerKeyword) > -1 ||
+            strResultSectionName.indexOf(strLowerKeyword) > -1)
         {
             arrResults.push({
 
                 type: "Result",
-                label: (objResult.exam_name || "Exam") + (objResult.subject ? " - " + objResult.subject : ""),
-                sublabel: "Result",
+                label: (objResult.exam || "Exam") + (objResult.subject ? " - " + objResult.subject : ""),
+                sublabel: strStudentName ? strStudentName : "Result",
                 action: openResultList
 
             });
@@ -762,9 +843,13 @@ function hideSearchResults()
 
 function renderRecentStudents()
 {
+    // FIELD-NAME FIX (this pass): was objStudent.name, which
+    // doesn't exist on a real Student.gs record (the field is
+    // studentName) - every entry in this list was silently
+    // falling back to "Unnamed" until now.
     renderShortcutList(listRecentStudents, arrCachedStudents, "No students yet.", function (objStudent)
     {
-        return objStudent.name || "Unnamed";
+        return objStudent.studentName || "Unnamed";
     });
 }
 
@@ -776,9 +861,13 @@ function renderRecentStudents()
 
 function renderRecentReports()
 {
+    // FIELD-NAME FIX (this pass): was objResult.exam_name, which
+    // doesn't exist on a real Result.gs record (the field is
+    // exam) - every entry in this list was silently falling back
+    // to "Exam" until now.
     renderShortcutList(listRecentReports, arrCachedResults, "No results yet.", function (objResult)
     {
-        return (objResult.exam_name || "Exam") + " - " + (objResult.subject || objResult.result || "");
+        return (objResult.exam || "Exam") + " - " + (objResult.subject || objResult.result || "");
     });
 }
 

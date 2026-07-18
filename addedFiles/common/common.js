@@ -444,11 +444,23 @@ var CommonUtils = (function ()
     {
         var iCount = intCount || 6;
 
+        /* Project Improvements (this pass): added a circular
+           avatar placeholder alongside the existing title/
+           subtitle lines, per the "Skeleton Loading" brief item
+           ("Placeholder avatar, Placeholder title, Placeholder
+           subtitle"). Wrapped in .skeleton-card-row so the CSS
+           can lay the avatar and the text lines out side by side
+           instead of stacked. */
         var strOneCard =
             '<div class="skeleton-card">' +
-                '<div class="skeleton-line skeleton-line-title"></div>' +
-                '<div class="skeleton-line skeleton-line-medium"></div>' +
-                '<div class="skeleton-line skeleton-line-short"></div>' +
+                '<div class="skeleton-card-row">' +
+                    '<div class="skeleton-avatar"></div>' +
+                    '<div class="skeleton-card-lines">' +
+                        '<div class="skeleton-line skeleton-line-title"></div>' +
+                        '<div class="skeleton-line skeleton-line-medium"></div>' +
+                        '<div class="skeleton-line skeleton-line-short"></div>' +
+                    '</div>' +
+                '</div>' +
             '</div>';
 
         var strHtml = "";

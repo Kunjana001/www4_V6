@@ -2970,6 +2970,26 @@ function parseListResponse(objPageResult)
                 : '' ) +
         '</span>';
 
+    var rollNumber = data[ SUMMARY_INDEX.ROLL_NUMBER ] || '';
+
+    // Project Improvements (this pass): initials avatar, generated
+    // from the Student's name (first letter of up to the first two
+    // words) - no new field/lookup needed, matches the "Better
+    // Cards" brief item. Falls back to a generic "?" if name is
+    // ever empty so the circle never renders blank.
+    var nameForInitials = ( name || '' ).replace( /^\d+\)\s*/, '' ).trim();
+    var initialsParts = nameForInitials.split( /\s+/ ).filter( function( p ) { return p.length > 0; } );
+    var initials = initialsParts.length > 0 ?
+        ( initialsParts[0].charAt(0) + ( initialsParts.length > 1 ? initialsParts[1].charAt(0) : '' ) ).toUpperCase() :
+        '?';
+
+    var avatarHtml = '<span class="list-card-avatar" aria-hidden="true">' + initials + '</span>';
+
+    // Roll Number chip - only rendered when the Student actually has
+    // one, since it's an optional field.
+    var rollBadgeHtml = rollNumber ?
+        '<span class="list-card-badge">Roll ' + rollNumber + '</span>' : '';
+
     // --------------------------------------------------
     // WHY: the outer <ul id="list_card"> used to carry a hard
     // inline box-shadow (a flat black drop-shadow straight on
@@ -2986,7 +3006,7 @@ function parseListResponse(objPageResult)
     var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
                         editIconHtml +
                         '<div id="list_item" class="list-item">' +
-                        '<li class="list-card-title">'+ seqNumber + name + '</li>' +
+                        '<li class="list-card-title">' + avatarHtml + seqNumber + name + rollBadgeHtml + '</li>' +
                         '<li class="list-card-subtitle">' + infoIconHtml + '<span>' + mobile + '</span></li>' +
                         '<li>' + quickActionsHtml + '</li>' +
                         '</div>' +

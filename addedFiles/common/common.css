@@ -733,6 +733,46 @@ html[data-font-size="large"] body
     margin-bottom:var(--app-space-sm);
 }
 
+/* Project Improvements (this pass): avatar + stacked lines,
+   side by side, per the "Skeleton Loading" brief item. */
+.skeleton-card-row
+{
+    display:flex;
+
+    align-items:center;
+
+    gap:var(--app-space-sm);
+}
+
+.skeleton-avatar
+{
+    flex-shrink:0;
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    background:linear-gradient(
+        90deg,
+        var(--app-border) 25%,
+        var(--app-bg-color) 37%,
+        var(--app-border) 63%
+    );
+
+    background-size:400% 100%;
+
+    animation:appSkeletonShimmer 1.4s ease infinite;
+}
+
+.skeleton-card-lines
+{
+    flex:1;
+
+    min-width:0;
+}
+
 .skeleton-line
 {
     height:12px;
@@ -1505,7 +1545,56 @@ body
 {
     border-color:var(--app-theme-color);
 
-    box-shadow:0 0 0 .15rem rgba(18,59,141,.18);
+    box-shadow:0 0 0 .15rem color-mix(in srgb, var(--app-theme-color) 18%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+}
+
+/* --------------------------------------------------------
+   Project Improvements (this pass) - Validation states
+
+   WHY: brief item "Better Forms" asks for a green checkmark /
+   red error state below each field. This is the CSS foundation
+   only - a .form-control gets .is-valid/.is-invalid and its
+   .form-group gets a .field-feedback child with .field-feedback-
+   valid/.field-feedback-invalid, toggled by whatever validation
+   logic a form already runs (or adds later); no existing form's
+   JS was changed to call this in this pass, since each entity's
+   Add/Edit form validates differently and wiring all of them is
+   a separate, larger change from this CSS pass.
+   -------------------------------------------------------- */
+
+.form-control.is-valid
+{
+    border-color:var(--app-success);
+}
+
+.form-control.is-invalid
+{
+    border-color:var(--app-danger);
+}
+
+.field-feedback
+{
+    font-size:12px;
+
+    margin-top:5px;
+
+    display:none;
+}
+
+.field-feedback-valid
+{
+    color:var(--app-success);
+}
+
+.field-feedback-invalid
+{
+    color:var(--app-danger);
+}
+
+.form-control.is-valid ~ .field-feedback-valid,
+.form-control.is-invalid ~ .field-feedback-invalid
+{
+    display:block;
 }
 
 
@@ -1835,7 +1924,7 @@ hr
 
     border-color: var(--app-theme-color);
 
-    box-shadow: 0 0 0 3px rgba(18,59,141,.15);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
 }
 
 
@@ -1888,7 +1977,7 @@ hr
 
     border-radius: 30px;
 
-    background: rgba(18,59,141,.08);
+    background: color-mix(in srgb, var(--app-theme-color) 8%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
 
     color: var(--app-theme-color);
 
@@ -1922,7 +2011,7 @@ hr
 {
     border-color: var(--app-theme-color);
 
-    box-shadow: 0 0 0 3px rgba(18,59,141,.15);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
 }
 
 
@@ -2073,7 +2162,7 @@ button:hover
 
     border-radius: 50%;
 
-    background: var(--app-theme-color-light, rgba(18,59,141,.08));
+    background: var(--app-theme-color-light, color-mix(in srgb, var(--app-theme-color) 8%, transparent)); /* Project Improvements (this pass): fallback was hardcoded to the old #123b8d theme blue */
 
     color: var(--app-theme-color);
 
@@ -2364,7 +2453,7 @@ button:hover
 
 .table-hover tbody tr:hover
 {
-    background: rgba(18,59,141,.05);
+    background: color-mix(in srgb, var(--app-theme-color) 5%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
 }
 
 
@@ -2580,6 +2669,65 @@ button:hover
     font-weight: 700;
 
     color: var(--color-text-primary);
+
+    /* Project Improvements (this pass): laid out as a flex row so
+       the new avatar circle and Roll Number badge (see
+       Student.script.js's createHtmlListItem()) sit inline with
+       the name instead of stacking underneath it. */
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+}
+
+/* Project Improvements (this pass): initials avatar for the
+   "Better Cards" brief item. Reuses the same brand gradient as
+   the dashboard's entity-card icons for visual consistency. */
+.list-card-avatar
+{
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 50%;
+
+    background: linear-gradient(135deg, var(--app-theme-color), var(--app-accent));
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: .02em;
+}
+
+/* Project Improvements (this pass): small pill badge (e.g. "Roll
+   12") for the "Better Cards" brief item - reused as a generic
+   badge class, not Student-specific. */
+.list-card-badge
+{
+    font-size: 11.5px;
+
+    font-weight: 600;
+
+    color: var(--app-theme-color);
+
+    background: color-mix(in srgb, var(--app-theme-color) 12%, transparent);
+
+    padding: 3px 9px;
+
+    border-radius: 999px;
+
+    white-space: nowrap;
 }
 
 .list-card-subtitle
@@ -2739,7 +2887,16 @@ button:hover
 
     padding: 16px;
 
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(15, 23, 42, 0.5);
+
+    /* Project Improvements (this pass): backdrop blur, per the
+       "Better Dialogs" brief item ("blue header, white body,
+       rounded, shadow, fade animation, backdrop blur"). -webkit-
+       prefix kept alongside the standard property for Safari/
+       older mobile WebViews, which is a realistic target given
+       this is a PWA. */
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
 
     animation: app-confirm-fade-in .15s ease;
 }
@@ -2759,22 +2916,40 @@ button:hover
 
     color: var(--color-text-primary);
 
-    border-radius: 12px;
+    border-radius: 14px;
 
     box-shadow: var(--shadow-medium);
 
-    padding: 22px 20px;
+    /* Project Improvements (this pass): box padding moved onto
+       .app-confirm-title/.app-confirm-message/.app-confirm-actions
+       individually below, so .app-confirm-title can become a
+       full-bleed colored header bar instead of just bold text
+       sharing the body's padding. overflow:hidden clips the
+       header's corners to match the box's own border-radius. */
+    padding: 0;
+
+    overflow: hidden;
 
     animation: app-confirm-pop-in .2s ease;
 }
 
 .app-confirm-title
 {
-    font-size: 17px;
+    font-size: 16px;
 
     font-weight: 700;
 
-    margin-bottom: 8px;
+    /* Project Improvements (this pass): "Blue header, white body"
+       - matches .app-confirm-btn-confirm's existing brand color
+       so the dialog always tracks whichever theme swatch is
+       active, not a hardcoded blue. */
+    background: var(--app-theme-color);
+
+    color: #fff;
+
+    padding: 14px 20px;
+
+    margin-bottom: 0;
 }
 
 .app-confirm-message
@@ -2782,6 +2957,8 @@ button:hover
     font-size: 14px;
 
     line-height: 1.5;
+
+    padding: 18px 20px 4px 20px;
 }
 
 .app-confirm-actions
@@ -2793,6 +2970,8 @@ button:hover
     gap: 10px;
 
     margin-top: 20px;
+
+    padding: 0 20px 18px 20px;
 }
 
 .app-confirm-btn

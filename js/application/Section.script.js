@@ -29,12 +29,13 @@
      bindPaginationBarListeners(), appended by showFilteredList()),
      and updated onClickRefresh() to reload only the page
      currently on screen (Task 2), not the whole table.
-   ✓ SEARCH: there is no searchSections backend action, so -
-     exactly like Student.script.js - searchList() keeps
-     filtering only the currently loaded page, instantly,
-     client-side; enableSearch() now wraps that in the same
-     250ms debounce Category.script.js uses for its search
-     (Task 6).
+   ✓ SEARCH (superseded by the Global Search Improvements pass
+     below - kept for history): at the time of this pagination
+     pass there was no searchSections backend action, so
+     searchList() only filtered the currently loaded page,
+     client-side. That is no longer true - see the "Global
+     Search Improvements" note further down this file for the
+     current server-side implementation.
    ✓ Category List loading (Task 3): the fix for "Category List
      stuck on Please Wait" lives in DataService.js, not here -
      see its "Pagination / Loading Performance pass" note. This
@@ -49,6 +50,26 @@
    doFilterSectionList()/showFilteredList()/enableSearch()/
    onClickRefresh() above, all already-existing functions, were
    modified.
+   ---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
+   Global Search Improvements pass
+   ----------------------------------------------------------
+   ✓ searchSections is now wired in DataService.js (searchAction),
+     so searchList() below sets mCurrentSearchKeyword and reloads
+     page 1 through getListData()/getRecordsPage() - a search now
+     covers every Section record, not only the page on screen.
+   ✓ FIXED double-debounce bug: enableSearch()'s "input" handler
+     used to wrap searchList() in its own 250ms setTimeout on top
+     of the 250ms debounce searchList() already applies - two
+     stacked debounces, ~500ms of lag per keystroke instead of
+     250ms. enableSearch() now just calls searchList() directly.
+   ✗ KNOWN GAP (backend, outside this zip): searchSections
+     matches Category as a raw id server-side, so typing a
+     category's NAME (e.g. "Science") won't match until
+     Section.gs's searchSections() itself resolves that id to a
+     name before comparing - same limitation as Result.gs
+     (Student name) noted in Result.script.js.
    ---------------------------------------------------------- */
 
 /* ----------------------------------------------------------
@@ -1666,26 +1687,21 @@ var SectionScript = (function () {
 				// applied to the Student List search box. The
 				// search_icon click binding right below is unchanged.
 				//
-				// SEARCH DEBOUNCE (this pass, Task 6): searchList()
-				// itself is unchanged - it still only filters the
-				// currently loaded page, instantly, client-side
-				// (there is no searchSections backend action). Wrapped
-				// here with the same 250ms debounce Category.script.js
-				// uses for its server-side search, so a fast typist
-				// does not re-run the filter on every single keystroke.
+				// SEARCH DEBOUNCE FIX (this pass): this used to wrap
+				// searchList() in its own extra 250ms setTimeout on
+				// top of the 250ms debounce searchList() itself already
+				// applies below - two stacked debounces meant every
+				// keystroke took ~500ms to show results instead of
+				// 250ms, and (since the same mSearchDebounceTimer was
+				// contended by both timers) an already-fired outer
+				// timer's stale id being passed to clearTimeout() was
+				// silently harmless but pointless. searchList() already
+				// debounces, so this now just calls it directly - one
+				// debounce, ~250ms, matching Category/Student.
 				// --------------------------------------------------
 				document.getElementById( "search" ).oninput = function() {
 
-					if( mSearchDebounceTimer ) {
-
-						clearTimeout( mSearchDebounceTimer );
-					}
-
-					mSearchDebounceTimer = setTimeout( function() {
-
-						searchList();
-
-					}, 250 );
+					searchList();
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
