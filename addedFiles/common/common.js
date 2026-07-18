@@ -37,6 +37,29 @@
      where signup.js's showLoader() call threw on signup.html
      (no LegacyCompatShim.js there), breaking every Sign Up
      attempt before it reached the backend.
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ showLoader()/hideLoader()/getOrCreateLoaderElement()
+     rewritten for a modern loading indicator (circular gradient
+     spinner, fade-in/out overlay, pulsing "Loading..." label,
+     optional percentage bar) - see those functions' own updated
+     comment for the full WHY/WHAT. Styling moved out of a
+     JS-injected <style> tag and into common.css's "MODERN
+     LOADING INDICATOR" section, where every other style already
+     lives.
+   ✓ Added CommonUtils.getSkeletonCardsHtml() - shimmering
+     placeholder cards shown by each list page while its first
+     page of data is in flight.
+   ✓ Added CommonUtils.highlightMatch() - wraps search matches
+     in <mark class="search-highlight">, used by each list
+     page's searchList().
+   ✓ Added CommonUtils.buildPaginationSummary() - builds the
+     "Showing 101-200 of 1348" pagination summary text used by
+     each list page's pagination bar.
+
+   Version: 1.2
    ========================================================== */
 
 "use strict";
@@ -84,7 +107,19 @@ var CommonUtils = (function ()
 
         getEmptyStateHtml:
 
-            getEmptyStateHtml
+            getEmptyStateHtml,
+
+        getSkeletonCardsHtml:
+
+            getSkeletonCardsHtml,
+
+        highlightMatch:
+
+            highlightMatch,
+
+        buildPaginationSummary:
+
+            buildPaginationSummary
 
     };
 
@@ -376,6 +411,130 @@ var CommonUtils = (function ()
         );
     }
 
+
+
+    /* ======================================================
+       Build Skeleton Placeholder Cards HTML
+
+       UI MODERNIZATION PASS (this pass)
+       WHY: while the first page of Students/Categories/
+       Sections/Results is in flight, the list area used to
+       just be empty (nothing rendered into #list_id) until the
+       response arrived, which on a slow connection reads like
+       a frozen/broken page rather than "loading".
+       WHAT: returns intCount placeholder cards shaped like a
+       real .list-item (one title-width bar, two shorter bars
+       underneath), using common.css's .skeleton-card/
+       .skeleton-line shimmer classes. Each Student/Category/
+       Section/Result list page writes this into #list_id (via
+       the existing setListToView()) immediately before its
+       first DataService call for a page, then replaces it with
+       the real cards the moment that call's callback fires -
+       real .list-item cards already fade in on insert (see
+       common.css's appCardFadeIn), so the transition from
+       skeleton to real data reads as a smooth reveal rather
+       than a jarring swap.
+
+       intCount - how many placeholder cards to render (list
+                  pages pass roughly how many real cards will
+                  likely fit on screen, e.g. 6)
+       ====================================================== */
+
+    function getSkeletonCardsHtml(intCount)
+    {
+        var iCount = intCount || 6;
+
+        var strOneCard =
+            '<div class="skeleton-card">' +
+                '<div class="skeleton-line skeleton-line-title"></div>' +
+                '<div class="skeleton-line skeleton-line-medium"></div>' +
+                '<div class="skeleton-line skeleton-line-short"></div>' +
+            '</div>';
+
+        var strHtml = "";
+
+        for (var i = 0; i < iCount; i++)
+        {
+            strHtml += strOneCard;
+        }
+
+        return strHtml;
+    }
+
+
+
+    /* ======================================================
+       Highlight Matching Search Text
+
+       UI MODERNIZATION PASS (this pass)
+       WHY: while a search narrows the currently loaded page
+       down to matching rows, it should be obvious at a glance
+       why each visible card matched, not just that it did.
+       WHAT: wraps every case-insensitive occurrence of
+       strKeyword inside strText in a
+       <mark class="search-highlight"> tag (styled in
+       common.css). Returns strText unchanged if strKeyword is
+       empty, so callers can run this unconditionally on every
+       row without an extra "is a search even active" check.
+       Escapes strText for HTML first, so a name that happens to
+       contain "<" or "&" can never be interpreted as markup.
+
+       strText    : the raw field value to search within
+       strKeyword : the current search box value
+       ====================================================== */
+
+    function highlightMatch(strText, strKeyword)
+    {
+        var strSafeText = (strText === null || strText === undefined) ? "" : String(strText);
+
+        if (!strKeyword)
+        {
+            return strSafeText;
+        }
+
+        var strEscapedText = strSafeText
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        var strEscapedKeyword = strKeyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        var oPattern = new RegExp("(" + strEscapedKeyword + ")", "ig");
+
+        return strEscapedText.replace(oPattern, '<mark class="search-highlight">$1</mark>');
+    }
+
+
+
+    /* ======================================================
+       Build the "Showing X-Y of Z" Pagination Summary
+
+       UI MODERNIZATION PASS (this pass)
+       WHY: a "Showing 101-200 of 1348" style summary next to
+       the Prev/Next controls is clearer than a bare "Total: N"
+       count. One shared implementation so Student/Category/
+       Section/Result's pagination bars all word it identically.
+
+       iPage     : current 1-based page number
+       iPageSize : rows per page (100)
+       iTotal    : total record count reported by the backend
+       ====================================================== */
+
+    function buildPaginationSummary(iPage, iPageSize, iTotal)
+    {
+        var iSafeTotal = iTotal || 0;
+
+        if (iSafeTotal === 0)
+        {
+            return "No records found";
+        }
+
+        var iFirstRow = ((iPage - 1) * iPageSize) + 1;
+        var iLastRow = Math.min(iPage * iPageSize, iSafeTotal);
+
+        return "Showing " + iFirstRow + "\u2013" + iLastRow + " of " + iSafeTotal;
+    }
+
 })();
 
 
@@ -430,6 +589,33 @@ StorageService.initializeDatabase()
    overlay once every one of them has finished.
    WHEN: showLoader() is called right before a DataService call;
    hideLoader() is called once that call's callback fires.
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ Replaced the old flat, one-directional single-border-side
+     spinner (previously built via a JS-injected <style> tag
+     right here in this function) with a modern circular
+     gradient spinner + fade-in/out overlay + pulsing "Loading
+     Students..." style label, styled from common.css's new
+     "MODERN LOADING INDICATOR" section instead of an inline
+     <style> tag - every page already loads common.css, so the
+     CSS belongs there like everything else.
+   ✓ showLoader(strMessage, iPercent) - iPercent is a new,
+     optional second argument. When a caller knows real
+     progress (0-100), the overlay shows a thin gradient
+     percentage bar under the label; omitted (the vast majority
+     of call sites, which just await a single Google Apps
+     Script response with no incremental progress to report),
+     the bar simply stays hidden - exactly the same look as
+     before, just with the new spinner/label. No existing
+     showLoader(strMessage) call site anywhere in the app needed
+     to change.
+   ✓ The overlay now fades in/out over a CSS transition
+     (appLoadingVisible class) instead of a hard display:none/
+     flex toggle, and hideLoader() waits for that fade to finish
+     before actually removing it from the layout flow (so it
+     stops intercepting clicks only once it's visually gone).
    ========================================================== */
 
 function getOrCreateLoaderElement()
@@ -441,22 +627,17 @@ function getOrCreateLoaderElement()
         return oLoader;
     }
 
-    var oStyle = document.createElement("style");
-
-    oStyle.textContent =
-        "#appLoadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;" +
-        "background:rgba(255,255,255,0.85);z-index:99999;display:none;" +
-        "align-items:center;justify-content:center;flex-direction:column;}" +
-        "#appLoadingOverlay .appLoadingSpinner{width:36px;height:36px;border-radius:50%;" +
-        "border:4px solid #cfd8ea;border-top-color:var(--app-theme-color,#123b8d);animation:appLoadingSpin 0.8s linear infinite;}" +
-        "#appLoadingOverlay .appLoadingMessage{margin-top:10px;color:var(--app-theme-color,#123b8d);font-size:14px;}" +
-        "@keyframes appLoadingSpin{to{transform:rotate(360deg);}}";
-
-    document.head.appendChild(oStyle);
-
     oLoader = document.createElement("div");
     oLoader.id = "appLoadingOverlay";
-    oLoader.innerHTML = "<div class=\"appLoadingSpinner\"></div><div class=\"appLoadingMessage\"></div>";
+    oLoader.innerHTML =
+        "<div class=\"appLoadingPanel\">" +
+            "<div class=\"appLoadingSpinner\"></div>" +
+            "<div class=\"appLoadingMessage\"></div>" +
+            "<div class=\"appLoadingSubtext\">Please wait...</div>" +
+            "<div class=\"appLoadingProgressTrack\">" +
+                "<div class=\"appLoadingProgressFill\"></div>" +
+            "</div>" +
+        "</div>";
 
     document.body.appendChild(oLoader);
 
@@ -465,14 +646,44 @@ function getOrCreateLoaderElement()
 
 var numLoaderRequestCount = 0;
 
-function showLoader(strMessage)
+function showLoader(strMessage, iPercent)
 {
     numLoaderRequestCount++;
 
     var oLoader = getOrCreateLoaderElement();
 
     oLoader.querySelector(".appLoadingMessage").textContent = strMessage || "Loading...";
+
+    var oTrack = oLoader.querySelector(".appLoadingProgressTrack");
+    var oFill = oLoader.querySelector(".appLoadingProgressFill");
+
+    if (typeof iPercent === "number" && isNaN(iPercent) === false)
+    {
+        var iClampedPercent = Math.max(0, Math.min(100, iPercent));
+
+        oTrack.classList.add("appLoadingProgressVisible");
+        oFill.style.width = iClampedPercent + "%";
+    }
+    else
+    {
+        oTrack.classList.remove("appLoadingProgressVisible");
+        oFill.style.width = "0%";
+    }
+
     oLoader.style.display = "flex";
+
+    /* Two rAF ticks (not one) so the browser has definitely
+       painted display:flex/opacity:0 first - otherwise the very
+       first showLoader() call on a page can skip straight to
+       opacity:1 with no visible fade, since display and the
+       class would land in the same paint frame. */
+    window.requestAnimationFrame(function ()
+    {
+        window.requestAnimationFrame(function ()
+        {
+            oLoader.classList.add("appLoadingVisible");
+        });
+    });
 }
 
 function hideLoader()
@@ -485,7 +696,20 @@ function hideLoader()
 
         if (oLoader)
         {
-            oLoader.style.display = "none";
+            oLoader.classList.remove("appLoadingVisible");
+
+            /* Matches common.css's #appLoadingOverlay transition
+               (opacity .2s ease) - only actually hides it (so it
+               stops intercepting clicks) once the fade-out has
+               visually finished, instead of vanishing instantly
+               mid-fade. */
+            window.setTimeout(function ()
+            {
+                if (numLoaderRequestCount === 0 && oLoader.classList.contains("appLoadingVisible") === false)
+                {
+                    oLoader.style.display = "none";
+                }
+            }, 200);
         }
     }
 }

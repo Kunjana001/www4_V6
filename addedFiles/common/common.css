@@ -35,6 +35,51 @@
    • Works with Bootstrap
    • Works with existing HTML
 
+   ----------------------------------------------------------
+   Project Improvements (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ New spacing/radius/transition design tokens (--app-radius/
+     --app-radius-sm/--app-space-*/--app-transition-speed),
+     applied to body/.card/.list-item/.btn/.form-control/
+     .search-box/.modal-content/.table - so a theme/density
+     change now visibly affects spacing, corners and animation
+     speed everywhere, building on Phase 1's font-family
+     switching so a "theme" is a full visual system, not just a
+     recolor.
+   ✓ Fixed .list-item and .table hard-coding
+     "background:white"/"border:1px solid #ececec" - real bugs
+     that meant every Student/Category/Section/Result list card
+     ignored the theme entirely no matter which color theme was
+     picked. Both cascade-winning duplicate blocks of .card/
+     .form-control/.table/.list-item further down this file
+     were also tokenized, since CSS "last rule wins" meant
+     fixing only the first copy of each had no visible effect.
+   ✓ Added a Professional theme (typography/radius/shadow
+     tokens too, not just color) alongside the existing High
+     Contrast theme from Phase 1.
+   ✓ Added Density mode (Comfortable/Compact), set via
+     html[data-density] the same way Theme/Font Size/Font
+     Family are - see theme.js's new DensityManager.
+   ✓ Modern loading indicator (circular gradient spinner, fade
+     in/out, pulsing "Loading..." label, optional percentage
+     bar) replacing the old flat one-directional ring - see the
+     MODERN LOADING INDICATOR section below and common.js's
+     updated getOrCreateLoaderElement()/showLoader().
+   ✓ Skeleton loading cards (shimmer animation) - see the
+     SKELETON LOADING section below and common.js's new
+     CommonUtils.getSkeletonCardsHtml().
+   ✓ Subtle CSS animations: page fade-in (body), card fade-in
+     (.list-item, reused/deduped from two competing keyframes
+     into one appCardFadeIn), popup pop-in (.modal-content),
+     Dashboard tile stagger-in (dashboard.css).
+   ✓ Search-match highlighting (mark.search-highlight) and a
+     small inline search spinner (.search-spinner) - used by
+     each list page's searchList() via the new
+     CommonUtils.highlightMatch().
+   ✓ Pagination bar styling (.pagination-summary, .btn-page-nav),
+     reusing the existing .pagination-area layout class.
+   ✓ Mobile tweaks for the loader/skeleton/pagination summary.
+
 ==========================================================*/
 
 /*==========================================================
@@ -212,6 +257,37 @@ img
 
 
     /* --------------------------------------------------------
+       UI MODERNIZATION PASS (this pass) - Spacing/Radius/
+       Transition tokens
+
+       WHY: the theme system only ever swapped 3-4 color
+       variables plus (as of Phase 1) font-family - spacing,
+       border radius, and transition speed were still the same
+       fixed values no matter which theme/density was active.
+       WHAT: a second set of tokens, applied to .card/.list-item/
+       .btn/.form-control/.modal-content further down this file,
+       that the new Density mode below (html[data-density]) can
+       override the same way color themes already override
+       --app-theme-color etc.
+       -------------------------------------------------------- */
+
+    --app-radius:12px;
+
+    --app-radius-sm:8px;
+
+    --app-space-xs:6px;
+
+    --app-space-sm:12px;
+
+    --app-space-md:18px;
+
+    --app-space-lg:24px;
+
+    --app-transition-speed:.25s;
+
+
+
+    /* --------------------------------------------------------
        WHY: .list-item, .page-container, .modal-body/.modal-footer,
        .table and the whole sidebar (dashboard.css) all style
        themselves using --color-page-background / --color-surface /
@@ -360,6 +436,53 @@ html[data-theme="contrast"] .settings-card
     border:2px solid #000000;
 }
 
+/* Professional - added for the UI Modernization pass. Neutral
+   navy/grey, a more formal font stack, tighter radius, flatter
+   shadows - unlike the color-only themes above, this overrides
+   the typography/radius/shadow tokens too, so it visibly reads
+   as a different "system", not just a recolor. */
+html[data-theme="professional"]
+{
+    --app-theme-color:#2b3a55;
+    --app-theme-dark:#1b2740;
+    --app-accent:#5c7099;
+
+    --app-font-family:
+        "Segoe UI", Georgia, "Times New Roman", serif;
+
+    --app-radius:6px;
+    --app-radius-sm:4px;
+
+    --shadow-small:0 1px 4px rgba(0,0,0,.10);
+    --shadow-medium:0 4px 10px rgba(0,0,0,.14);
+}
+
+/*==========================================================
+    DENSITY (Comfortable / Compact) - added for the UI
+    Modernization pass.
+
+    WHY: density is independent of color (someone may want a
+    compact Dark theme just as much as a compact Light theme),
+    so - like Font Size/Font Family - it is its own attribute
+    (theme.js's new DensityManager sets "data-density" on
+    <html>), not folded into the theme picker.
+    WHAT: shrinks the spacing/radius tokens declared in :root
+    above, so .card/.list-item/.btn/.form-control padding and
+    gaps all tighten up together in one place. Comfortable (the
+    default) matches the app's original spacing exactly.
+==========================================================*/
+
+html[data-density="compact"]
+{
+    --app-space-xs:4px;
+    --app-space-sm:8px;
+    --app-space-md:10px;
+    --app-space-lg:14px;
+
+    --app-radius:8px;
+    --app-radius-sm:6px;
+}
+
 /*==========================================================
     FONT FAMILY
 
@@ -418,6 +541,368 @@ html[data-font-size="large"] body
 
 
 /*==========================================================
+    MODERN LOADING INDICATOR (UI Modernization pass, this pass)
+
+    WHY: the old spinner (see common.js's
+    getOrCreateLoaderElement(), before this pass) was a flat,
+    one-directional ring with no fade, no label animation, and
+    no percentage/skeleton support.
+    WHAT: a two-tone circular spinner (gradient ring, not just
+    one border side), a fade-in/out overlay, a pulsing
+    "Loading Students..." style label, and an optional
+    percentage bar - all pure CSS animation, no GIFs, no
+    external animation library.
+==========================================================*/
+
+#appLoadingOverlay
+{
+    position:fixed;
+
+    top:0; left:0; right:0; bottom:0;
+
+    background:rgba(0,0,0,.35);
+
+    z-index:99999;
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+
+    flex-direction:column;
+
+    opacity:0;
+
+    transition:opacity .2s ease;
+}
+
+#appLoadingOverlay.appLoadingVisible
+{
+    opacity:1;
+}
+
+#appLoadingOverlay .appLoadingPanel
+{
+    background:var(--app-card-bg);
+
+    color:var(--app-text-color);
+
+    border-radius:var(--app-radius);
+
+    box-shadow:var(--shadow-medium);
+
+    padding:28px 36px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:14px;
+
+    min-width:200px;
+
+    animation:appModalPopIn .2s ease;
+}
+
+#appLoadingOverlay .appLoadingSpinner
+{
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    border:4px solid var(--app-border);
+
+    border-top-color:var(--app-theme-color);
+
+    border-right-color:var(--app-accent);
+
+    animation:appLoadingSpin .8s linear infinite;
+}
+
+@keyframes appLoadingSpin
+{
+    to { transform:rotate(360deg); }
+}
+
+#appLoadingOverlay .appLoadingMessage
+{
+    font-size:14px;
+
+    font-weight:600;
+
+    color:var(--app-theme-color);
+
+    animation:appLoadingPulse 1.4s ease-in-out infinite;
+
+    text-align:center;
+}
+
+@keyframes appLoadingPulse
+{
+    0%, 100% { opacity:1; }
+
+    50%      { opacity:.55; }
+}
+
+#appLoadingOverlay .appLoadingSubtext
+{
+    font-size:12px;
+
+    color:var(--app-text-light);
+}
+
+/* Optional percentage bar - only shown when showLoader() is
+   called with a known percentage (see common.js). */
+
+#appLoadingOverlay .appLoadingProgressTrack
+{
+    width:160px;
+
+    height:6px;
+
+    border-radius:999px;
+
+    background:var(--app-border);
+
+    overflow:hidden;
+
+    display:none;
+}
+
+#appLoadingOverlay .appLoadingProgressTrack.appLoadingProgressVisible
+{
+    display:block;
+}
+
+#appLoadingOverlay .appLoadingProgressFill
+{
+    height:100%;
+
+    width:0%;
+
+    background:linear-gradient(90deg, var(--app-theme-color), var(--app-accent));
+
+    transition:width .2s ease;
+}
+
+
+/*==========================================================
+    SKELETON LOADING (UI Modernization pass, this pass)
+
+    WHY: while the first page of Students/Categories/Sections/
+    Results is in flight, the list area used to just be empty
+    until the response arrived - which reads as a frozen/broken
+    page, especially on a slow connection.
+    WHAT: placeholder cards shaped like a real .list-item (a
+    title-width bar, then two shorter bars), with a shimmering
+    gradient sweep instead of a static grey box. Built by
+    CommonUtils.getSkeletonCardsHtml() in common.js and written
+    into #list_id the same way real cards are.
+==========================================================*/
+
+.skeleton-card
+{
+    background:var(--app-card-bg);
+
+    border:1px solid var(--app-border);
+
+    border-radius:var(--app-radius);
+
+    padding:var(--app-space-md);
+
+    margin-bottom:var(--app-space-sm);
+}
+
+.skeleton-line
+{
+    height:12px;
+
+    border-radius:999px;
+
+    margin-bottom:10px;
+
+    background:linear-gradient(
+        90deg,
+        var(--app-border) 25%,
+        var(--app-bg-color) 37%,
+        var(--app-border) 63%
+    );
+
+    background-size:400% 100%;
+
+    animation:appSkeletonShimmer 1.4s ease infinite;
+}
+
+.skeleton-line:last-child
+{
+    margin-bottom:0;
+}
+
+.skeleton-line-title { width:55%; height:14px; }
+
+.skeleton-line-short  { width:35%; }
+
+.skeleton-line-medium { width:70%; }
+
+@keyframes appSkeletonShimmer
+{
+    0%   { background-position:100% 50%; }
+
+    100% { background-position:0 50%; }
+}
+
+
+/*==========================================================
+    SEARCH HIGHLIGHT (UI Modernization pass, this pass)
+
+    WHY: while a search is narrowing the currently loaded page
+    down to matching rows, it should also be obvious at a
+    glance why each visible card matched. Built by
+    CommonUtils.highlightMatch() in common.js, used by each
+    list page's searchList().
+==========================================================*/
+
+mark.search-highlight
+{
+    background:var(--app-accent);
+
+    color:#ffffff;
+
+    padding:0 2px;
+
+    border-radius:3px;
+}
+
+.search-spinner
+{
+    display:none;
+
+    width:14px;
+
+    height:14px;
+
+    margin-left:8px;
+
+    border-radius:50%;
+
+    border:2px solid var(--app-border);
+
+    border-top-color:var(--app-theme-color);
+
+    animation:appLoadingSpin .6s linear infinite;
+
+    vertical-align:middle;
+}
+
+.search-spinner.search-spinner-visible
+{
+    display:inline-block;
+}
+
+
+/*==========================================================
+    PAGINATION BAR (UI Modernization pass, this pass)
+
+    WHY: reuses the existing .pagination-area class for layout
+    (declared further down this file), this just styles the
+    Prev/Next buttons and the "Showing X-Y of Z" summary text
+    consistently with the rest of the design system/theme
+    tokens instead of raw Bootstrap defaults.
+==========================================================*/
+
+.pagination-summary
+{
+    font-size:13px;
+
+    color:var(--app-text-light);
+
+    min-width:170px;
+
+    text-align:center;
+}
+
+.btn-page-nav
+{
+    border-radius:var(--app-radius-sm);
+
+    border:1px solid var(--app-theme-color);
+
+    background:var(--app-card-bg);
+
+    color:var(--app-theme-color);
+
+    font-weight:600;
+
+    padding:6px 16px;
+
+    transition:var(--app-transition-speed);
+}
+
+.btn-page-nav:hover:not(:disabled)
+{
+    background:var(--app-theme-color);
+
+    color:#ffffff;
+}
+
+.btn-page-nav:disabled
+{
+    opacity:.4;
+
+    cursor:not-allowed;
+}
+
+
+/*==========================================================
+    MOBILE - LOADER / SKELETON / PAGINATION (UI Modernization
+    pass, this pass)
+
+    Scales the loader panel and skeleton line heights down
+    slightly on narrow screens so neither one overflows or
+    looks oversized on a phone.
+==========================================================*/
+
+@media screen and (max-width:576px)
+{
+    #appLoadingOverlay .appLoadingPanel
+    {
+        min-width:160px;
+
+        padding:20px 24px;
+    }
+
+    #appLoadingOverlay .appLoadingSpinner
+    {
+        width:36px;
+
+        height:36px;
+    }
+
+    .skeleton-card
+    {
+        padding:var(--app-space-sm);
+    }
+
+    .skeleton-line
+    {
+        height:10px;
+    }
+
+    .pagination-summary
+    {
+        min-width:0;
+
+        font-size:12px;
+    }
+}
+
+
+/*==========================================================
     MAIN PAGE
 ==========================================================*/
 
@@ -428,6 +913,19 @@ body
     color:var(--app-text-color);
 
     transition:.25s;
+
+    /* Smooth Animations (UI Modernization pass, this pass -
+       "Page opens"): a very subtle fade so navigating between
+       pages doesn't feel like an abrupt hard cut. Kept short
+       and simple - "do not overdo animations". */
+    animation:appPageFadeIn .2s ease;
+}
+
+@keyframes appPageFadeIn
+{
+    from { opacity:0; }
+
+    to   { opacity:1; }
 }
 
 .main-container
@@ -819,13 +1317,13 @@ body
 
     border:none;
 
-    border-radius:14px;
+    border-radius:var(--app-radius);
 
     box-shadow:var(--shadow-small);
 
     margin-bottom:20px;
 
-    transition:.25s;
+    transition:var(--app-transition-speed);
 }
 
 .card:hover
@@ -867,19 +1365,43 @@ body
 
 .list-item
 {
-    background:white;
+    /* --------------------------------------------------
+       THEME FIX (UI Modernization pass, this pass): this used
+       to be background:white; border:1px solid #ececec; -
+       fixed values that ignored every theme variable that
+       exists. .list-item is the one class Student/Category/
+       Section/Result's createHtmlListItem() all render every
+       card into, so no matter which theme was picked, every
+       list page's cards stayed plain white with a light grey
+       border - the actual reason list cards "didn't visibly
+       change" with the theme. Now reads --app-card-bg/
+       --app-border/--app-radius, the same tokens .card above
+       (and the Professional/High Contrast/Density modes) use.
+       -------------------------------------------------- */
 
-    border-radius:12px;
+    background:var(--app-card-bg);
 
-    padding:18px;
+    border-radius:var(--app-radius);
 
-    margin-bottom:15px;
+    padding:var(--app-space-md);
 
-    border:1px solid #ececec;
+    margin-bottom:var(--app-space-sm);
 
-    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    border:1px solid var(--app-border);
 
-    transition:.25s;
+    box-shadow:var(--shadow-small);
+
+    transition:var(--app-transition-speed);
+
+    color:var(--app-text-color);
+
+    /* Smooth Animations (UI Modernization pass - "Cards
+       appear"): every card is a freshly inserted DOM node each
+       time a list page (re)renders (setListToView() replaces
+       #list_id's innerHTML wholesale) - this animation replays
+       automatically on every insert, no JS required. */
+
+    animation:appCardFadeIn .3s ease both;
 }
 
 .list-item:hover
@@ -888,7 +1410,24 @@ body
 
     transform:translateY(-2px);
 
-    box-shadow:0 8px 20px rgba(0,0,0,.10);
+    box-shadow:var(--shadow-medium);
+}
+
+@keyframes appCardFadeIn
+{
+    from
+    {
+        opacity:0;
+
+        transform:translateY(6px);
+    }
+
+    to
+    {
+        opacity:1;
+
+        transform:translateY(0);
+    }
 }
 
 
@@ -924,7 +1463,7 @@ body
 
 .form-control
 {
-    border-radius:8px;
+    border-radius:var(--app-radius-sm);
 
     border:1px solid var(--app-border);
 
@@ -932,7 +1471,7 @@ body
 
     box-shadow:none;
 
-    transition:.25s;
+    transition:var(--app-transition-speed);
 }
 
 .form-control:focus
@@ -971,13 +1510,13 @@ textarea.form-control
 
 .btn
 {
-    border-radius:8px;
+    border-radius:var(--app-radius-sm);
 
     min-height:42px;
 
     font-weight:600;
 
-    transition:.25s;
+    transition:var(--app-transition-speed);
 }
 
 .btn:hover
@@ -1112,7 +1651,9 @@ button.form-control
 
 .table
 {
-    background:white;
+    background:var(--app-card-bg);
+
+    color:var(--app-text-color);
 }
 
 .table thead
@@ -1223,7 +1764,7 @@ hr
 
     border: 1px solid var(--color-border);
 
-    border-radius: 8px;
+    border-radius: var(--app-radius-sm);
 
     background: var(--color-surface);
 
@@ -1231,7 +1772,7 @@ hr
 
     padding-left: 12px;
 
-    transition: all .2s ease;
+    transition: all var(--app-transition-speed) ease;
 }
 
 /* ----------------------------------------------------------
@@ -1339,7 +1880,7 @@ hr
 
 .form-control
 {
-    border-radius: 8px;
+    border-radius: var(--app-radius-sm);
 
     border: 1px solid var(--color-border);
 
@@ -1375,9 +1916,9 @@ hr
 .btn,
 button
 {
-    border-radius: 8px;
+    border-radius: var(--app-radius-sm);
 
-    transition: .2s;
+    transition: var(--app-transition-speed);
 }
 
 .btn:hover,
@@ -1410,26 +1951,40 @@ button:hover
 
 .list-item
 {
+    /* --------------------------------------------------
+       THEME + DENSITY FIX (UI Modernization pass, this pass):
+       this is the block that actually wins the cascade (it is
+       declared later in the file than the earlier .list-item
+       block above) - its border-radius/padding/margin were
+       fixed 10px/15px/12px values, so this is why cards never
+       visibly resized with Density or re-cornered with the
+       Professional/High Contrast themes even after tokenizing
+       the earlier block. Switched to the same --app-radius/
+       --app-space-* tokens used everywhere else.
+       -------------------------------------------------- */
+
     background: var(--color-surface);
 
     border: 1px solid var(--color-border);
 
-    border-radius: 10px;
+    border-radius: var(--app-radius);
 
-    padding: 15px;
+    padding: var(--app-space-md);
 
-    margin-bottom: 12px;
+    margin-bottom: var(--app-space-sm);
 
-    transition: .2s;
+    transition: var(--app-transition-speed);
 
-    /* UI MODERNIZATION PASS 2 (added): subtle entrance animation
-       so a freshly rendered list doesn't just snap into place. */
-    animation: list-item-fade-in .25s ease-out;
+    /* Reuses the single shared appCardFadeIn keyframe declared
+       with the earlier .list-item block above, instead of
+       keeping two near-identical fade-in keyframes in the
+       file. */
+    animation: appCardFadeIn .25s ease-out;
 }
 
 .list-item:hover
 {
-    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    box-shadow: var(--shadow-medium);
 
     cursor: pointer;
 }
@@ -1525,11 +2080,11 @@ button:hover
 
 .card
 {
-    border-radius: 12px;
+    border-radius: var(--app-radius);
 
     border: none;
 
-    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+    box-shadow: var(--shadow-small);
 }
 
 .card-header
@@ -1624,9 +2179,33 @@ button:hover
 {
     border: none;
 
-    border-radius: 12px;
+    border-radius: var(--app-radius);
 
     overflow: hidden;
+
+    /* Smooth Animations (UI Modernization pass - "Popup
+       opens"): Bootstrap toggles the "show" class on .modal
+       when it opens, and .modal-content is not recreated, so
+       this needs the animation on the class-add itself rather
+       than an insert-triggered one like .list-item's. */
+    animation: appModalPopIn .2s ease;
+}
+
+@keyframes appModalPopIn
+{
+    from
+    {
+        opacity:0;
+
+        transform:scale(.96) translateY(6px);
+    }
+
+    to
+    {
+        opacity:1;
+
+        transform:scale(1) translateY(0);
+    }
 }
 
 .modal-header

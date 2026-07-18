@@ -1494,6 +1494,18 @@ var ResultScript = (function () {
 
 		showLoader( "Please wait..." );
 
+		// --------------------------------------------------
+		// SKELETON LOADING (UI Modernization pass, this pass):
+		// show shimmering placeholder cards immediately instead
+		// of leaving #list_id empty while the first page of Results
+		// is still in flight - getListData()/parseListResponse()
+		// below replace this with the real cards (which already
+		// fade in on insert - see common.css's appCardFadeIn) the
+		// moment the backend responds.
+		// --------------------------------------------------
+
+		setListToView( CommonUtils.getSkeletonCardsHtml( 6 ) );
+
 		// Fetching the fields like City, State, Country, Role, Organization and Lookup list data to populate it in the Filter and other selections. 
 		// We will load it from the Cache(Local storage). After laoding all the list we will get the List(getListData) and set data to list view
 		onLoadCacheManager();
@@ -2800,7 +2812,7 @@ var ResultScript = (function () {
 
 		htmlContent += buildPaginationBarHtml();
 
-		var records = "Total: " + mTotalRecords;
+		var records = CommonUtils.buildPaginationSummary( mCurrentPage, mPageSize, mTotalRecords );
 		
 		document.getElementById( "records" ).innerText = records;
 
@@ -2821,10 +2833,10 @@ var ResultScript = (function () {
 		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
 
 		return (
-			'<div id="pagination_bar" style="display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 0;">' +
-				'<button type="button" id="btn_page_prev" class="btn btn-sm btn-outline-primary" ' + strPrevDisabled + '>Prev</button>' +
-				'<span id="page_indicator">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
-				'<button type="button" id="btn_page_next" class="btn btn-sm btn-outline-primary" ' + strNextDisabled + '>Next</button>' +
+			'<div id="pagination_bar" class="pagination-area">' +
+				'<button type="button" id="btn_page_prev" class="btn-page-nav" ' + strPrevDisabled + '>Prev</button>' +
+				'<span id="page_indicator" class="pagination-summary">Page ' + mCurrentPage + ' of ' + mTotalPages + '</span>' +
+				'<button type="button" id="btn_page_next" class="btn-page-nav" ' + strNextDisabled + '>Next</button>' +
 			'</div>'
 		);
 	}

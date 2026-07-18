@@ -253,6 +253,64 @@
 
     </section>
 
+    <!-- ================= Font Family Card =================
+         Project Improvements (UI Modernization pass, this
+         pass): new card, same layout pattern as the Theme/Font
+         Size cards above. Populated by Settings.script.js from
+         FontFamilyManager.ALL_FONT_FAMILIES (common/theme.js).
+         WHY: FontFamilyManager already existed (Phase 1 - the
+         Poppins/Inter/Nunito/Roboto switch) but had no picker
+         anywhere in the app, so it was unreachable by anyone
+         except by directly calling it from a console - this is
+         that missing picker, following the exact same "add one
+         entry, not new HTML" pattern the other grids use. -->
+
+    <section class="settings-card" style="margin-bottom: 20px; margin-top: 20px;">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-font"></i>
+
+            <div>
+
+                <h3>Font Family</h3>
+
+                <p>Choose which font is used throughout the application.</p>
+
+            </div>
+
+        </div>
+
+        <div class="theme-grid" id="font_family_grid"></div>
+
+    </section>
+
+    <!-- ================= Density Card =================
+         Project Improvements (UI Modernization pass, this
+         pass): new card, same layout pattern as the cards
+         above. Populated by Settings.script.js from
+         DensityManager.ALL_DENSITIES (common/theme.js). -->
+
+    <section class="settings-card">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-table-cells-large"></i>
+
+            <div>
+
+                <h3>Density</h3>
+
+                <p>Choose how tightly spaced cards, buttons and fields are.</p>
+
+            </div>
+
+        </div>
+
+        <div class="theme-grid" id="density_grid"></div>
+
+    </section>
+
 </div>
 
 <!-- JavaScript -->

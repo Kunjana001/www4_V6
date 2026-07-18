@@ -33,7 +33,29 @@
      AppConfig.STORAGE_KEYS.FONT_SIZE key added in Config.js.
      Nothing about ThemeManager itself was changed or removed.
 
-   Version: 1.1
+   ----------------------------------------------------------
+   PHASE 1 - MODERN UI PASS
+   ----------------------------------------------------------
+   ✓ Added THEME_CONTRAST ("High Contrast") to ALL_THEMES.
+   ✓ Added FontFamilyManager (Poppins/Inter/Nunito/Roboto),
+     mirroring FontSizeManager's exact shape.
+
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ Added THEME_PROFESSIONAL ("Professional") to ALL_THEMES -
+     neutral navy/grey with a more formal font stack, matching
+     common.css's new html[data-theme="professional"] block,
+     which also overrides radius/shadow tokens, not just color.
+   ✓ Added DensityManager (Comfortable / Compact) - mirrors
+     FontSizeManager/FontFamilyManager's exact shape
+     (getCurrentDensity/applyDensity/restoreSavedDensity) and a
+     new AppConfig.STORAGE_KEYS.DENSITY key, set independently
+     of color theme via a new "data-density" attribute on
+     <html>. restoreSavedDensity() now also runs immediately
+     below, alongside the other restore calls.
+
+   Version: 1.3
    ========================================================== */
 
 "use strict";
@@ -73,18 +95,27 @@ var ThemeManager = (function ()
 
     var THEME_CONTRAST = "contrast";
 
+    /* Added for the UI Modernization pass (this pass) - neutral
+       navy/grey with a more formal font stack, alongside High
+       Contrast above. common.css's html[data-theme="professional"]
+       block also overrides radius/shadow tokens, not just the 3
+       brand tokens the other color themes swap. */
+
+    var THEME_PROFESSIONAL = "professional";
+
     /* All theme names in one place, in the order they should be
        offered on the Settings page. common.css has a matching
        html[data-theme="..."] block for every one of these. */
 
     var ALL_THEMES = [
-        { id: THEME_LIGHT,    label: "Light",          swatch: "#123b8d" },
-        { id: THEME_DARK,     label: "Dark",           swatch: "#171a22" },
-        { id: THEME_BLUE,     label: "Blue",           swatch: "#1565c0" },
-        { id: THEME_GREEN,    label: "Green",          swatch: "#2e7d32" },
-        { id: THEME_PURPLE,   label: "Purple",         swatch: "#6a1b9a" },
-        { id: THEME_ORANGE,   label: "Orange",         swatch: "#ef6c00" },
-        { id: THEME_CONTRAST, label: "High Contrast",  swatch: "#000000" }
+        { id: THEME_LIGHT,        label: "Light",          swatch: "#123b8d" },
+        { id: THEME_DARK,         label: "Dark",           swatch: "#171a22" },
+        { id: THEME_BLUE,         label: "Blue",           swatch: "#1565c0" },
+        { id: THEME_GREEN,        label: "Green",          swatch: "#2e7d32" },
+        { id: THEME_PURPLE,       label: "Purple",         swatch: "#6a1b9a" },
+        { id: THEME_ORANGE,       label: "Orange",         swatch: "#ef6c00" },
+        { id: THEME_PROFESSIONAL, label: "Professional",   swatch: "#2b3a55" },
+        { id: THEME_CONTRAST,     label: "High Contrast",  swatch: "#000000" }
     ];
 
 
@@ -122,6 +153,10 @@ var ThemeManager = (function ()
         THEME_CONTRAST:
 
             THEME_CONTRAST,
+
+        THEME_PROFESSIONAL:
+
+            THEME_PROFESSIONAL,
 
         ALL_THEMES:
 
@@ -492,11 +527,124 @@ var FontFamilyManager = (function ()
 
 
 /* ==========================================================
-   Restore the Theme, Font Size and Font Family Immediately
+   Density Manager (UI Modernization pass, this pass)
 
-   This runs the moment theme.js loads on any page, so the
-   saved theme, font size and font family are applied
-   automatically everywhere, as required by Task 6 and Task 7.
+   WHY: density is independent of color/font - someone may want
+   a compact Dark theme just as much as a compact Light theme -
+   so, like FontSizeManager/FontFamilyManager above, it is its
+   own attribute/manager rather than being folded into
+   ThemeManager's theme list.
+
+   WHAT it does: stores the chosen density under
+   AppConfig.STORAGE_KEYS.DENSITY and applies it as a
+   "data-density" attribute on <html>, the same way
+   ThemeManager uses "data-theme". common.css's
+   html[data-density="compact"] block reads that attribute to
+   tighten spacing/radius.
+
+   WHEN it runs: restoreSavedDensity() runs immediately below,
+   the moment this file loads on any page - identical timing to
+   the other restore calls.
+   ========================================================== */
+
+var DensityManager = (function ()
+{
+
+    var DENSITY_COMFORTABLE = "comfortable";
+
+    var DENSITY_COMPACT = "compact";
+
+    var ALL_DENSITIES = [
+        { id: DENSITY_COMFORTABLE, label: "Comfortable" },
+        { id: DENSITY_COMPACT,     label: "Compact" }
+    ];
+
+    return {
+
+        DENSITY_COMFORTABLE: DENSITY_COMFORTABLE,
+
+        DENSITY_COMPACT: DENSITY_COMPACT,
+
+        ALL_DENSITIES: ALL_DENSITIES,
+
+        getCurrentDensity: getCurrentDensity,
+
+        applyDensity: applyDensity,
+
+        restoreSavedDensity: restoreSavedDensity
+
+    };
+
+
+
+    /* ======================================================
+       Get the Currently Saved Density
+
+       An unknown or missing value defaults to Comfortable,
+       which matches the app's original spacing, so a
+       first-time visit looks unchanged.
+       ====================================================== */
+
+    function getCurrentDensity()
+    {
+        var strSavedDensity = StorageService.getValue(AppConfig.STORAGE_KEYS.DENSITY);
+
+        var bIsKnownDensity = ALL_DENSITIES.some(function (objDensity)
+        {
+            return objDensity.id === strSavedDensity;
+        });
+
+        if (bIsKnownDensity === true)
+        {
+            return strSavedDensity;
+        }
+
+        return DENSITY_COMFORTABLE;
+    }
+
+
+
+    /* ======================================================
+       Apply a Density to the Page
+
+       strDensity : DENSITY_COMFORTABLE or DENSITY_COMPACT
+       ====================================================== */
+
+    function applyDensity(strDensity)
+    {
+        document.documentElement.setAttribute("data-density", strDensity);
+
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.DENSITY, strDensity);
+    }
+
+
+
+    /* ======================================================
+       Restore the Last Saved Density
+
+       Call this as soon as a page loads, right alongside
+       ThemeManager.restoreSavedTheme()/FontSizeManager.
+       restoreSavedFontSize()/FontFamilyManager.
+       restoreSavedFontFamily().
+       ====================================================== */
+
+    function restoreSavedDensity()
+    {
+        var strSavedDensity = getCurrentDensity();
+
+        document.documentElement.setAttribute("data-density", strSavedDensity);
+    }
+
+})();
+
+
+
+/* ==========================================================
+   Restore the Theme, Font Size, Font Family and Density
+   Immediately
+
+   This runs the moment theme.js loads on any page, so every
+   saved appearance setting is applied automatically everywhere.
    ========================================================== */
 
 ThemeManager.restoreSavedTheme();
@@ -504,3 +652,5 @@ ThemeManager.restoreSavedTheme();
 FontSizeManager.restoreSavedFontSize();
 
 FontFamilyManager.restoreSavedFontFamily();
+
+DensityManager.restoreSavedDensity();

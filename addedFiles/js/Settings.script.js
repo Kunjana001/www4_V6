@@ -43,7 +43,18 @@
      Session.isLoggedIn() is true, since Settings is also
      reachable before login.
 
-   Version: 4.0
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ Added a Font Family grid (Poppins/Inter/Nunito/Roboto),
+     built and wired up exactly like the Font Size grid - fixes
+     a real gap where Phase 1's FontFamilyManager (common/
+     theme.js) existed but had no picker anywhere in the app.
+   ✓ Added a Density grid (Comfortable/Compact), built and
+     wired up the same way, reading from the new
+     DensityManager.ALL_DENSITIES list in common/theme.js.
+
+   Version: 4.1
    ========================================================== */
 
 "use strict";
@@ -58,6 +69,10 @@ var themeGrid = document.getElementById("theme_grid");
 
 /* New for the Font Size part of the Theme System Enhancement task */
 var fontSizeGrid = document.getElementById("font_size_grid");
+
+/* New for the UI Modernization pass (this pass) */
+var fontFamilyGrid = document.getElementById("font_family_grid");
+var densityGrid = document.getElementById("density_grid");
 
 var txtServerUrl = document.getElementById("txtServerUrl");
 var txtApplicationName = document.getElementById("txtApplicationName");
@@ -123,6 +138,10 @@ function initializeSettingsPage()
     renderThemeGrid();
 
     renderFontSizeGrid();
+
+    renderFontFamilyGrid();
+
+    renderDensityGrid();
 
     populateApplicationSettingsFields();
 
@@ -336,6 +355,137 @@ function handleFontSizeSelected(strSizeId)
     if (typeof CommonUtils !== "undefined")
     {
         CommonUtils.showToast("Font size updated.", "success");
+    }
+}
+
+
+
+/* ==========================================================
+   Render the Font Family Grid
+
+   WHY: added for the UI Modernization pass (this pass).
+   FontFamilyManager (Phase 1's Poppins/Inter/Nunito/Roboto
+   switch) already existed but had no picker anywhere in the
+   app - this is that missing picker.
+   WHAT: one button per font in FontFamilyManager.ALL_FONT_FAMILIES,
+   built exactly the way renderFontSizeGrid() builds its
+   buttons.
+   WHEN: called once from initializeSettingsPage(), and again
+   after every selection so the checkmark moves.
+   ========================================================== */
+
+function renderFontFamilyGrid()
+{
+    var strCurrentFont = FontFamilyManager.getCurrentFontFamily();
+
+    fontFamilyGrid.innerHTML = "";
+
+    FontFamilyManager.ALL_FONT_FAMILIES.forEach(function (objFont)
+    {
+        var bIsActive = (objFont.id === strCurrentFont);
+
+        var btnFont = document.createElement("button");
+        btnFont.type = "button";
+        btnFont.className = "theme-swatch-btn" + (bIsActive === true ? " theme-swatch-active" : "");
+        btnFont.setAttribute("data-font-family-id", objFont.id);
+
+        btnFont.innerHTML =
+            "<span class=\"theme-swatch-color\" style=\"background:var(--app-theme-color)\">" +
+                (bIsActive === true ? "<i class=\"fa-solid fa-check\"></i>" : "<i class=\"fa-solid fa-font\"></i>") +
+            "</span>" +
+            "<span class=\"theme-swatch-label\">" + objFont.label + "</span>";
+
+        btnFont.onclick = function ()
+        {
+            handleFontFamilySelected(objFont.id);
+        };
+
+        fontFamilyGrid.appendChild(btnFont);
+    });
+}
+
+
+
+/* ==========================================================
+   Handle a Font Family Being Selected
+
+   Mirrors handleFontSizeSelected(): applies + persists the
+   choice immediately (no reload needed), then redraws the
+   grid so the checkmark moves to the new selection.
+   ========================================================== */
+
+function handleFontFamilySelected(strFontId)
+{
+    FontFamilyManager.applyFontFamily(strFontId);
+
+    renderFontFamilyGrid();
+
+    if (typeof CommonUtils !== "undefined")
+    {
+        CommonUtils.showToast("Font updated.", "success");
+    }
+}
+
+
+
+/* ==========================================================
+   Render the Density Grid
+
+   WHY: added for the UI Modernization pass (this pass) -
+   Density is independent of color/font, so it gets its own
+   card, following the exact same "add one entry, not new HTML"
+   pattern the other grids use.
+   ========================================================== */
+
+function renderDensityGrid()
+{
+    var strCurrentDensity = DensityManager.getCurrentDensity();
+
+    densityGrid.innerHTML = "";
+
+    DensityManager.ALL_DENSITIES.forEach(function (objDensity)
+    {
+        var bIsActive = (objDensity.id === strCurrentDensity);
+
+        var btnDensity = document.createElement("button");
+        btnDensity.type = "button";
+        btnDensity.className = "theme-swatch-btn" + (bIsActive === true ? " theme-swatch-active" : "");
+        btnDensity.setAttribute("data-density-id", objDensity.id);
+
+        btnDensity.innerHTML =
+            "<span class=\"theme-swatch-color\" style=\"background:var(--app-theme-color)\">" +
+                (bIsActive === true ? "<i class=\"fa-solid fa-check\"></i>" : "<i class=\"fa-solid fa-table-cells-large\"></i>") +
+            "</span>" +
+            "<span class=\"theme-swatch-label\">" + objDensity.label + "</span>";
+
+        btnDensity.onclick = function ()
+        {
+            handleDensitySelected(objDensity.id);
+        };
+
+        densityGrid.appendChild(btnDensity);
+    });
+}
+
+
+
+/* ==========================================================
+   Handle a Density Being Selected
+
+   Mirrors handleFontSizeSelected(): applies + persists the
+   choice immediately (no reload needed), then redraws the
+   grid so the checkmark moves to the new selection.
+   ========================================================== */
+
+function handleDensitySelected(strDensityId)
+{
+    DensityManager.applyDensity(strDensityId);
+
+    renderDensityGrid();
+
+    if (typeof CommonUtils !== "undefined")
+    {
+        CommonUtils.showToast("Density updated.", "success");
     }
 }
 

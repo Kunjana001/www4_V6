@@ -1,205 +1,858 @@
-<!DOCTYPE html>
-<!-- ==========================================================
-     CONNECTION FIX - what changed in this pass (folder
-     structure was NOT changed; only the references below)
-     ==========================================================
+/* ==========================================
+   Student Management System
+   Dashboard Style Sheet
 
-     Every <script src="../js/application/...js"> tag on this
-     page pointed one folder too deep: Config.js, StorageService.js, DataService.js and login.js actually live
-     directly under www4/addedFiles/js/, not under an
-     "application" sub-folder - so those tags 404'd and none of
-     that code ever ran. Fixed by pointing each tag at
-     ../js/...js instead, without moving a single file.
+   ----------------------------------------------------------
+   Project Improvements (UI Modernization pass, this pass)
+   ----------------------------------------------------------
+   ✓ .card (the KPI tiles) now gets a short, staggered fade/
+     rise-in animation on load ("Dashboard tiles"), layered on
+     top of the existing glassmorphism styling without changing
+     it - see .cards .card:nth-child(...) / @keyframes
+     appDashTileIn below.
+   ========================================== */
 
-     Also added <script src="../js/DataService.js">, which did
-     not exist anywhere in the project - see DataService.js for
-     details.
-     ==========================================================
+/* ---------- Reset ---------- */
 
-     FORGOT PASSWORD PAGE (this pass)
-     ==========================================================
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-     Removed the #forgotPasswordOverlay popup and all of its
-     markup (both steps, the close/cancel buttons). Forgot
-     Password now lives on its own page,
-     addedFiles/html/forgotPassword.html - the same pattern
-     already used for Sign Up (signup.html). "Forgot Password?"
-     below is now a plain link to that page; see login.js for
-     the (much simpler) click handler.
-     ========================================================== -->
-<html lang="en">
+body {
 
-<head>
-    <link rel="manifest" href="../manifest.json">
+    font-family: var(--app-font-family, Arial, Helvetica, sans-serif);
+    background: var(--color-page-background);
+}
 
-    <meta name="theme-color" content="#123b8d">
+/* ---------- Main Layout ---------- */
 
-    <meta charset="UTF-8">
+.dashboard {
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    display: flex;
+    min-height: 100vh;
+}
 
-    <title>Student Management System - Login</title>
+/* ---------- Sidebar ---------- */
 
-    <link rel="stylesheet" href="../login.css">
+.sidebar {
 
-    <link rel="stylesheet" href="../common/common.css">
+    width: 260px;
+    background: var(--color-sidebar-background);
+    color: var(--color-sidebar-text);
+    transition: width .3s ease, left .3s ease;
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    box-shadow: 4px 0 18px rgba(0, 0, 0, .12);
+}
 
-</head>
+.logo {
 
-<body>
+    text-align: center;
+    padding: 32px 20px 26px;
+}
 
-    <!-- ===========================
-         Login Container
-    ============================ -->
+.logo img {
 
-    <div class="container">
+    width: 128px;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    display: inline-block;
+}
 
-        <div class="login-card">
+.logo h2 {
 
-            <!-- Settings Button (Phase 3): reachable before
-                 login so the Server URL / App Name / Logo can
-                 be configured without signing in first. -->
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: .01em;
+}
 
-            <button
-                type="button"
-                id="btnLoginSettings"
-                class="login-settings-btn"
-                title="Settings">
+/* ---------- Menu ---------- */
 
-                <i class="fa-solid fa-gear"></i>
+.menu {
 
-            </button>
+    list-style: none;
+    margin-top: 16px;
+    padding: 0 12px;
 
-            <!-- Logo -->
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
 
-            <img
-                id="loginLogo"
-                src="../images/logo.png"
-                alt="Student Management System Logo"
-                class="logo">
+.menu li {
 
-            <!-- Login Title -->
+    position: relative;
 
-            <h2 class="title" id="loginTitle">
+    display: flex;
+    align-items: center;
+    gap: 12px;
 
-                Login
+    padding: 12px 16px;
 
-            </h2>
+    border-radius: 12px;
 
-            <p class="subtitle" id="loginSubtitle">
+    cursor: pointer;
 
-                Welcome to Student Management System
+    transition: background .2s ease, transform .2s ease, padding-left .2s ease;
+}
 
-            </p>
+.menu li i {
 
-            <!-- Username -->
+    font-size: 16px;
+}
 
-            <div class="input-box">
+.menu li span {
 
-                <i class="fa-regular fa-user"></i>
+    font-size: 15px;
+    font-weight: 500;
+}
 
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="Enter Username"
-                    autocomplete="username">
+.menu li:hover {
 
-            </div>
+    background: var(--color-sidebar-hover);
 
-            <!-- Password -->
+    transform: translateX(2px);
+}
 
-            <div class="input-box">
+/* Active page: blue background + a thin bright indicator bar
+   on the left edge, so the current page is unmistakable even
+   at a glance (Phase 1 sidebar brief - "Blue active indicator"). */
 
-                <i class="fa-solid fa-lock"></i>
+.menu .active {
 
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Enter Password"
-                    autocomplete="current-password">
+    background: var(--app-accent, #3d7bfd);
+}
 
-                <i
-                    class="fa-regular fa-eye"
-                    id="togglePassword"></i>
+.menu .active::before {
 
-            </div>
+    content: "";
 
-            <!-- Remember Me -->
+    position: absolute;
+    left: -12px;
+    top: 8px;
+    bottom: 8px;
 
-            <div class="options">
+    width: 4px;
 
-                <label>
+    border-radius: 0 4px 4px 0;
 
-                    <input
-                        type="checkbox"
-                        id="rememberMe">
+    background: #ffffff;
+}
 
-                    Remember Me
+.menu .active span {
 
-                </label>
+    font-weight: 600;
+}
 
-                <a href="forgotPassword.html" id="forgotPasswordLink">
-                      Forgot Password?
-               </a>
+/* ---------- Colored Icon Backgrounds ----------
+   Each nav item gets its own small rounded-square icon
+   background so it's easy to identify at a glance, especially
+   on mobile where the sidebar is a full-height overlay. Colors
+   are fixed per item (not theme-driven) so they stay
+   recognizable no matter which color theme is active. */
 
-            </div>
+.menu-icon-bg {
 
-            <!-- Login Button -->
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            <button
-                type="button"
-                id="loginBtn">
+    width: 34px;
+    height: 34px;
+    flex: none;
 
-                Login
+    border-radius: 9px;
 
-            </button>
+    color: #ffffff;
 
-            <!-- Sign Up Button -->
+    font-size: 15px;
+}
 
-            <button
-                type="button"
-                class="signup"
-                id="signupBtn">
+.menu-icon-blue   { background: #2f6fed; }
+.menu-icon-green  { background: #2e9e5b; }
+.menu-icon-purple { background: #8e44ec; }
+.menu-icon-orange { background: #f0883e; }
+.menu-icon-red    { background: #e5484d; }
+.menu-icon-cyan   { background: #17a5b8; }
+.menu-icon-gray   { background: #6b7280; }
+.menu-icon-pink   { background: #ec4899; }
 
-                Sign Up
+#logout {
 
-            </button>
+    color: #ffe0e0;
+}
 
-        </div>
+/* ---------- Main ---------- */
 
-    </div>
+.main {
 
+    flex: 1;
+    padding: 30px;
+}
 
-    <!-- JavaScript -->
-    <!-- Common dependencies load first so login.js can use Session.login() / Session.logout() -->
+/* ---------- Top Bar ---------- */
 
-    <script src="../js/Config.js"></script>
+.topbar {
 
-    <script src="../js/StorageService.js"></script>
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
 
-    <script src="../js/DataService.js"></script>
+#menuBtn {
 
-    <script src="../common/common.js"></script>
+    display: none;
 
-<script src="../common/theme.js"></script>
+    border: none;
+    background: none;
 
-    <script src="../common/settings.js"></script>
+    font-size: 24px;
 
-    <script src="../common/activity.js"></script>
+    cursor: pointer;
+}
 
-    <script src="../common/navigation.js"></script>
+.topbar h1 {
 
-    <script src="../common/session.js"></script>
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
 
-    <script src="../common/register-sw.js"></script>
-    
-    <script src="../js/LegacyCompatShim.js"></script>
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
 
-    <script src="../js/login.js"></script>
+.topbar p {
 
-</body>
+    color: var(--color-text-secondary);
 
-</html>
+    font-size: 14px;
+}
+
+/* Settings gear button (Round 2 improvement #4: Dashboard ->
+   Settings, moved out from behind Profile). Pushed to the far
+   right of the topbar so it reads like a page-level action,
+   not part of the title block. */
+
+.topbar-settings-btn {
+
+    margin-left: auto;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: var(--color-surface, #fff);
+    color: var(--app-theme-color);
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+
+    transition: transform .15s ease, background .15s ease;
+}
+
+.topbar-settings-btn:hover {
+
+    background: var(--app-theme-color);
+    color: white;
+
+    transform: rotate(45deg);
+}
+
+/* ---------- Search ---------- */
+
+.search-box {
+
+    display: flex;
+
+    margin-top: 20px;
+
+    margin-bottom: 25px;
+}
+
+.search-box input {
+
+    flex: 1;
+
+    padding: 14px 16px;
+
+    border: 1px solid var(--color-border, #dde1ea);
+
+    border-radius: 12px 0 0 12px;
+
+    outline: none;
+
+    font-size: 15px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.search-box input:focus {
+
+    border-color: var(--app-theme-color);
+
+    box-shadow: 0 0 0 3px rgba(61, 123, 253, .15);
+}
+
+.search-box button {
+
+    width: 60px;
+
+    border: none;
+
+    background: var(--app-theme-color);
+
+    color: white;
+
+    border-radius: 0 12px 12px 0;
+
+    cursor: pointer;
+
+    transition: background .2s ease;
+}
+
+.search-box button:hover {
+
+    background: var(--app-theme-dark);
+}
+
+/* ---------- Dashboard Cards ---------- */
+
+.cards {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+    gap: 25px;
+}
+
+.card {
+
+    /* Glassmorphism: a translucent surface over a soft blur so
+       the page background reads faintly through the card,
+       instead of a flat opaque panel. Falls back to a normal
+       solid card automatically wherever backdrop-filter isn't
+       supported, since --color-surface is still set underneath. */
+
+    background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255, 255, 255, .35);
+
+    border-radius: 16px;
+
+    padding: 28px 24px;
+
+    text-align: left;
+
+    box-shadow: 0px 8px 24px rgba(17, 38, 90, .1);
+
+    cursor: pointer;
+
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+
+    /* Smooth Animations (UI Modernization pass, this pass -
+       "Dashboard tiles"): each tile rises/fades in, staggered
+       slightly by its position, so they don't all snap into
+       place at once. */
+    animation: appDashTileIn .35s ease both;
+}
+
+.cards .card:nth-child(1) { animation-delay:.03s; }
+.cards .card:nth-child(2) { animation-delay:.07s; }
+.cards .card:nth-child(3) { animation-delay:.11s; }
+.cards .card:nth-child(4) { animation-delay:.15s; }
+.cards .card:nth-child(n+5) { animation-delay:.18s; }
+
+@keyframes appDashTileIn {
+
+    from { opacity:0; transform:translateY(10px); }
+
+    to   { opacity:1; transform:translateY(0); }
+}
+
+.card:hover {
+
+    transform: translateY(-6px);
+
+    box-shadow: 0px 16px 32px rgba(17, 38, 90, .16);
+
+    border-color: var(--app-theme-color);
+}
+
+.card i {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 56px;
+    height: 56px;
+
+    border-radius: 14px;
+
+    font-size: 24px;
+
+    color: #ffffff;
+
+    margin-bottom: 18px;
+
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .18);
+
+    transition: transform .25s ease;
+}
+
+.card:hover i {
+
+    transform: scale(1.08) rotate(-4deg);
+}
+
+#studentCard i  { background: linear-gradient(135deg, #34c17c, #2e9e5b); }
+#categoryCard i { background: linear-gradient(135deg, #a463f2, #8e44ec); }
+#sectionCard i  { background: linear-gradient(135deg, #f7a05c, #f0883e); }
+#resultCard i   { background: linear-gradient(135deg, #ef6a6e, #e5484d); }
+
+.card h3 {
+
+    color: var(--color-text-primary);
+
+    margin-bottom: 6px;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.card p {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13.5px;
+}
+
+.card-count {
+
+    color: var(--app-theme-color) !important;
+
+    font-weight: 700;
+
+    font-size: 22px !important;
+
+    margin-bottom: 6px;
+
+    letter-spacing: -.01em;
+}
+
+/* ---------- Quick Stats / Recent Activity Panels ---------- */
+
+.panel {
+
+    background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255, 255, 255, .3);
+
+    border-radius: 16px;
+
+    padding: 24px;
+
+    margin-top: 22px;
+
+    box-shadow: 0px 6px 18px rgba(17, 38, 90, .08);
+}
+
+.panel-title {
+
+    color: var(--color-text-primary);
+
+    font-size: 16px;
+    font-weight: 700;
+
+    margin-bottom: 18px;
+}
+
+.quick-stats {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+    gap: 14px;
+}
+
+.stat-item {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    background: var(--color-page-background);
+
+    border-radius: 12px;
+
+    padding: 18px 10px;
+
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.stat-item:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0px 6px 14px rgba(17, 38, 90, .1);
+}
+
+.stat-value {
+
+    font-size: 24px;
+
+    font-weight: 800;
+
+    color: var(--app-theme-color);
+}
+
+.stat-label {
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+    color: var(--color-text-secondary);
+
+    margin-top: 4px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+}
+
+/* ---------- Live Search Results (Phase 4) ---------- */
+
+.search-results {
+
+    display: none;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    margin-top: -15px;
+
+    margin-bottom: 25px;
+}
+
+.search-results.show {
+
+    display: flex;
+}
+
+.search-result-item {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: var(--color-surface);
+
+    box-shadow: 0px 2px 8px rgba(0,0,0,.08);
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    color: var(--color-text-primary);
+}
+
+.search-result-item:hover {
+
+    background: var(--color-page-background);
+}
+
+.search-result-item span {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+.search-result-type {
+
+    flex: 0 0 auto;
+
+    padding: 2px 8px;
+
+    margin-right: 10px;
+
+    border-radius: 999px;
+
+    background: var(--app-theme-color-light, rgba(18,59,141,.08));
+
+    color: var(--app-theme-color) !important;
+
+    font-size: 11px !important;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .03em;
+}
+
+.search-result-label {
+
+    flex: 1;
+
+    text-align: left;
+
+    color: var(--color-text-primary) !important;
+
+    font-size: 14px !important;
+
+    font-weight: 600;
+}
+
+.search-result-sublabel {
+
+    flex: 0 0 auto;
+
+    margin-left: 10px;
+
+    text-align: right;
+}
+
+.search-result-empty {
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: var(--color-page-background);
+
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+
+    text-align: center;
+}
+
+/* ---------- Shortcuts (Phase 4) ---------- */
+
+.shortcuts-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 18px;
+}
+
+.shortcut-box {
+
+    background: var(--color-page-background);
+
+    border-radius: 12px;
+
+    padding: 18px;
+}
+
+.shortcut-box-wide {
+
+    grid-column: 1 / -1;
+}
+
+.shortcut-box h4 {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+
+    margin-bottom: 12px;
+}
+
+.shortcut-badge {
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: #ffffff;
+
+    background: var(--app-theme-color);
+
+    padding: 2px 8px;
+
+    border-radius: 20px;
+
+    margin-left: auto;
+}
+
+.shortcut-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.shortcut-list li {
+
+    background: var(--color-surface);
+
+    border-radius: 8px;
+
+    padding: 10px 12px;
+
+    font-size: 13px;
+
+    color: var(--color-text-primary);
+
+    cursor: pointer;
+}
+
+.shortcut-list li:hover {
+
+    box-shadow: 0px 2px 8px rgba(0,0,0,.1);
+}
+
+.shortcut-empty {
+
+    color: var(--color-text-secondary) !important;
+
+    cursor: default !important;
+}
+
+.shortcut-empty:hover {
+
+    box-shadow: none !important;
+}
+
+.shortcut-placeholder-text {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+.shortcut-ops {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+.shortcut-ops button {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 10px 16px;
+
+    background: var(--app-theme-color);
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.shortcut-ops button:hover {
+
+    opacity: .9;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width:768px) {
+
+    .sidebar {
+
+        position: fixed;
+
+        left: -260px;
+
+        top: 0;
+
+        height: 100%;
+
+        z-index: 1000;
+    }
+
+    .sidebar.show {
+
+        left: 0;
+    }
+
+    #menuBtn {
+
+        display: block;
+
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .menu li {
+
+        padding: 14px 20px;
+    }
+
+    .main {
+
+        padding: 20px;
+    }
+
+    .cards {
+
+        grid-template-columns: 1fr;
+    }
+
+}
