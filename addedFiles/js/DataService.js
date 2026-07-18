@@ -552,6 +552,13 @@ var DataService = (function ()
             deleteAction: "deleteStudent",
             idParam: "studentId",
 
+            /* Project Improvements (this pass): searchStudents already
+               exists in Student.gs and is already routed in Code.gs -
+               it was simply never wired up here, which is why Student
+               search only ever filtered whatever page was already
+               loaded instead of searching every record. */
+            searchAction: "searchStudents",
+
             /* Student.script.js builds records with JSON_KEY
                fields (student_id, category_id, section_id, name,
                roll_number, mobile, email, parent_mobile,
@@ -679,6 +686,17 @@ var DataService = (function ()
             deleteAction: "deleteSection",
             idParam: "sectionId",
 
+            /* Project Improvements (this pass): searchSections already
+               exists in Section.gs and is already routed in Code.gs -
+               it was simply never wired up here, which is why Section
+               search only ever filtered whatever page was already
+               loaded instead of searching every record. Note:
+               searchSections matches categoryId as a raw id, not a
+               resolved category name, so searching by category name
+               text still won't match server-side until Section.gs
+               itself is updated to look the name up. */
+            searchAction: "searchSections",
+
             /* Section.gs requires categoryId to add/update a
                Section, but Section.script.js's Add/Edit form
                (JSON_KEY) never collects one - only section_id and
@@ -721,6 +739,17 @@ var DataService = (function ()
             updateAction: "updateResult",
             deleteAction: "deleteResult",
             idParam: "resultId",
+
+            /* Project Improvements (this pass): searchResults already
+               exists in Result.gs and is already routed in Code.gs -
+               it was simply never wired up here, which is why Result
+               search only ever filtered whatever page was already
+               loaded instead of searching every record. Note:
+               searchResults matches studentId as a raw id, not the
+               student's resolved name, so searching "Ram" still won't
+               match server-side until Result.gs itself is updated to
+               look the name up. */
+            searchAction: "searchResults",
 
             /* Result.gs requires studentId/exam/subject to add or
                update a Result, but Result.script.js's form (see

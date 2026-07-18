@@ -172,11 +172,26 @@ img
 
     /* Brand */
 
-    --app-theme-color:#123b8d;
+    /* --------------------------------------------------------
+       Project Improvements (this pass) - Color Palette
 
-    --app-theme-dark:#0f3277;
+       WHY: brief asks for a specific Material/Glassmorphism
+       palette (Primary #1E40AF, Secondary #3B82F6, Success
+       #16A34A, Warning #F59E0B, Error #DC2626, Background
+       #F4F7FC, Border #E5E7EB) while keeping the existing blue
+       branding. Only the values below changed - every other
+       theme swatch (blue/green/purple/orange/contrast/
+       professional further down this file) and every rule that
+       reads these variables is untouched, since they already
+       pull color through var(--app-theme-color) etc. instead of
+       hardcoding a hex value.
+       -------------------------------------------------------- */
 
-    --app-accent:#3d7bfd;
+    --app-theme-color:#1E40AF;
+
+    --app-theme-dark:#1e3a8a;
+
+    --app-accent:#3B82F6;
 
 
 
@@ -202,7 +217,7 @@ img
 
     /* Background */
 
-    --app-bg-color:#f4f6fb;
+    --app-bg-color:#F4F7FC;
 
     --app-card-bg:#ffffff;
 
@@ -222,25 +237,25 @@ img
 
     /* Border */
 
-    --app-border:#d9dce5;
+    --app-border:#E5E7EB;
 
 
 
     /* Success */
 
-    --app-success:#28a745;
+    --app-success:#16A34A;
 
 
 
     /* Danger */
 
-    --app-danger:#dc3545;
+    --app-danger:#DC2626;
 
 
 
     /* Warning */
 
-    --app-warning:#ff9800;
+    --app-warning:#F59E0B;
 
 
 
@@ -1239,7 +1254,10 @@ body
 
 .page-title
 {
-    font-size:28px;
+    /* Project Improvements (this pass): 28px -> 24px per the
+       new typography scale (Page Title 24 / Section Title 20 /
+       Card Title 18 / Body 15 / Small 13). */
+    font-size:24px;
 
     font-weight:bold;
 

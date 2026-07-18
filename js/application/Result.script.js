@@ -255,12 +255,12 @@ var ResultScript = (function () {
 	// These variables track which page is currently showing so
 	// the Prev/Next buttons (buildPaginationBarHtml() below) and
 	// Refresh (onClickRefresh()) know which page to (re)request.
-	// mCurrentSearchKeyword is intentionally always "" here -
-	// there is no searchResults backend action (see
-	// DataService.js's getEntityApiConfig()), so - exactly like
-	// Student.script.js - searching stays instant/client-side
-	// against only the currently loaded page (see searchList()
-	// below), never a server round trip.
+	// Project Improvements (this pass): searchResults IS wired up
+	// now via DataService.js's RESULT.searchAction (it already
+	// existed as a backend action, it just wasn't referenced from
+	// the frontend entity map) - see searchList() below, which now
+	// reloads page 1 through the server instead of filtering only
+	// the currently loaded page.
 	// --------------------------------------------------
 	var mCurrentPage = 1;
 	var mPageSize = 100;
@@ -581,6 +581,14 @@ var ResultScript = (function () {
 
 				arrRow[ StudentScript.INDEX.STUDENT_ID ] = objStudent.student_id;
 				arrRow[ StudentScript.INDEX.NAME ] = objStudent.name;
+
+				// Project Improvements (this pass): also cache Roll Number
+				// alongside the id/name that were already stored, so
+				// searchList() below can match a Result by the student's
+				// roll number, not just their name. objStudent.roll_number
+				// is already returned by the same Student list call - no
+				// new request needed.
+				arrRow[ StudentScript.INDEX.ROLL_NUMBER ] = objStudent.roll_number || "";
 
 				arrStudentRows.push( arrRow );
 			}
@@ -1160,6 +1168,14 @@ var ResultScript = (function () {
 				arrRow[ StudentScript.INDEX.STUDENT_ID ] = objStudent.student_id;
 				arrRow[ StudentScript.INDEX.NAME ] = objStudent.name;
 
+				// Project Improvements (this pass): also cache Roll Number
+				// alongside the id/name that were already stored, so
+				// searchList() below can match a Result by the student's
+				// roll number, not just their name. objStudent.roll_number
+				// is already returned by the same Student list call - no
+				// new request needed.
+				arrRow[ StudentScript.INDEX.ROLL_NUMBER ] = objStudent.roll_number || "";
+
 				arrStudentRows.push( arrRow );
 			}
 
@@ -1728,6 +1744,8 @@ var ResultScript = (function () {
 	function clearSearch() {
 
 		$("#search").val("");
+
+		mCurrentSearchKeyword = "";
 	}
 
 	function enableSearch( mode ) {
@@ -1843,65 +1861,32 @@ var ResultScript = (function () {
 
 	function searchList() {
 
-		var list = document.getElementById("list_id");
-		var listItems = list.getElementsByTagName("ul");
+		if( mSearchDebounceTimer ) {
 
-		var input = document.getElementById("search");
-		var filter = input.value.toUpperCase();
-
-		// Rebuilt fresh on every keystroke so it always matches exactly
-		// what's currently visible - previously this only ever grew
-		// (never cleared), which corrupted the row lookup used by
-		// multi-select (mMultiSelectedList) the longer someone typed.
-		mSearchList = [];
-
-		for( var i = 0; i < listItems.length; i++ ) {
-
-			var resultData = mSelectedDataList[ i ];
-
-			if( resultData == null ) {
-
-				continue;
-			}
-
-			// Every field the Result List should be searchable by -
-			// previously this only ever checked the rendered Exam
-			// Name text in the card's first <li>, so Date Of Exam/
-			// Total Marks/Marks Obtained were never actually searched.
-			var searchableText = [
-				resultData[ SUMMARY_INDEX.EXAM_NAME ],
-				resultData[ SUMMARY_INDEX.SUBJECT ],
-				resultData[ SUMMARY_INDEX.MARKS_OBTAINED ],
-				resultData[ SUMMARY_INDEX.GRADE ],
-				resultData[ SUMMARY_INDEX.RESULT ]
-			].join( " " ).toUpperCase();
-
-			if( searchableText.indexOf( filter ) > -1 ) {
-
-				mSearchList[ mSearchList.length ] = resultData;
-
-				listItems[i].style.display = "";
-			} else {
-
-				listItems[i].style.display = "none";
-			}
+			clearTimeout( mSearchDebounceTimer );
 		}
 
-		// Displaying No. of Records
-		var totalRecordsLength = listItems.length;
-		var searchRecordsLength = $( "ul:visible" ).length - 1;
-		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
-		var totalRecords = "Total: " + totalRecordsLength;
-		var searchInput = document.getElementById( "search" ).value;
+		// Project Improvements (this pass): previously filtered only
+		// mSelectedDataList (the current page) client-side, resolving
+		// Student name/roll number locally. Now that DataService.js's
+		// RESULT entity has a searchAction wired to the existing
+		// searchResults backend action, this follows the same
+		// debounce -> set keyword -> reload page 1 pattern already used
+		// by Category.script.js/Student.script.js, so a search actually
+		// covers every Result record, not just the ones already loaded.
+		// Known limitation: searchResults compares Student as a raw id
+		// server-side, so searching "Ram" (the brief's own example)
+		// still won't match until Result.gs itself resolves that id to
+		// a name.
+		mSearchDebounceTimer = setTimeout( function() {
 
-		if( searchInput == "" ) {
+			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
+			mCurrentPage = 1;
 
-			document.getElementById( "records" ).innerText = totalRecords;
-		}
-		else {
+			showLoader( "Searching..." );
+			getListData( 1 );
 
-			document.getElementById( "records" ).innerText = searchRecords;
-		}
+		}, 250 );
 	}
 	function onClickListBackButton() {
 

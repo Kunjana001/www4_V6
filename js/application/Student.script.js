@@ -2088,6 +2088,8 @@ function parseListResponse(objPageResult)
 	function clearSearch() {
 
 		$("#search").val("");
+
+		mCurrentSearchKeyword = "";
 	}
 
 	function enableSearch( mode ) {
@@ -2186,91 +2188,30 @@ function parseListResponse(objPageResult)
 
 	function searchList() {
 
-		var list = document.getElementById("list_id");
-		var listItems = list.getElementsByTagName("ul");
+		if( mSearchDebounceTimer ) {
 
-		var input = document.getElementById("search");
-		var filter = input.value.toUpperCase().trim();
-
-		// Category/Section are stored on each student row as IDs
-		// (SUMMARY_INDEX.CATEGORY_ID / SECTION_ID), not names, so a
-		// search for "10A" needs these id->name lookups built first.
-		// Both lists are already cached in storage by loadCategoryList()
-		// / loadSectionList() - no new data fetch needed here.
-		var categoryNameById = {};
-		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST ) || [];
-		for( var c = 0; c < categoryList.length; c++ ) {
-
-			categoryNameById[ categoryList[ c ][ CategoryScript.INDEX.CATEGORY_ID ] ] = categoryList[ c ][ CategoryScript.INDEX.NAME ] || "";
+			clearTimeout( mSearchDebounceTimer );
 		}
 
-		var sectionNameById = {};
-		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST ) || [];
-		for( var s = 0; s < sectionList.length; s++ ) {
+		// Project Improvements (this pass): previously filtered only
+		// mSelectedDataList (the current page) client-side, and never
+		// touched mCurrentSearchKeyword at all even though getListData()
+		// already sends it to DataService.getRecordsPage() - that
+		// argument just always went through as "". Now that
+		// DataService.js's STUDENT entity has a searchAction wired to
+		// the existing searchStudents backend action, this follows the
+		// same debounce -> set keyword -> reload page 1 pattern already
+		// used by Category.script.js, so a search actually covers every
+		// Student record, not just the ones already loaded.
+		mSearchDebounceTimer = setTimeout( function() {
 
-			sectionNameById[ sectionList[ s ][ SectionScript.INDEX.SECTION_ID ] ] = sectionList[ s ][ SectionScript.INDEX.NAME ] || "";
-		}
+			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
+			mCurrentPage = 1;
 
-		// Rebuilt fresh on every keystroke so it always matches exactly
-		// what's currently visible - previously this only ever grew
-		// (never cleared), which corrupted the row lookup used by
-		// multi-select (mMultiSelectedList) the longer someone typed.
-		mSearchList = [];
+			showLoader( "Searching..." );
+			getListData( 1 );
 
-		for( var i = 0; i < listItems.length; i++ ) {
-
-			var studentData = mSelectedDataList[ i ];
-
-			if( studentData == null ) {
-
-				continue;
-			}
-
-			var categoryName = categoryNameById[ studentData[ SUMMARY_INDEX.CATEGORY_ID ] ] || "";
-			var sectionName = sectionNameById[ studentData[ SUMMARY_INDEX.SECTION_ID ] ] || "";
-
-			// Every field the Student List should be searchable by -
-			// previously this only ever checked the Name shown in the
-			// card's first <li>, so Roll Number/Mobile/Email/Parent
-			// Mobile/Parent Email/Telegram/Category/Section/Student ID
-			// were never actually searched.
-			var searchableText = [
-				studentData[ SUMMARY_INDEX.STUDENT_ID ],
-				studentData[ SUMMARY_INDEX.NAME ],
-				studentData[ SUMMARY_INDEX.ROLL_NUMBER ],
-				studentData[ SUMMARY_INDEX.MOBILE ],
-				studentData[ SUMMARY_INDEX.EMAIL ],
-				studentData[ SUMMARY_INDEX.PARENT_MOBILE ],
-				studentData[ SUMMARY_INDEX.PARENT_EMAIL ],
-				studentData[ SUMMARY_INDEX.TELEGRAM ],
-				categoryName,
-				sectionName
-			].join( " " ).toUpperCase();
-
-			if( searchableText.indexOf( filter ) > -1 ) {
-
-				mSearchList[ mSearchList.length ] = studentData;
-				listItems[ i ].style.display = "";
-			} else {
-
-				listItems[ i ].style.display = "none";
-			}
-		}
-
-		// Displaying No. of Records
-		var totalRecordsLength = listItems.length;
-		var searchRecordsLength = mSearchList.length;
-		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
-		var totalRecords = "Total: " + totalRecordsLength;
-
-		if( filter == "" ) {
-
-			document.getElementById( "records" ).innerText = totalRecords;
-		}
-		else {
-
-			document.getElementById( "records" ).innerText = searchRecords;
-		}
+		}, 250 );
 	}
 	// --------------------------------------------------
 	// WHY: requested "Export" button for the Student List -

@@ -257,12 +257,12 @@ var SectionScript = (function () {
 	// These variables track which page is currently showing so
 	// the Prev/Next buttons (buildPaginationBarHtml() below) and
 	// Refresh (onClickRefresh()) know which page to (re)request.
-	// mCurrentSearchKeyword is intentionally always "" here -
-	// there is no searchSections backend action (see
-	// DataService.js's getEntityApiConfig()), so - exactly like
-	// Student.script.js - searching stays instant/client-side
-	// against only the currently loaded page (see searchList()
-	// below), never a server round trip.
+	// Project Improvements (this pass): searchSections IS wired up
+	// now via DataService.js's SECTION.searchAction (it already
+	// existed as a backend action, it just wasn't referenced from
+	// the frontend entity map) - see searchList() below, which now
+	// reloads page 1 through the server instead of filtering only
+	// the currently loaded page.
 	// --------------------------------------------------
 	var mCurrentPage = 1;
 	var mPageSize = 100;
@@ -1649,6 +1649,8 @@ var SectionScript = (function () {
 	function clearSearch() {
 
 		$("#search").val("");
+
+		mCurrentSearchKeyword = "";
 	}
 
 	function enableSearch( mode ) {
@@ -1764,62 +1766,31 @@ var SectionScript = (function () {
 
 	function searchList() {
 
-		var list = document.getElementById("list_id");
-		var listItems = list.getElementsByTagName("ul");
+		if( mSearchDebounceTimer ) {
 
-		var input = document.getElementById("search");
-		var filter = input.value.toUpperCase();
-
-		// Rebuilt fresh on every keystroke so it always matches exactly
-		// what's currently visible - previously this only ever grew
-		// (never cleared), which corrupted the row lookup used by
-		// multi-select (mMultiSelectedList) the longer someone typed.
-		mSearchList = [];
-
-		for( var i = 0; i < listItems.length; i++ ) {
-
-			var sectionData = mSelectedDataList[ i ];
-
-			if( sectionData == null ) {
-
-				continue;
-			}
-
-			// Every field the Section List should be searchable by -
-			// previously this only ever checked the rendered Name text
-			// in the card's first <li>, so Section ID was never
-			// actually searched.
-			var searchableText = [
-				sectionData[ SUMMARY_INDEX.SECTION_ID ],
-				sectionData[ SUMMARY_INDEX.NAME ]
-			].join( " " ).toUpperCase();
-
-			if( searchableText.indexOf( filter ) > -1 ) {
-
-				mSearchList[ mSearchList.length ] = sectionData;
-
-				listItems[i].style.display = "";
-			} else {
-
-				listItems[i].style.display = "none";
-			}
+			clearTimeout( mSearchDebounceTimer );
 		}
 
-		// Displaying No. of Records
-		var totalRecordsLength = listItems.length;
-		var searchRecordsLength = $( "ul:visible" ).length - 1;
-		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
-		var totalRecords = "Total: " + totalRecordsLength;
-		var searchInput = document.getElementById( "search" ).value;
+		// Project Improvements (this pass): previously filtered only
+		// mSelectedDataList (the current page) client-side. Now that
+		// DataService.js's SECTION entity has a searchAction wired to
+		// the existing searchSections backend action, this follows the
+		// same debounce -> set keyword -> reload page 1 pattern already
+		// used by Category.script.js/Student.script.js, so a search
+		// actually covers every Section record, not just the ones
+		// already loaded. Known limitation: searchSections compares
+		// Category as a raw id server-side, so searching by a
+		// category's name text won't match until Section.gs itself
+		// resolves that id to a name.
+		mSearchDebounceTimer = setTimeout( function() {
 
-		if( searchInput == "" ) {
+			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
+			mCurrentPage = 1;
 
-			document.getElementById( "records" ).innerText = totalRecords;
-		}
-		else {
+			showLoader( "Searching..." );
+			getListData( 1 );
 
-			document.getElementById( "records" ).innerText = searchRecords;
-		}
+		}, 250 );
 	}
 	function onClickListBackButton() {
 
