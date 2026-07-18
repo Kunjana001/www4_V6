@@ -99,7 +99,20 @@
 
         <ul class="menu">
 
-            <li class="active">
+            <!-- ==========================================================
+                 PRIORITY 1 FIX (Sidebar Navigation - #3 Dashboard menu
+                 item doesn't work):
+
+                 This <li> never had an id, so it was never wired to
+                 any click handler in Dashboard.script.js - tapping it
+                 did nothing. Every other sidebar item (menuStudent,
+                 menuCategory, ...) already follows the
+                 "id + Dashboard.script.js wires .onclick" pattern; this
+                 just brings Dashboard itself in line with that same
+                 pattern. See openDashboardMenu() in Dashboard.script.js.
+                 ========================================================== -->
+
+            <li class="active" id="menuDashboard">
 
                 <span class="menu-icon-bg menu-icon-blue"><i class="fa-solid fa-house"></i></span>
 
@@ -158,6 +171,21 @@
         </ul>
 
     </aside>
+
+    <!-- ==========================================================
+         PRIORITY 1 FIX (Sidebar Navigation - #2 tap outside to
+         close):
+
+         Dark overlay behind the sidebar on mobile. Hidden by
+         default (see dashboard.css); Dashboard.script.js shows it
+         at the same time the sidebar opens and gives it a click
+         handler that closes the sidebar - the standard "tap
+         outside a mobile drawer to dismiss it" pattern. This did
+         not exist anywhere in the markup before, which is why
+         tapping outside the open sidebar previously did nothing.
+         ========================================================== -->
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- ================= Main ================= -->
 

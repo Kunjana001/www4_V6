@@ -175,13 +175,24 @@
 
 	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
-	<!-- Floating button to navigate to top -->
-	<a href="#bottom_target_span">
-	  <div class="col-xl-auto float-button">
+	<!-- ==========================================================
+	     PRIORITY 3 / 6 FIX - Floating pagination button
+	     ----------------------------------------------------------
+	     This used to be a bare "#bottom_target_span" scroll-to-
+	     bottom anchor with no id and no click handler of its own -
+	     it could never have navigated anywhere by itself, but it
+	     also never did anything useful like paging. Turned into a
+	     real button (id="btn_float_next_page") wired up in
+	     onListDocumentReady() to simply trigger the real Prev/Next
+	     pagination bar's own Next button (already correctly bound
+	     to fetch the next 100 records) - so there is exactly one
+	     piece of pagination logic, never a second competing one,
+	     and this control can never fall back to opening Dashboard
+	     or any other page.
+	     ========================================================== -->
+	<button type="button" id="btn_float_next_page" class="col-xl-auto float-button" title="Next Page" aria-label="Next Page">
 		<i class="fa fa-arrow-down" style="padding-top: 22px;"></i>
-	  </div>
-	</a>
-	<!-- /Floating button to navigate to top -->
+	</button>
 
 	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 

@@ -1539,6 +1539,22 @@ var ResultScript = (function () {
 			onClickRefresh();
 		});
 
+		// --------------------------------------------------
+		// PRIORITY 3 / 6 FIX: the floating down-arrow button
+		// (#btn_float_next_page, resultList.html) is this page's
+		// pagination "next page" control. Rather than duplicate
+		// the getListData(mCurrentPage + 1) logic, this just
+		// forwards the click to the real Prev/Next bar's own
+		// Next button (bindPaginationBarListeners() below), which
+		// already respects the disabled state on the last page.
+		// --------------------------------------------------
+		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			$( "#btn_page_next" ).click();
+		});
+
 		//--------- START - FILTER --------------
 		$('#filter_icon').off().on( "click", function() {
 	

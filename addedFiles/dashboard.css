@@ -782,6 +782,34 @@ body {
     opacity: .9;
 }
 
+/* ==========================================================
+   PRIORITY 1 FIX (Sidebar Navigation - #2 tap outside / swipe
+   to close)
+   ----------------------------------------------------------
+   Dark overlay behind the mobile sidebar drawer. Sits just
+   under the sidebar's own z-index (1000) so the sidebar still
+   renders on top of it, and above everything else on the page.
+   Kept at display:none outside the mobile breakpoint below so
+   toggling its "show" class on desktop (where the sidebar is
+   not an overlay at all) has no visual effect.
+   ========================================================== */
+
+.sidebar-overlay {
+
+    display: none;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    z-index: 999;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width:768px) {
@@ -797,11 +825,18 @@ body {
         height: 100%;
 
         z-index: 1000;
+
+        overflow-y: auto;
     }
 
     .sidebar.show {
 
         left: 0;
+    }
+
+    .sidebar-overlay.show {
+
+        display: block;
     }
 
     #menuBtn {

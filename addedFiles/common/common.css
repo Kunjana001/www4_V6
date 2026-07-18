@@ -1204,6 +1204,15 @@ body
 
     border-radius:50%;
 
+    /* PRIORITY 3 / 6 FIX: .float-button is now also used on a real
+       <button> element (the pagination "next page" control) instead
+       of only a <div>/<a>, so the browser's default button border/
+       font need to be explicitly cleared here - everything else in
+       this rule already applied the same either way. */
+    border:none;
+
+    font:inherit;
+
     background:var(--app-theme-color);
 
     color:white;
@@ -2139,6 +2148,15 @@ button:hover
     padding: 0 !important;
 
     border-radius: 50%;
+
+    /* PRIORITY 3 / 6 FIX: .float-button is now also used on a real
+       <button> element (the pagination "next page" control), so
+       the browser's default button border/font need clearing here
+       too - this rule comes later in the cascade than the one
+       above and would otherwise win. */
+    border: none;
+
+    font: inherit;
 
     background: var(--app-theme-color);
 

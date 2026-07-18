@@ -100,7 +100,11 @@
 
 var divSidebar = document.getElementById("sidebar");
 
+var divSidebarOverlay = document.getElementById("sidebarOverlay");
+
 var btnMenu = document.getElementById("menuBtn");
+
+var liDashboard = document.getElementById("menuDashboard");
 
 var divStudentCard = document.getElementById("studentCard");
 var divCategoryCard = document.getElementById("categoryCard");
@@ -892,6 +896,27 @@ function registerEvents()
 {
     btnMenu.onclick = toggleSidebar;
 
+    /* PRIORITY 1 FIX (#2 tap outside to close): the overlay only
+       exists behind the sidebar, so any click reaching it is by
+       definition a tap outside the sidebar itself. */
+    divSidebarOverlay.onclick = closeSidebar;
+
+    /* PRIORITY 1 FIX (#2 swipe to close): a left swipe anywhere on
+       the open sidebar closes it. See onSidebarTouchStart()/
+       onSidebarTouchEnd() below. */
+    divSidebar.addEventListener("touchstart", onSidebarTouchStart, { passive: true });
+    divSidebar.addEventListener("touchend", onSidebarTouchEnd, { passive: true });
+
+    /* PRIORITY 1 FIX (#1 Back button closes sidebar first): a
+       single popstate listener for the whole page - see
+       closeSidebar()/openSidebar() for how the matching history
+       entry is pushed/consumed. */
+    window.addEventListener("popstate", onDashboardPopState);
+
+    /* PRIORITY 1 FIX (#3 Dashboard menu item doesn't work): this
+       item never had an id before, so it was never reachable here. */
+    liDashboard.onclick = openDashboardMenu;
+
     divStudentCard.onclick = openStudentList;
     divCategoryCard.onclick = openCategoryList;
     divSectionCard.onclick = openSectionList;
@@ -1000,9 +1025,150 @@ function requestDashboardQuickAdd( strEntityKey, fnOpenList )
    Toggle the Sidebar Open / Closed
    ========================================================== */
 
+/* ==========================================================
+   PRIORITY 1 FIX - Sidebar Navigation
+   ----------------------------------------------------------
+
+   Everything below replaces the old one-line toggleSidebar()
+   (which only ever did divSidebar.classList.toggle("show") -
+   no overlay, no Back-button awareness, no swipe/tap-outside
+   handling, so none of that worked).
+
+   HOW BACK-BUTTON CLOSE WORKS (#1): opening the sidebar pushes
+   one extra history entry (see openSidebar()). The very next
+   Back press - hardware Android Back, browser Back, or a
+   swipe-back gesture - fires "popstate", which
+   onDashboardPopState() below always answers by closing the
+   sidebar (harmless no-op if it was already closed). Since that
+   consumes the one extra entry we pushed, a SECOND Back press
+   has nothing sidebar-related left to pop and falls straight
+   through to the browser's normal earlier-page/exit behavior -
+   exactly the "first press closes, second press acts normally"
+   split the brief asks for, without this file ever needing to
+   guess whether it is allowed to exit the app.
+
+   Any other way of closing the sidebar (tapping the overlay,
+   swiping it away, clicking a menu item) goes through
+   closeSidebar() below, which calls history.back() to pop that
+   same entry - so the same popstate handler ends up doing the
+   actual closing every time, and the sidebar/history state never
+   drifts out of sync (#2, #8 "no stuck menu state").
+   ========================================================== */
+
 function toggleSidebar()
 {
-    divSidebar.classList.toggle("show");
+    if (divSidebar.classList.contains("show"))
+    {
+        closeSidebar();
+    }
+    else
+    {
+        openSidebar();
+    }
+}
+
+
+
+/* ==========================================================
+   Open the Sidebar
+   ========================================================== */
+
+function openSidebar()
+{
+    divSidebar.classList.add("show");
+    divSidebarOverlay.classList.add("show");
+
+    history.pushState({ sidebarOpen: true }, "");
+}
+
+
+
+/* ==========================================================
+   Close the Sidebar
+
+   Only pops history when the sidebar is actually open, so
+   calling this when it is already closed (e.g. a stray overlay
+   click) never eats a Back press that belongs to something else.
+   ========================================================== */
+
+function closeSidebar()
+{
+    if (divSidebar.classList.contains("show"))
+    {
+        history.back();
+    }
+}
+
+
+
+/* ==========================================================
+   Sidebar-Only UI Close (no history involved)
+
+   The one place that actually removes the "show" classes.
+   Called from onDashboardPopState() (a Back press already
+   popped the history entry - nothing left to do here but update
+   the UI) so there is exactly one code path that hides the
+   sidebar, and it can never get out of sync with history.state.
+   ========================================================== */
+
+function closeSidebarUiOnly()
+{
+    divSidebar.classList.remove("show");
+    divSidebarOverlay.classList.remove("show");
+}
+
+
+
+/* ==========================================================
+   Handle Back Button / Swipe-Back (#1)
+   ========================================================== */
+
+function onDashboardPopState()
+{
+    closeSidebarUiOnly();
+}
+
+
+
+/* ==========================================================
+   Swipe Left On the Sidebar to Close It (#2)
+   ========================================================== */
+
+var intSidebarTouchStartX = 0;
+
+function onSidebarTouchStart(objEvent)
+{
+    intSidebarTouchStartX = objEvent.touches[0].clientX;
+}
+
+function onSidebarTouchEnd(objEvent)
+{
+    var intDeltaX = objEvent.changedTouches[0].clientX - intSidebarTouchStartX;
+
+    // A left swipe of more than 50px counts as "swipe to close".
+    if (intDeltaX < -50)
+    {
+        closeSidebar();
+    }
+}
+
+
+
+/* ==========================================================
+   Open Dashboard From the Sidebar's Own "Dashboard" Item (#3)
+
+   Re-uses goDashboard() like every other sidebar item, so the
+   page does a normal reload of dashboard.html - which also
+   satisfies "current page should close normally" (#8: opening
+   another page closes the sidebar automatically) without any
+   extra sidebar-closing code needed here.
+   ========================================================== */
+
+function openDashboardMenu()
+{
+    ActivityLog.logActivity("Opened Dashboard");
+
+    goDashboard();
 }
 
 

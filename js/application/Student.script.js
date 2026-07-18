@@ -1714,6 +1714,22 @@ function getListData( iRequestedPage )
 			onClickRefresh();
 		});
 
+		// --------------------------------------------------
+		// PRIORITY 3 / 6 FIX: the floating down-arrow button
+		// (#btn_float_next_page, studentList.html) is this page's
+		// pagination "next page" control. Rather than duplicate
+		// the getListData(mCurrentPage + 1) logic, this just
+		// forwards the click to the real Prev/Next bar's own
+		// Next button (bindPaginationBarListeners() below), which
+		// already respects the disabled state on the last page.
+		// --------------------------------------------------
+		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			$( "#btn_page_next" ).click();
+		});
+
 		//--------- START - FILTER --------------
 		$('#filter_icon').off().on( "click", function() {
 	
@@ -1726,6 +1742,23 @@ function getListData( iRequestedPage )
 		});
 
 		$('#btn_filter').off().on( "click", function() {
+
+			doFilterStudentList();
+		});
+
+		// --------------------------------------------------
+		// PRIORITY 5 FIX (Filter): the Category/Section dropdowns
+		// inside the Filter modal previously only took effect once
+		// the separate "Apply" button (#btn_filter, still wired
+		// above for anyone who prefers it) was clicked - picking a
+		// value and forgetting to press Apply silently changed
+		// nothing. Binding the same doFilterStudentList() to each
+		// select's own "change" event makes the list redraw the
+		// instant a filter is changed, per the brief. No new
+		// filtering logic was written - both paths call the exact
+		// same function.
+		// --------------------------------------------------
+		$( '#filter_category_id, #filter_section_id' ).off( "change" ).on( "change", function() {
 
 			doFilterStudentList();
 		});
