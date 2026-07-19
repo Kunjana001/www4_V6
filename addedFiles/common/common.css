@@ -286,7 +286,14 @@ img
        --app-theme-color etc.
        -------------------------------------------------------- */
 
-    --app-radius:12px;
+    /* UI MODERNIZATION FIX (this pass): brief asks for 16px
+       rounded corners specifically - was 12px. --app-radius-sm
+       (used for smaller inner controls like inputs/badges) is
+       left at 8px on purpose, same ratio as before, just scaled
+       from the new base. Every .card/.list-item/.btn/.modal-content
+       etc. already reads this variable instead of a hardcoded
+       value, so this one change applies everywhere consistently. */
+    --app-radius:16px;
 
     --app-radius-sm:8px;
 

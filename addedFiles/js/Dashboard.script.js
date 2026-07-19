@@ -1346,7 +1346,8 @@ function openProfilePage()
 
 function logoutUser()
 {
-    CommonUtils.showConfirmDialog("Are you sure you want to sign out?", "Yes", "No", "Logout?")
+    
+    CommonUtils.showConfirmDialog("Are you sure you want to sign out?", "Yes", "No", "Logout")
         .then(function (blnConfirmedLogout)
         {
             if (blnConfirmedLogout === true)

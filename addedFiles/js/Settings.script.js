@@ -203,6 +203,15 @@ function populateApplicationSettingsFields()
    are left untouched (SettingsManager.saveSettings skips
    anything empty), so the user can only fill in the one
    field they care about without clearing the others.
+
+   CONFIRMATION FIX (this pass): brief requires a confirmation
+   before saving Settings - this used to save immediately on
+   click with no confirmation at all. Reuses the same
+   CommonUtils.showConfirmDialog() already used for Logout and
+   Delete User, so the dialog looks and behaves identically to
+   every other confirmation in the app. Values are only read
+   from the inputs and actually saved once the user confirms;
+   Cancel leaves the fields as-is and saves nothing.
    ========================================================== */
 
 function handleSaveSettings()
@@ -213,18 +222,31 @@ function handleSaveSettings()
 
     var strLogoUrl = txtLogoUrl.value.trim();
 
-    SettingsManager.saveSettings({
-
-        strServerUrl: strServerUrl,
-        strApplicationName: strApplicationName,
-        strLogoUrl: strLogoUrl
-
-    });
-
-    if (typeof CommonUtils !== "undefined")
+    CommonUtils.showConfirmDialog(
+        "Save these application settings?",
+        "Save",
+        "Cancel",
+        "Save Settings"
+    ).then(function (bConfirmed)
     {
-        CommonUtils.showToast("Application settings saved.", "success");
-    }
+        if (bConfirmed !== true)
+        {
+            return;
+        }
+
+        SettingsManager.saveSettings({
+
+            strServerUrl: strServerUrl,
+            strApplicationName: strApplicationName,
+            strLogoUrl: strLogoUrl
+
+        });
+
+        if (typeof CommonUtils !== "undefined")
+        {
+            CommonUtils.showToast("Application settings saved.", "success");
+        }
+    });
 }
 
 
@@ -564,7 +586,15 @@ function handleChangePassword()
     }
 
     /* ------------------------------------------------------
-       All fields look good - hand off to the backend, which
+       CONFIRMATION FIX (this pass): brief requires a
+       confirmation before saving a Password change - this used
+       to call DataService.changePassword() immediately once
+       validation passed, with no confirmation at all. All
+       validation above is unchanged and still runs first, so a
+       user only ever sees this dialog once every field is
+       actually valid. Same CommonUtils.showConfirmDialog()
+       pattern as Logout/Delete User/Save Settings, so it looks
+       and behaves identically. Hands off to the backend, which
        is the only place that can actually verify the current
        password against the Users sheet. See DataService.js
        for the changePassword() function - it sends
@@ -573,29 +603,42 @@ function handleChangePassword()
        old "All fields are required." error.
        ------------------------------------------------------ */
 
-    showLoader("Changing password...");
-
-    DataService.changePassword(
-        Session.getUsername(),
-        strCurrentPassword,
-        strNewPassword,
-        function ()
+    CommonUtils.showConfirmDialog(
+        "Change your password?",
+        "Change",
+        "Cancel",
+        "Change Password"
+    ).then(function (bConfirmed)
+    {
+        if (bConfirmed !== true)
         {
-            hideLoader();
-
-            CommonUtils.showAlert("Password changed successfully.", "success");
-
-            ActivityLog.logActivity("Password Changed");
-
-            txtCurrentPassword.value = "";
-            txtNewPassword.value = "";
-            txtConfirmPassword.value = "";
-        },
-        function (objError)
-        {
-            hideLoader();
-
-            CommonUtils.showAlert((objError && objError.message) || "Could not change password.");
+            return;
         }
-    );
+
+        showLoader("Changing password...");
+
+        DataService.changePassword(
+            Session.getUsername(),
+            strCurrentPassword,
+            strNewPassword,
+            function ()
+            {
+                hideLoader();
+
+                CommonUtils.showAlert("Password changed successfully.", "success");
+
+                ActivityLog.logActivity("Password Changed");
+
+                txtCurrentPassword.value = "";
+                txtNewPassword.value = "";
+                txtConfirmPassword.value = "";
+            },
+            function (objError)
+            {
+                hideLoader();
+
+                CommonUtils.showAlert((objError && objError.message) || "Could not change password.");
+            }
+        );
+    });
 }

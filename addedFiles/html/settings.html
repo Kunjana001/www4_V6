@@ -67,7 +67,7 @@
 
     <!-- ================= Application Settings Card (Phase 3) ================= -->
 
-    <section class="settings-card" style="margin-bottom: 20px;">
+    <section class="settings-card">
 
         <div class="settings-row-text" style="margin-bottom: 18px;">
 
@@ -144,9 +144,29 @@
          Moved here from Profile (brief item 5 - "Change
          Password belongs inside Settings"). Same three fields
          and button as before; wired up in Settings.script.js,
-         which now also owns handleChangePassword(). -->
+         which now also owns handleChangePassword().
 
-    <section class="settings-card" id="changePasswordSection" style="margin-bottom: 20px;">
+         SETTINGS PAGE CONSISTENCY FIX (this pass): this card's
+         header used to be a bare, unclassed <div> followed by an
+         EXTRA, unmatched </div> right after it. Per how browsers
+         parse malformed HTML, that orphaned closing tag walked up
+         and force-closed the nearest open <div> on the stack -
+         which was .settings-page itself (this <section> is not a
+         div, so it doesn't count) - so .settings-page silently
+         ended right here. Every card after this one (this card's
+         own inputs/button, Theme, Font Size, Font Family, Density)
+         was then rendered OUTSIDE .settings-page, with none of its
+         max-width/margin/padding, which is exactly why they
+         stretched full-width instead of matching the cards above.
+         Removed the stray </div> and gave this header the same
+         .settings-row-text + icon structure every other card on
+         this page already uses, so spacing/layout matches too. -->
+
+    <section class="settings-card" id="changePasswordSection">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-key"></i>
 
             <div>
 
@@ -201,7 +221,7 @@
 
     <!-- ================= Theme Card ================= -->
 
-    <section class="settings-card" style="margin-bottom: 20px;">
+    <section class="settings-card">
 
         <div class="settings-row-text" style="margin-bottom: 18px;">
 
@@ -265,7 +285,7 @@
          that missing picker, following the exact same "add one
          entry, not new HTML" pattern the other grids use. -->
 
-    <section class="settings-card" style="margin-bottom: 20px; margin-top: 20px;">
+    <section class="settings-card">
 
         <div class="settings-row-text" style="margin-bottom: 18px;">
 

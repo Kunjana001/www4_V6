@@ -84,6 +84,18 @@ body {
     box-shadow: 0px 5px 15px rgba(0,0,0,.12);
 }
 
+/* SETTINGS PAGE CONSISTENCY FIX (this pass): every .settings-card
+   used to carry its own one-off inline style="margin-bottom: 20px"
+   (some had it, some didn't, one had both margin-top AND
+   margin-bottom) to space cards apart - inconsistent and easy to
+   miss on a new card. Single rule here instead: every card except
+   the first gets the same 20px gap above it, and settings.html no
+   longer needs a spacing style on any individual <section>. */
+.settings-card + .settings-card {
+
+    margin-top: 20px;
+}
+
 /* ---------- Settings Row ---------- */
 
 .settings-row {

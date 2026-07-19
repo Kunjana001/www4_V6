@@ -428,31 +428,49 @@ function addNewUser(strUsername, strFullName, strRole, strStatus)
         strFullName = strUsername;
     }
 
-    showLoader("Adding user...");
-
-    DataService.addRecord(AppConfig.STORES.USER, {
-        username: strUsername,
-        password: strPassword,
-        fullName: strFullName,
-        role: strRole,
-        status: strStatus
-    },
-    function ()
+    // CONFIRMATION FIX (this pass): brief requires a confirmation
+    // before saving a User (Profile / Admin User Management) -
+    // this used to save immediately once validation passed. Same
+    // CommonUtils.showConfirmDialog() pattern already used for
+    // Logout/Delete User/Save Settings/Change Password.
+    CommonUtils.showConfirmDialog(
+        "Add user \"" + strUsername + "\"?",
+        "Save",
+        "Cancel",
+        "Add User"
+    ).then(function (bConfirmed)
     {
-        hideLoader();
-        closeUserModal();
+        if (bConfirmed !== true)
+        {
+            return;
+        }
 
-        CommonUtils.showAlert("User created successfully.", "success");
+        showLoader("Adding user...");
 
-        ActivityLog.logActivity("Added User: " + strUsername);
+        DataService.addRecord(AppConfig.STORES.USER, {
+            username: strUsername,
+            password: strPassword,
+            fullName: strFullName,
+            role: strRole,
+            status: strStatus
+        },
+        function ()
+        {
+            hideLoader();
+            closeUserModal();
 
-        loadUsersList();
-    },
-    function (objError)
-    {
-        hideLoader();
+            CommonUtils.showAlert("User created successfully.", "success");
 
-        CommonUtils.showAlert((objError && objError.message) || "Could not add user.");
+            ActivityLog.logActivity("Added User: " + strUsername);
+
+            loadUsersList();
+        },
+        function (objError)
+        {
+            hideLoader();
+
+            CommonUtils.showAlert((objError && objError.message) || "Could not add user.");
+        });
     });
 }
 
@@ -471,31 +489,46 @@ function saveEditedUser(strUsername, strFullName, strRole, strStatus)
         return;
     }
 
-    showLoader("Saving user...");
-
-    DataService.updateRecord(AppConfig.STORES.USER, {
-        user_id: strEditingUserId,
-        username: strUsername,
-        fullName: strFullName,
-        role: strRole,
-        status: strStatus
-    },
-    function ()
+    // CONFIRMATION FIX (this pass): same reasoning as addNewUser()
+    // above - confirm before writing, not after.
+    CommonUtils.showConfirmDialog(
+        "Save changes to user \"" + strUsername + "\"?",
+        "Save",
+        "Cancel",
+        "Save User"
+    ).then(function (bConfirmed)
     {
-        hideLoader();
-        closeUserModal();
+        if (bConfirmed !== true)
+        {
+            return;
+        }
 
-        CommonUtils.showAlert("User updated successfully.", "success");
+        showLoader("Saving user...");
 
-        ActivityLog.logActivity("Edited User: " + strUsername);
+        DataService.updateRecord(AppConfig.STORES.USER, {
+            user_id: strEditingUserId,
+            username: strUsername,
+            fullName: strFullName,
+            role: strRole,
+            status: strStatus
+        },
+        function ()
+        {
+            hideLoader();
+            closeUserModal();
 
-        loadUsersList();
-    },
-    function (objError)
-    {
-        hideLoader();
+            CommonUtils.showAlert("User updated successfully.", "success");
 
-        CommonUtils.showAlert((objError && objError.message) || "Could not update user.");
+            ActivityLog.logActivity("Edited User: " + strUsername);
+
+            loadUsersList();
+        },
+        function (objError)
+        {
+            hideLoader();
+
+            CommonUtils.showAlert((objError && objError.message) || "Could not update user.");
+        });
     });
 }
 
