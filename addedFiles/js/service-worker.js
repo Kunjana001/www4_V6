@@ -42,14 +42,32 @@
       under the old (broken) absolute paths cannot linger and
       accidentally get matched by caches.match() later.
 
+   ----------------------------------------------------------
+   PROJECT IMPROVEMENTS (Phase 7 - Offline Support pass)
+   ----------------------------------------------------------
+   4. FILES_TO_CACHE only listed 9 files - most of the app
+      (common.js, DataService.js, every list page's own script,
+      settings/profile/signup/forgotpassword pages, the app's
+      own CSS/manifest/icons) was never precached, so opening
+      those while offline only worked if the browser's regular
+      HTTP cache happened to still have them. Expanded the list
+      to every first-party HTML page, CSS file, and JS file the
+      app actually loads (confirmed via each page's own <script>/
+      <link> tags), plus manifest.json and the app icons. Same
+      resolveProjectUrl()/per-file cache.add().catch() pattern as
+      before - nothing else about how caching works changed.
+   5. CACHE_NAME bumped v3 -> v4 so this larger file list is
+      actually precached on next load, same reasoning as the v2
+      -> v3 bump above.
+
    No page/file was renamed or moved. The install/fetch/activate
    event flow and the same-origin-only fetch-handling logic
    (added previously) are unchanged below.
 
-   Version: 3.0
+   Version: 4.0
    ========================================================== */
 
-const CACHE_NAME = "student-management-v3";
+const CACHE_NAME = "student-management-v4";
 
 /* ==========================================================
    Resolve a Cache Entry to Its Real Project-Relative Address
@@ -79,11 +97,21 @@ function resolveProjectUrl(strRelativePath)
 
 const FILES_TO_CACHE = [
 
+    /* ---- HTML pages ---- */
+
     resolveProjectUrl("../../index.html"),
 
     resolveProjectUrl("../html/index.html"),
 
     resolveProjectUrl("../html/dashboard.html"),
+
+    resolveProjectUrl("../html/forgotpassword.html"),
+
+    resolveProjectUrl("../html/profile.html"),
+
+    resolveProjectUrl("../html/settings.html"),
+
+    resolveProjectUrl("../html/signup.html"),
 
     resolveProjectUrl("../../html/studentList.html"),
 
@@ -93,9 +121,85 @@ const FILES_TO_CACHE = [
 
     resolveProjectUrl("../../html/resultList.html"),
 
+    /* ---- CSS ---- */
+
+    resolveProjectUrl("../common/common.css"),
+
+    resolveProjectUrl("../dashboard.css"),
+
     resolveProjectUrl("../login.css"),
 
-    resolveProjectUrl("../dashboard.css")
+    resolveProjectUrl("../profile.css"),
+
+    resolveProjectUrl("../settings.css"),
+
+    /* ---- Shared / common JS (loaded by every page) ---- */
+
+    resolveProjectUrl("../common/common.js"),
+
+    resolveProjectUrl("../common/theme.js"),
+
+    resolveProjectUrl("../common/settings.js"),
+
+    resolveProjectUrl("../common/activity.js"),
+
+    resolveProjectUrl("../common/navigation.js"),
+
+    resolveProjectUrl("../common/session.js"),
+
+    resolveProjectUrl("../common/register-sw.js"),
+
+    /* ---- Core app JS ---- */
+
+    resolveProjectUrl("../Config.js"),
+
+    resolveProjectUrl("../StorageService.js"),
+
+    resolveProjectUrl("../DataService.js"),
+
+    resolveProjectUrl("../LegacyCompatShim.js"),
+
+    resolveProjectUrl("../Dashboard.script.js"),
+
+    resolveProjectUrl("../dashboard.js"),
+
+    resolveProjectUrl("../login.js"),
+
+    resolveProjectUrl("../signup.js"),
+
+    resolveProjectUrl("../Profile.script.js"),
+
+    resolveProjectUrl("../Settings.script.js"),
+
+    resolveProjectUrl("../UserManagement.script.js"),
+
+    /* ---- List-page application JS (Student/Category/Section/Result) ---- */
+
+    resolveProjectUrl("../../js/application/Student.script.js"),
+
+    resolveProjectUrl("../../js/application/StudentHTML.script.js"),
+
+    resolveProjectUrl("../../js/application/Category.script.js"),
+
+    resolveProjectUrl("../../js/application/CategoryHTML.script.js"),
+
+    resolveProjectUrl("../../js/application/Section.script.js"),
+
+    resolveProjectUrl("../../js/application/SectionHTML.script.js"),
+
+    resolveProjectUrl("../../js/application/Result.script.js"),
+
+    resolveProjectUrl("../../js/application/ResultHTML.script.js"),
+
+    /* ---- Manifest + icons ---- */
+
+    resolveProjectUrl("../manifest.json"),
+
+    resolveProjectUrl("../images/icon-192.png"),
+
+    resolveProjectUrl("../images/icon-512.png"),
+
+    resolveProjectUrl("../images/logo.png")
 
 ];
 

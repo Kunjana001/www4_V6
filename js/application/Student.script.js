@@ -2947,11 +2947,17 @@ function parseListResponse(objPageResult)
     // mSearchList array, so it can't be changed to a global number.
     var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
-    var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="StudentScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
+    // ACCESSIBILITY FIX (this pass): role="button" tabindex="0"
+    // aria-label added - these are <span>s, not native <button>s,
+    // so without these three they were invisible to screen readers
+    // and unreachable by keyboard (Tab skips a plain <span>). See
+    // common.js's new delegated keydown listener for the matching
+    // Enter/Space activation.
+    var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View student details" onclick="StudentScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
     var editIconHtml = '';
     if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-        editIconHtml = '<span class="icon-btn icon-btn-edit" onclick="StudentScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+        editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
     }
 
     // Quick-action icons: call / WhatsApp / SMS / email, using the
@@ -3147,6 +3153,13 @@ function parseListResponse(objPageResult)
 		$( '#copy_student_details' ).off().on( 'click', function() {
 
 			copyStudentDetails();
+		});
+
+		// Phase 6 (Share feature) - same off()/on() binding pattern as
+		// the Copy button above.
+		$( '#share_student_details' ).off().on( 'click', function() {
+
+			shareStudentDetails();
 		});
 
 		DataService.getRecordById(
@@ -3353,16 +3366,23 @@ function parseListResponse(objPageResult)
 	 * Returns:
 	 *   Nothing
 	 */
-	function copyStudentDetails() {
+	// Phase 6 (Share feature) - pulled the text-building lines out of
+	// copyStudentDetails() into their own function so shareStudentDetails()
+	// below can reuse the exact same text instead of duplicating it.
+	function getStudentDetailsText() {
 
-		var strDetails =
-			"Name: " + $( FORM_FIELD_INFO.LBL_NAME ).text() + "\n" +
+		return "Name: " + $( FORM_FIELD_INFO.LBL_NAME ).text() + "\n" +
 			"Roll Number: " + $( FORM_FIELD_INFO.LBL_ROLL_NUMBER ).text() + "\n" +
 			"Mobile: " + $( FORM_FIELD_INFO.LBL_MOBILE ).text() + "\n" +
 			"Email: " + $( FORM_FIELD_INFO.LBL_EMAIL ).text() + "\n" +
 			"Parent Mobile: " + $( FORM_FIELD_INFO.LBL_PARENT_MOBILE ).text() + "\n" +
 			"Telegram: " + $( FORM_FIELD_INFO.LBL_TELEGRAM ).text() + "\n" +
 			"Parent Email: " + $( FORM_FIELD_INFO.LBL_PARENT_EMAIL ).text();
+	}
+
+	function copyStudentDetails() {
+
+		var strDetails = getStudentDetailsText();
 
 		if( navigator.clipboard && navigator.clipboard.writeText ) {
 
@@ -3401,6 +3421,20 @@ function parseListResponse(objPageResult)
 
 			document.body.removeChild( elmTemp );
 		}
+	}
+
+	// Phase 6 (Share feature) - reuses the exact same text
+	// copyStudentDetails() copies, just handed to
+	// CommonUtils.shareContent() (Web Share API, with the same
+	// clipboard-copy fallback) instead of always copying.
+	function shareStudentDetails() {
+
+		var strName = $( FORM_FIELD_INFO.LBL_NAME ).text() || "Student";
+
+		CommonUtils.shareContent(
+			"Student: " + strName,
+			getStudentDetailsText()
+		);
 	}
 
 	function doFilterStudentList() {
@@ -3824,25 +3858,45 @@ function parseListResponse(objPageResult)
 
 	function getFormattedData( seqNumber, selectedData ) {
 
+		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
+		// pass): this function used to be an entirely commented-out
+		// stub ("Write your code in here") that always returned "".
+		// That meant every use of the Share menu item (single -
+		// #student_share - and multi-select - #multi_share -, both
+		// wired to onClickShare() -> onClickShareByEmail()/
+		// onClickShareByWhatsApp() above) silently sent a
+		// completely blank email or WhatsApp message every time -
+		// a real, live bug, not dead code, since those menu items
+		// are still visible and clickable in the UI.
+		//
+		// Filled in using the real SUMMARY_INDEX fields this file
+		// already defines (getSelectedSummaryListData()/
+		// getMultiSelectData() above already return rows shaped
+		// this way) instead of the stub's placeholder
+		// FIRST_NAME/LAST_NAME/MOBILE_NUMBER fields, which don't
+		// exist on this entity at all.
 		var resultText = "";
 
-/*	Write your code in here
-		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
-
-		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
-		
+		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
+		var strRollNumber = selectedData[ SUMMARY_INDEX.ROLL_NUMBER ] || "";
+		var strMobile = selectedData[ SUMMARY_INDEX.MOBILE ] || "";
+		var strEmail = selectedData[ SUMMARY_INDEX.EMAIL ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
-			resultText += seqNumber +") " + name + "<br>";
-			resultText += mobileNumber + "<br><br>";
+			resultText += seqNumber + ") " + strName + "<br>";
+			resultText += "Roll Number: " + strRollNumber + "<br>";
+			resultText += "Mobile: " + strMobile + "<br>";
+			resultText += "Email: " + strEmail + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
-			resultText += "_*" + seqNumber +") " + name + "*_\n";
-			resultText += "*" + mobileNumber + "*\n\n";
+			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
+			resultText += "Roll Number: " + strRollNumber + "\n";
+			resultText += "Mobile: *" + strMobile + "*\n";
+			resultText += "Email: " + strEmail + "\n\n";
 		}
-*/		
+
 		return resultText;
 	}
 	// End - Share data

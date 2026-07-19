@@ -2417,11 +2417,13 @@ var SectionScript = (function () {
 		// page's own cached array.
 		var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
-		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="SectionScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
+		// ACCESSIBILITY FIX (this pass): see Student.script.js's
+		// createHtmlListItem() for the full WHY.
+		var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View section details" onclick="SectionScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" onclick="SectionScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
 		// --------------------------------------------------
@@ -2919,25 +2921,27 @@ var SectionScript = (function () {
 
 	function getFormattedData( seqNumber, selectedData ) {
 
+		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
+		// pass): same commented-out stub bug as Student.script.js's
+		// getFormattedData() - always returned "". Filled in using
+		// this entity's own real SUMMARY_INDEX fields (Section has
+		// no mobile/email of its own).
 		var resultText = "";
 
-/*	Write your code in here
-		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
-
-		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
-		
+		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
+		var strCategoryId = selectedData[ SUMMARY_INDEX.CATEGORY_ID ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
-			resultText += seqNumber +") " + name + "<br>";
-			resultText += mobileNumber + "<br><br>";
+			resultText += seqNumber + ") " + strName + "<br>";
+			resultText += "Category: " + strCategoryId + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
-			resultText += "_*" + seqNumber +") " + name + "*_\n";
-			resultText += "*" + mobileNumber + "*\n\n";
+			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
+			resultText += "Category: " + strCategoryId + "\n\n";
 		}
-*/		
+
 		return resultText;
 	}
 	// End - Share data

@@ -376,7 +376,19 @@
 			<!-- Modal Footer -->
 			<div class="modal-footer" style="display: block; padding-bottom: 0;">
 				<div class="row">
-					<div class="col">
+					<div class="col-6">
+						<div class="form-group">
+							<!-- Phase 6 (Share feature) - handled by
+							     CommonUtils.shareContent() (Web Share API,
+							     copy-to-clipboard fallback). Click handler
+							     bound in onInfoViewDocumentReady() in
+							     Result.script.js. -->
+							<button id="share_result_details" type="button" style="background-color: var(--app-theme-color);
+						  color: aliceblue;
+						  font-weight: bolder;" class="form-control"><i class="fa-solid fa-share-nodes"></i> Share </button>
+						</div>
+					</div>
+					<div class="col-6">
 						<div class="form-group">
 							<button style="background-color: var(--app-theme-color);
 						  color: aliceblue;

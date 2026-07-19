@@ -2520,11 +2520,13 @@ var ResultScript = (function () {
 			marksAndGradeHtml += String( marks ) + ( grade ? ' (' + String( grade ) + ')' : '' ) + ' &middot; ';
 		}
 
-		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="ResultScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
+		// ACCESSIBILITY FIX (this pass): see Student.script.js's
+		// createHtmlListItem() for the full WHY.
+		var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View result details" onclick="ResultScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_RESULT ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
@@ -2643,6 +2645,13 @@ var ResultScript = (function () {
 	// --------------------------------------------------
 
 	function onInfoViewDocumentReady() {
+
+		// Phase 6 (Share feature) - same off()/on() binding pattern
+		// Student.script.js already uses for its info popup's buttons.
+		$( '#share_result_details' ).off().on( 'click', function() {
+
+			shareResultDetails();
+		});
 
 		DataService.getRecordById(
 
@@ -2768,6 +2777,27 @@ var ResultScript = (function () {
 		}
 
 	}
+
+	// Phase 6 (Share feature) - reads the same lbl_* fields the Info
+	// popup just populated (setPreview()/parsePreviewResponse() above),
+	// same idea as Student.script.js's getStudentDetailsText(), and
+	// hands the text to CommonUtils.shareContent() (Web Share API with
+	// a copy-to-clipboard fallback).
+	function shareResultDetails() {
+
+		var strStudentName = $( FORM_FIELD_INFO.LBL_STUDENT_NAME ).text() || "Result";
+
+		var strDetails =
+			"Student: " + $( FORM_FIELD_INFO.LBL_STUDENT_NAME ).text() + "\n" +
+			"Exam: " + $( FORM_FIELD_INFO.LBL_EXAM_NAME ).text() + "\n" +
+			"Subject: " + $( FORM_FIELD_INFO.LBL_SUBJECT ).text() + "\n" +
+			"Marks: " + $( FORM_FIELD_INFO.LBL_MARKS_OBTAINED ).text() + "\n" +
+			"Grade: " + $( FORM_FIELD_INFO.LBL_GRADE ).text() + "\n" +
+			"Result: " + $( FORM_FIELD_INFO.LBL_RESULT ).text();
+
+		CommonUtils.shareContent( "Result: " + strStudentName, strDetails );
+	}
+
 	function doFilterResultList() {
 
 		clearSearch();
@@ -3040,25 +3070,29 @@ var ResultScript = (function () {
 
 	function getFormattedData( seqNumber, selectedData ) {
 
+		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
+		// pass): same commented-out stub bug as Student.script.js's
+		// getFormattedData() - always returned "". Filled in using
+		// this entity's own real SUMMARY_INDEX fields.
 		var resultText = "";
 
-/*	Write your code in here
-		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
-
-		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
-		
+		var strExamName = selectedData[ SUMMARY_INDEX.EXAM_NAME ] || "";
+		var strSubject = selectedData[ SUMMARY_INDEX.SUBJECT ] || "";
+		var strMarks = selectedData[ SUMMARY_INDEX.MARKS_OBTAINED ] || "";
+		var strGrade = selectedData[ SUMMARY_INDEX.GRADE ] || "";
+		var strResult = selectedData[ SUMMARY_INDEX.RESULT ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
-			resultText += seqNumber +") " + name + "<br>";
-			resultText += mobileNumber + "<br><br>";
+			resultText += seqNumber + ") " + strExamName + " - " + strSubject + "<br>";
+			resultText += "Marks: " + strMarks + " | Grade: " + strGrade + " | Result: " + strResult + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
-			resultText += "_*" + seqNumber +") " + name + "*_\n";
-			resultText += "*" + mobileNumber + "*\n\n";
+			resultText += "_*" + seqNumber + ") " + strExamName + " - " + strSubject + "*_\n";
+			resultText += "Marks: *" + strMarks + "* | Grade: *" + strGrade + "* | Result: *" + strResult + "*\n\n";
 		}
-*/		
+
 		return resultText;
 	}
 	// End - Share data

@@ -1555,6 +1555,20 @@ body
     box-shadow:0 0 0 .15rem color-mix(in srgb, var(--app-theme-color) 18%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
 }
 
+/* ANIMATION FIX (this pass): "Button press" was one of the
+   explicitly requested animations that didn't exist anywhere -
+   every Save/Delete/Cancel/Close button in the app uses class=
+   "form-control" (shared with text <input>s), so this is scoped
+   to the actual button element selector rather than the class
+   alone, otherwise clicking into a text field would visually
+   "press" it too, which would look like a bug, not a feature. */
+button.form-control:active,
+input[type="button"].form-control:active,
+input[type="submit"].form-control:active
+{
+    transform: scale(.97);
+}
+
 /* --------------------------------------------------------
    Project Improvements (this pass) - Validation states
 
@@ -2593,6 +2607,12 @@ button:hover
    Result.script.js so every list page shares the same look.
 ---------------------------------------------------------- */
 
+/* ACCESSIBILITY FIX (this pass): was 30x30px - well under the
+   44x44px minimum WCAG 2.5.5 (Target Size) and Apple/Material's
+   own mobile guidelines both recommend for a tappable control.
+   Icon size itself (font-size below) is unchanged, so this only
+   grows the invisible tappable/clickable area, not how big the
+   icon looks. */
 .icon-btn
 {
     display: inline-flex;
@@ -2600,8 +2620,8 @@ button:hover
     align-items: center;
     justify-content: center;
 
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
 
     border-radius: 50%;
 
@@ -2620,6 +2640,18 @@ button:hover
 .icon-btn:active
 {
     transform: scale(.94);
+}
+
+/* ACCESSIBILITY FIX (this pass): these are <span role="button">
+   elements (see Student/Category/Section/Result.script.js's
+   createHtmlListItem()), not native <button>s, so they need an
+   explicit focus style - without this, a keyboard user tabbing
+   through the list had no visual indication these controls were
+   even focusable, let alone which one currently had focus. */
+.icon-btn:focus-visible
+{
+    outline: 2px solid var(--app-theme-color, #1E40AF);
+    outline-offset: 2px;
 }
 
 .icon-btn-info

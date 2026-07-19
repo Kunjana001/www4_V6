@@ -119,7 +119,11 @@ var CommonUtils = (function ()
 
         buildPaginationSummary:
 
-            buildPaginationSummary
+            buildPaginationSummary,
+
+        shareContent:
+
+            shareContent
 
     };
 
@@ -348,6 +352,93 @@ var CommonUtils = (function ()
 
             btnConfirm.focus();
         });
+    }
+
+
+
+    /* ======================================================
+       Share Content (Phase 6 - Share Feature)
+
+       One shared implementation used by every "Share" button
+       in the app (Student/Result info popups, Dashboard's
+       Share App button, etc) instead of each page inventing
+       its own. Tries the native Web Share API first (the
+       brief's explicit requirement) - on mobile this opens the
+       device's own share sheet (WhatsApp/Email/SMS/etc, same
+       as it does when sharing from Photos or Chrome). Falls
+       back to copying the text to the clipboard when
+       navigator.share isn't available (most desktop browsers)
+       or the user's own browser/OS blocks it, reusing the same
+       execCommand("copy") fallback Student.script.js's existing
+       copyStudentDetails() already relies on for older WebViews.
+
+       strTitle : short share title (used by the native share
+                  sheet; ignored by the clipboard fallback)
+       strText  : the actual content being shared
+       strUrl   : optional link to include (native share sheet
+                  only - appended to the copied text too, if
+                  the fallback path is used)
+       ====================================================== */
+
+    function shareContent(strTitle, strText, strUrl)
+    {
+        if (navigator.share)
+        {
+            navigator.share({
+                title: strTitle,
+                text: strText,
+                url: strUrl || undefined
+            }).catch(function (objError)
+            {
+                /* AbortError just means the user closed the share
+                   sheet without picking anything - not a real
+                   failure, so don't show an error toast for it. */
+                if (objError && objError.name !== "AbortError")
+                {
+                    logError("CommonUtils.shareContent", objError);
+                    showAlert("Could not share.");
+                }
+            });
+
+            return;
+        }
+
+        var strClipboardText = strUrl ? (strText + "\n" + strUrl) : strText;
+
+        if (navigator.clipboard && navigator.clipboard.writeText)
+        {
+            navigator.clipboard.writeText(strClipboardText).then(function ()
+            {
+                showAlert("Copied to clipboard - paste it anywhere to share.", "success");
+            }, function (objError)
+            {
+                logError("CommonUtils.shareContent", objError);
+                showAlert("Could not copy details.");
+            });
+
+            return;
+        }
+
+        var elTemp = document.createElement("textarea");
+        elTemp.value = strClipboardText;
+        elTemp.style.position = "fixed";
+        elTemp.style.opacity = "0";
+        document.body.appendChild(elTemp);
+        elTemp.focus();
+        elTemp.select();
+
+        try
+        {
+            document.execCommand("copy");
+            showAlert("Copied to clipboard - paste it anywhere to share.", "success");
+        }
+        catch (objError)
+        {
+            logError("CommonUtils.shareContent", objError);
+            showAlert("Could not copy details.");
+        }
+
+        document.body.removeChild(elTemp);
     }
 
 
@@ -752,3 +843,40 @@ function handleDeviceCameOnline()
         DataService.synchronizePendingChanges();
     }
 }
+
+
+
+/* ==========================================================
+   Keyboard Support for .icon-btn Controls
+
+   ACCESSIBILITY FIX (this pass): the info/edit/copy/share
+   icon buttons rendered on every list card (Student/Category/
+   Section/Result.script.js's createHtmlListItem()) are
+   <span role="button" tabindex="0"> elements, not native
+   <button>s - a <span> gets no keyboard activation for free,
+   only a native <button>/<a> does. Without this, a keyboard-
+   only user could Tab onto one of these (now that it has
+   tabindex="0") but pressing Enter or Space would do nothing.
+
+   One delegated listener here covers every .icon-btn on every
+   page (present and future), instead of repeating the same
+   keydown handler in four separate .script.js files. Space is
+   prevented from scrolling the page, matching how a real
+   <button> already behaves.
+   ========================================================== */
+
+document.addEventListener("keydown", function (objEvent)
+{
+    if (objEvent.key !== "Enter" && objEvent.key !== " " && objEvent.key !== "Spacebar")
+    {
+        return;
+    }
+
+    var elTarget = objEvent.target;
+
+    if (elTarget && elTarget.classList && elTarget.classList.contains("icon-btn"))
+    {
+        objEvent.preventDefault();
+        elTarget.click();
+    }
+});

@@ -2366,11 +2366,15 @@ var CategoryScript = (function () {
 		// page's own cached array.
 		var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
-		var infoIconHtml = '<span class="icon-btn icon-btn-info" onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
+		// ACCESSIBILITY FIX (this pass): see Student.script.js's
+		// createHtmlListItem() for the full WHY - same fix, same
+		// role/tabindex/aria-label pattern, same shared keydown
+		// handler in common.js.
+		var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View category details" onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_CATEGORY ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit category" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
 		// --------------------------------------------------
@@ -2873,25 +2877,23 @@ var CategoryScript = (function () {
 
 	function getFormattedData( seqNumber, selectedData ) {
 
+		/
 		var resultText = "";
 
-/*	Write your code in here
-		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
-
-		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
-		
+		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
+		var strOrganization = selectedData[ SUMMARY_INDEX.ORGANIZATION_ID ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
-			resultText += seqNumber +") " + name + "<br>";
-			resultText += mobileNumber + "<br><br>";
+			resultText += seqNumber + ") " + strName + "<br>";
+			resultText += "Organization: " + strOrganization + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
-			resultText += "_*" + seqNumber +") " + name + "*_\n";
-			resultText += "*" + mobileNumber + "*\n\n";
+			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
+			resultText += "Organization: " + strOrganization + "\n\n";
 		}
-*/		
+
 		return resultText;
 	}
 	// End - Share data

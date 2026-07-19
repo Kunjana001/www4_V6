@@ -476,7 +476,19 @@
 			<!-- Modal Footer -->
 			<div class="modal-footer" style="display: block; padding-bottom: 0;">
 				<div class="row">
-					<div class="col-6">
+					<div class="col-4">
+						<div class="form-group">
+							<!-- Phase 6 (Share feature) - Web Share API with a
+							     copy-to-clipboard fallback, both handled by
+							     CommonUtils.shareContent(). Click handler bound
+							     in onInfoViewDocumentReady() in Student.script.js,
+							     same pattern as the existing Copy button. -->
+							<button id="share_student_details" type="button" style="background-color: var(--app-theme-color);
+						  color: aliceblue;
+						  font-weight: bolder;" class="form-control"><i class="fa-solid fa-share-nodes"></i> Share </button>
+						</div>
+					</div>
+					<div class="col-4">
 						<div class="form-group">
 							<!-- MENTOR NOTE (added): Copy student details button.
 							     Click handler is bound in onInfoViewDocumentReady()
@@ -487,7 +499,7 @@
 						  font-weight: bolder;" class="form-control"><i class="fa-solid fa-copy"></i> Copy </button>
 						</div>
 					</div>
-					<div class="col-6">
+					<div class="col-4">
 						<div class="form-group">
 							<button style="background-color: var(--app-theme-color);
 						  color: aliceblue;

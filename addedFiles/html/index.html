@@ -22,10 +22,24 @@
      Removed the #forgotPasswordOverlay popup and all of its
      markup (both steps, the close/cancel buttons). Forgot
      Password now lives on its own page,
-     addedFiles/html/forgotPassword.html - the same pattern
+     addedFiles/html/forgotpassword.html - the same pattern
      already used for Sign Up (signup.html). "Forgot Password?"
      below is now a plain link to that page; see login.js for
      the (much simpler) click handler.
+
+     ==========================================================
+     CASE-SENSITIVITY FIX (this pass)
+     ==========================================================
+
+     The link below pointed at "forgotPassword.html" (capital
+     P), but the real file on disk is "forgotpassword.html"
+     (all lowercase) - see addedFiles/js/service-worker.js's
+     FILES_TO_CACHE, which already had the correct lowercase
+     spelling. Windows/local dev servers are case-INsensitive,
+     so this worked fine while testing locally - but GitHub
+     Pages (and any Linux server) is case-sensitive, so this
+     link 404'd there. Fixed to match the real filename exactly;
+     no file was renamed.
      ========================================================== -->
 <html lang="en">
 
@@ -141,7 +155,7 @@
 
                 </label>
 
-                <a href="forgotPassword.html" id="forgotPasswordLink">
+                <a href="forgotpassword.html" id="forgotPasswordLink">
                       Forgot Password?
                </a>
 
