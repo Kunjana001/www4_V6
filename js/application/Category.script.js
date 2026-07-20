@@ -2877,7 +2877,12 @@ var CategoryScript = (function () {
 
 	function getFormattedData( seqNumber, selectedData ) {
 
-		/
+		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
+		// pass): same commented-out stub bug as Student.script.js's
+		// getFormattedData() - always returned "", so the Share
+		// menu item silently sent a blank email/WhatsApp message.
+		// Filled in using this entity's own real SUMMARY_INDEX
+		// fields (Category has no mobile/email of its own).
 		var resultText = "";
 
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
