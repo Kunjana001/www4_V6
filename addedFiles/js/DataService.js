@@ -2,6 +2,50 @@
    Student Management System
    DataService.js
 
+   ==========================================================
+   Project Improvements
+
+   Added switchable backend architecture.
+
+   Supports Google Apps Script.
+
+   Supports IndexedDB.
+
+   Prepared Spring Boot integration.
+
+   Architecture unchanged.
+
+   Folder structure unchanged.
+
+   Existing CRUD unchanged.
+   ==========================================================
+
+   ----------------------------------------------------------
+   SWITCHABLE BACKEND ARCHITECTURE (added, this pass)
+   ----------------------------------------------------------
+
+   Every CRUD/auth function in this file now starts by reading
+   AppConfig.BACKEND_MODE (via getBackendMode()) and branches on
+   it explicitly:
+
+     GOOGLE    - existing behavior below, completely unchanged.
+     INDEXEDDB - (new name for the existing OFFLINE mode - see
+                 isIndexedDbMode()) goes straight to
+                 StorageService, never touches the network.
+     SPRING    - calls the new callSpringGet/Post/Put/Delete
+                 placeholders (see just after parseGoogleResponse
+                 below), which always reject with "Spring backend
+                 not implemented" until a real Spring Boot service
+                 exists.
+
+   No page (Student.script.js, Category.script.js, Section.script.js,
+   Result.script.js, Dashboard.script.js, Profile.script.js,
+   Login.js, signup.js, etc.) needed to change - they still call
+   DataService.getAllRecords()/addRecord()/updateRecord()/
+   deleteRecord()/login()/etc. exactly as before. Only this file
+   (plus the small AppConfig.BACKEND.INDEXEDDB addition in
+   Config.js) changed.
+
    ----------------------------------------------------------
    PASS 3 (added) - createAccount()
    ----------------------------------------------------------
@@ -366,6 +410,7 @@ var DataService = (function ()
 
         if (strSavedMode === AppConfig.BACKEND.GOOGLE ||
             strSavedMode === AppConfig.BACKEND.OFFLINE ||
+            strSavedMode === AppConfig.BACKEND.INDEXEDDB || // ADDED: accept the new INDEXEDDB alias too
             strSavedMode === AppConfig.BACKEND.SPRING)
         {
             return strSavedMode;
@@ -389,6 +434,24 @@ var DataService = (function ()
         StorageService.saveValue(AppConfig.STORAGE_KEYS.BACKEND, strMode);
 
         CommonUtils.logError("DataService.setBackendMode", "Backend mode set to " + strMode);
+    }
+
+
+
+    /* ======================================================
+       ADDED: Is This the IndexedDB-Only Backend Mode?
+
+       WHY: AppConfig.BACKEND.OFFLINE and AppConfig.BACKEND.INDEXEDDB
+       mean exactly the same thing (see the "SWITCHABLE BACKEND
+       ARCHITECTURE" note in Config.js) - INDEXEDDB is just the new,
+       preferred name. Every function below that used to check
+       `strMode === AppConfig.BACKEND.OFFLINE` now calls this helper
+       instead, so both names keep working from one single place.
+       ====================================================== */
+
+    function isIndexedDbMode(strMode)
+    {
+        return strMode === AppConfig.BACKEND.OFFLINE || strMode === AppConfig.BACKEND.INDEXEDDB;
     }
 
 
@@ -970,6 +1033,45 @@ var DataService = (function ()
 
 
     /* ======================================================
+       ADDED: Spring Boot Backend - Placeholders Only
+
+       Future Spring Boot backend. None of these actually call
+       anything yet - AppConfig.SPRING_BOOT_URL is not pointed at
+       a real service. Every one of them simply rejects, so any
+       CRUD function that reaches AppConfig.BACKEND.SPRING mode
+       fails clearly and predictably instead of silently doing
+       nothing. When a real Spring Boot backend exists, only the
+       bodies of these four functions need to change - nothing
+       else in this file (or any page script) has to know.
+       ====================================================== */
+
+    function callSpringGet(strAction, objParams)
+    {
+        // Future Spring Boot backend - GET not implemented yet
+        return Promise.reject(new Error("Spring backend not implemented"));
+    }
+
+    function callSpringPost(strAction, objParams)
+    {
+        // Future Spring Boot backend - POST not implemented yet
+        return Promise.reject(new Error("Spring backend not implemented"));
+    }
+
+    function callSpringPut(strAction, objParams)
+    {
+        // Future Spring Boot backend - PUT not implemented yet
+        return Promise.reject(new Error("Spring backend not implemented"));
+    }
+
+    function callSpringDelete(strAction, objParams)
+    {
+        // Future Spring Boot backend - DELETE not implemented yet
+        return Promise.reject(new Error("Spring backend not implemented"));
+    }
+
+
+
+    /* ======================================================
        Get Every Record for a Store
 
        strStoreName : AppConfig.STORES.STUDENT / CATEGORY / ...
@@ -1000,7 +1102,8 @@ var DataService = (function ()
 
         var strMode = getBackendMode();
 
-        if (strMode === AppConfig.BACKEND.OFFLINE || CommonUtils.isOnline() === false)
+        // CHANGED: isIndexedDbMode() also covers the new INDEXEDDB alias, not just OFFLINE
+        if (isIndexedDbMode(strMode) || CommonUtils.isOnline() === false)
         {
             StorageService.getAllRecords(strStoreName)
                 .then(function (arrRecords)
@@ -1174,12 +1277,17 @@ var DataService = (function ()
             return;
         }
 
-        /* SPRING - kept here for Task 6 (Spring Boot backend not
-           built yet, so this falls back to the offline cache
-           until AppConfig.SPRING_BOOT_URL points at a real
-           service, following the same list/getById/add/update/
-           delete shape as GOOGLE above). */
+        /* CHANGED (Spring switch added): mode is SPRING here (the
+           only remaining possibility) - call the placeholder, which
+           always rejects, and report that error instead of quietly
+           reusing the IndexedDB cache the way this used to. Old
+           fallback-to-cache behavior is commented out below in case
+           it is ever wanted back before a real Spring backend exists. */
 
+        callSpringGet("getAll_" + strStoreName, {})
+            .catch(fnError);
+
+        /* ---- OLD SPRING FALLBACK (commented out, not removed) ----
         StorageService.getAllRecords(strStoreName)
             .then(function (arrRecords)
             {
@@ -1187,6 +1295,7 @@ var DataService = (function ()
                 fnSuccess(arrRecords);
             })
             .catch(fnError);
+        ------------------------------------------------------------ */
     }
 
 
@@ -1233,6 +1342,25 @@ var DataService = (function ()
         if (!objEntity)
         {
             fnError(new Error("No paging configuration for '" + strStoreName + "'."));
+            return;
+        }
+
+        // ADDED: read the active backend mode so this can branch, same as the other CRUD functions
+        var strPageMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE branch - page and (optionally) search entirely on the local StorageService cache
+        if (isIndexedDbMode(strPageMode))
+        {
+            getRecordsPageFromIndexedDb(strStoreName, iPage, iPageSize, strKeyword, fnSuccess, fnError);
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly instead of calling Google
+        if (strPageMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringGet("page_" + strStoreName, { page: iPage, pageSize: iPageSize, keyword: strKeyword })
+                .catch(fnError);
+
             return;
         }
 
@@ -1340,6 +1468,48 @@ var DataService = (function ()
 
 
     /* ======================================================
+       ADDED: Page (and Optionally Search) Records From
+       IndexedDB Only
+
+       Used by getRecordsPage() above whenever
+       AppConfig.BACKEND_MODE (or the runtime override) is
+       INDEXEDDB/OFFLINE. Reuses StorageService.getAllRecords()/
+       searchRecords() - no IndexedDB logic is duplicated here,
+       only pagination math over whatever StorageService returns.
+       ====================================================== */
+
+    function getRecordsPageFromIndexedDb(strStoreName, iPage, iPageSize, strKeyword, fnSuccess, fnError)
+    {
+        var blnIsSearch = !!(strKeyword && strKeyword.trim() !== "");
+
+        var objRecordsPromise = blnIsSearch
+            ? StorageService.searchRecords(strStoreName, strKeyword)
+            : StorageService.getAllRecords(strStoreName);
+
+        objRecordsPromise
+            .then(function (arrAllRecords)
+            {
+                arrAllRecords = arrAllRecords || [];
+
+                var iTotalRecords = arrAllRecords.length;
+                var iTotalPages = Math.max(1, Math.ceil(iTotalRecords / iPageSize));
+                var iActualPage = Math.min(Math.max(1, iPage), iTotalPages);
+                var iSliceStart = (iActualPage - 1) * iPageSize;
+
+                fnSuccess({
+                    records: arrAllRecords.slice(iSliceStart, iSliceStart + iPageSize),
+                    totalRecords: iTotalRecords,
+                    totalPages: iTotalPages,
+                    page: iActualPage,
+                    pageSize: iPageSize
+                });
+            })
+            .catch(fnError);
+    }
+
+
+
+    /* ======================================================
        Get a Single Record By Id
 
        strStoreName : AppConfig.STORES.STUDENT / CATEGORY / ...
@@ -1352,10 +1522,20 @@ var DataService = (function ()
     {
         var strMode = getBackendMode();
 
-        if (strMode === AppConfig.BACKEND.OFFLINE || CommonUtils.isOnline() === false)
+        // CHANGED: isIndexedDbMode() also covers the new INDEXEDDB alias, not just OFFLINE
+        if (isIndexedDbMode(strMode) || CommonUtils.isOnline() === false)
         {
             StorageService.getRecordById(strStoreName, mId)
                 .then(fnSuccess)
+                .catch(fnError);
+
+            return;
+        }
+
+        // ADDED: explicit SPRING branch - placeholder only, rejects clearly
+        if (strMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringGet("getById_" + strStoreName, { id: mId })
                 .catch(fnError);
 
             return;
@@ -1514,9 +1694,25 @@ var DataService = (function ()
             return;
         }
 
-        /* OFFLINE mode, SPRING placeholder, or GOOGLE but the
+        // ADDED: explicit SPRING branch - placeholder only, rejects clearly instead of queuing offline
+        if (strMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("add_" + strStoreName, objEntity ? objEntity.toBackendFields(objRecord) : objRecord)
+                .catch(function (objError)
+                {
+                    if (fnError)
+                    {
+                        fnError(objError);
+                    }
+                });
+
+            return;
+        }
+
+        /* CHANGED comment: OFFLINE/INDEXEDDB mode, or GOOGLE but the
            device itself is offline: save locally right away and
-           queue the change so it is not lost. */
+           queue the change so it is not lost. (SPRING no longer
+           falls through to here - see the branch added just above.) */
 
         saveRecordOfflineAsNew(strStoreName, objRecord, fnSuccess, fnError);
     }
@@ -1613,6 +1809,21 @@ var DataService = (function ()
             return;
         }
 
+        // ADDED: explicit SPRING branch - placeholder only, rejects clearly instead of queuing offline
+        if (strMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPut("update_" + strStoreName, objEntity ? objEntity.toBackendFields(objRecord) : objRecord)
+                .catch(function (objError)
+                {
+                    if (fnError)
+                    {
+                        fnError(objError);
+                    }
+                });
+
+            return;
+        }
+
         saveRecordOfflineAsUpdate(strStoreName, objRecord, fnSuccess, fnError);
     }
 
@@ -1692,6 +1903,24 @@ var DataService = (function ()
 
                 deleteRecordOffline(strStoreName, mId, fnSuccess, fnError);
             });
+
+            return;
+        }
+
+        // ADDED: explicit SPRING branch - placeholder only, rejects clearly instead of queuing offline
+        if (strMode === AppConfig.BACKEND.SPRING)
+        {
+            var objSpringDeleteParams = {};
+            objSpringDeleteParams[objEntity ? objEntity.idParam : "id"] = mId;
+
+            callSpringDelete("delete_" + strStoreName, objSpringDeleteParams)
+                .catch(function (objError)
+                {
+                    if (fnError)
+                    {
+                        fnError(objError);
+                    }
+                });
 
             return;
         }
@@ -1890,6 +2119,27 @@ var DataService = (function ()
 
     function login(strUsername, strPassword, fnSuccess, fnError)
     {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strLoginMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no local Users store to authenticate against
+        if (isIndexedDbMode(strLoginMode))
+        {
+            fnError(new Error("Login requires an online backend (Google or Spring). IndexedDB mode does not support login."));
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strLoginMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("login", { username: strUsername, password: strPassword })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- existing GOOGLE logic below, unchanged ----
+
         if (CommonUtils.isOnline() === false)
         {
             fnError(new Error("You appear to be offline. Please connect to the internet to log in."));
@@ -1949,6 +2199,27 @@ var DataService = (function ()
 
     function createAccount(strUsername, strPassword, fnSuccess, fnError)
     {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strCreateMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no local Users store to create accounts against
+        if (isIndexedDbMode(strCreateMode))
+        {
+            fnError(new Error("Sign up requires an online backend (Google or Spring). IndexedDB mode does not support account creation."));
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strCreateMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("createAccount", { username: strUsername, password: strPassword })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- existing GOOGLE logic below, unchanged ----
+
         if (CommonUtils.isOnline() === false)
         {
             fnError(new Error("You appear to be offline. Please connect to the internet to sign up."));
@@ -2008,6 +2279,30 @@ var DataService = (function ()
 
     function changePassword(strUsername, strCurrentPassword, strNewPassword, fnSuccess, fnError)
     {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strChangePwMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no local Users store to change passwords against
+        if (isIndexedDbMode(strChangePwMode))
+        {
+            fnError(new Error("Changing your password requires an online backend (Google or Spring). IndexedDB mode does not support this."));
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strChangePwMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("changePassword", {
+                username: strUsername,
+                oldPassword: strCurrentPassword,
+                newPassword: strNewPassword
+            }).catch(fnError);
+
+            return;
+        }
+
+        // ---- existing GOOGLE logic below, unchanged ----
+
         if (CommonUtils.isOnline() === false)
         {
             fnError(new Error("You appear to be offline. Please connect to the internet to change your password."));
@@ -2073,6 +2368,27 @@ var DataService = (function ()
 
     function verifyUsernameExists(strUsername, fnSuccess, fnError)
     {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strVerifyMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no local Users store to verify against
+        if (isIndexedDbMode(strVerifyMode))
+        {
+            fnError(new Error("Verifying a username requires an online backend (Google or Spring). IndexedDB mode does not support this."));
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strVerifyMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringGet("verifyUsername", { username: strUsername })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- existing GOOGLE logic below, unchanged ----
+
         if (CommonUtils.isOnline() === false)
         {
             fnError(new Error("You appear to be offline. Please connect to the internet to reset your password."));
@@ -2141,6 +2457,27 @@ var DataService = (function ()
 
     function resetPassword(strUsername, strNewPassword, fnSuccess, fnError)
     {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strResetMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no local Users store to reset passwords against
+        if (isIndexedDbMode(strResetMode))
+        {
+            fnError(new Error("Resetting your password requires an online backend (Google or Spring). IndexedDB mode does not support this."));
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strResetMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("resetPassword", { username: strUsername, newPassword: strNewPassword })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- existing GOOGLE logic below, unchanged ----
+
         if (CommonUtils.isOnline() === false)
         {
             fnError(new Error("You appear to be offline. Please connect to the internet to reset your password."));

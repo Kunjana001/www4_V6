@@ -156,15 +156,46 @@ const AppConfig = {
 
     /* ======================================================
        Backend Modes
+
+       ------------------------------------------------------
+       SWITCHABLE BACKEND ARCHITECTURE (added)
+
+       AppConfig.BACKEND_MODE is the single source of truth
+       DataService.js reads to decide which backend every CRUD
+       call goes to. Supported values:
+
+         GOOGLE     - existing Google Apps Script backend
+                      (unchanged, still the default).
+         INDEXEDDB  - browser-only, via StorageService (no
+                      network calls at all). This is the new
+                      canonical name for what used to be called
+                      "OFFLINE" mode.
+         SPRING     - reserved for a future Spring Boot backend.
+                      Currently only placeholder functions exist
+                      (see callSpringGet/Post/Put/Delete in
+                      DataService.js) that reject with "Spring
+                      backend not implemented".
+
+       BACKEND.OFFLINE is kept, unchanged, so nothing that
+       already reads/writes it breaks; BACKEND.INDEXEDDB is a
+       new, preferred alias for the exact same mode going
+       forward. DataService.js's getBackendMode() accepts either
+       value.
+       ------------------------------------------------------
        ====================================================== */
 
-    BACKEND_MODE: "GOOGLE",
+    BACKEND_MODE: "GOOGLE", // unchanged - default backend is still GOOGLE
 
     BACKEND: {
 
         GOOGLE: "GOOGLE",
 
-        OFFLINE: "OFFLINE",
+        OFFLINE: "OFFLINE", // unchanged - kept for backward compatibility, do not remove
+
+        /* ADDED: new canonical name for the IndexedDB-only backend
+           mode. Same meaning as OFFLINE above; see comment block
+           above and DataService.js's getBackendMode(). */
+        INDEXEDDB: "INDEXEDDB",
 
         SPRING: "SPRING"
 

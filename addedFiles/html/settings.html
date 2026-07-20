@@ -140,6 +140,53 @@
 
     </section>
 
+    <!-- ================= Backend Settings Card (ADDED - switchable backend architecture) =================
+         Admin/Developer only - hidden entirely for non-Admins by
+         Settings.script.js (see initializeSettingsPage()). Lets an
+         Admin pick which backend DataService.js talks to, without
+         touching any code. Same card markup pattern as the
+         Application card above. -->
+
+    <section class="settings-card" id="backendSettingsSection">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-server"></i>
+
+            <div>
+
+                <h3>Backend</h3>
+
+                <p>Developer/Admin only - choose which backend this app talks to.</p>
+
+            </div>
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label for="selBackendMode">Backend</label>
+
+            <select id="selBackendMode">
+
+                <option value="GOOGLE">Google Sheets</option>
+
+                <option value="INDEXEDDB">IndexedDB</option>
+
+                <option value="SPRING">Spring Boot</option>
+
+            </select>
+
+        </div>
+
+        <button type="button" id="btnSaveBackend" class="settings-save-btn">
+
+            Save Backend
+
+        </button>
+
+    </section>
+
     <!-- ================= Change Password Card =================
          Moved here from Profile (brief item 5 - "Change
          Password belongs inside Settings"). Same three fields

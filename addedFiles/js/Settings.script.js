@@ -89,6 +89,12 @@ var txtNewPassword = document.getElementById("txtNewPassword");
 var txtConfirmPassword = document.getElementById("txtConfirmPassword");
 var btnChangePassword = document.getElementById("btnChangePassword");
 
+/* ADDED - switchable backend architecture: Admin/Developer-only
+   Backend card elements (see backendSettingsSection in settings.html) */
+var sectionBackendSettings = document.getElementById("backendSettingsSection");
+var selBackendMode = document.getElementById("selBackendMode");
+var btnSaveBackend = document.getElementById("btnSaveBackend");
+
 
 
 /* ==========================================================
@@ -168,6 +174,84 @@ function initializeSettingsPage()
     {
         sectionChangePassword.style.display = "none";
     }
+
+    /* --------------------------------------------------
+       ADDED - switchable backend architecture: only an Admin
+       (Session.getRole() === AppConfig.ROLES.ADMIN) may see or
+       change the Backend card - same "hide the whole section"
+       pattern already used above for Change Password.
+       -------------------------------------------------- */
+
+    if (sectionBackendSettings)
+    {
+        if (Session.isLoggedIn() === true && Session.getRole() === AppConfig.ROLES.ADMIN)
+        {
+            sectionBackendSettings.style.display = "";
+
+            populateBackendModeField();
+
+            btnSaveBackend.onclick = handleSaveBackend;
+        }
+        else
+        {
+            sectionBackendSettings.style.display = "none";
+        }
+    }
+}
+
+
+
+/* ==========================================================
+   ADDED - Populate the Backend Mode Field
+
+   Restores whichever backend mode is currently in effect
+   (DataService.getBackendMode(), which itself already falls
+   back to AppConfig.BACKEND_MODE if nothing has been saved
+   yet - see "Restore it during application startup" in the
+   brief) into the <select> so the dropdown always shows the
+   real, active mode instead of always defaulting to Google.
+   ========================================================== */
+
+function populateBackendModeField()
+{
+    selBackendMode.value = DataService.getBackendMode();
+}
+
+
+
+/* ==========================================================
+   ADDED - Handle Save Backend
+
+   Saves the chosen backend mode through
+   DataService.setBackendMode(), which persists it via
+   StorageService.saveValue() (see AppConfig.STORAGE_KEYS.BACKEND),
+   so it is restored automatically on every future page load -
+   no code change or redeploy needed to switch backends.
+   ========================================================== */
+
+function handleSaveBackend()
+{
+    var strChosenMode = selBackendMode.value;
+
+    CommonUtils.showConfirmDialog(
+        "Switch the backend to " + selBackendMode.options[selBackendMode.selectedIndex].text + "?",
+        "Save",
+        "Cancel",
+        "Save Backend"
+    ).then(function (bConfirmed)
+    {
+        if (bConfirmed !== true)
+        {
+            return;
+        }
+
+        DataService.setBackendMode(strChosenMode);
+
+        if (typeof CommonUtils !== "undefined")
+        {
+            CommonUtils.showToast("Backend switched to " + selBackendMode.options[selBackendMode.selectedIndex].text + ".", "success");
+        }
+    });
 }
 
 
