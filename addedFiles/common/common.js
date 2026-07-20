@@ -504,33 +504,7 @@ var CommonUtils = (function ()
 
 
 
-    /* ======================================================
-       Build Skeleton Placeholder Cards HTML
-
-       UI MODERNIZATION PASS (this pass)
-       WHY: while the first page of Students/Categories/
-       Sections/Results is in flight, the list area used to
-       just be empty (nothing rendered into #list_id) until the
-       response arrived, which on a slow connection reads like
-       a frozen/broken page rather than "loading".
-       WHAT: returns intCount placeholder cards shaped like a
-       real .list-item (one title-width bar, two shorter bars
-       underneath), using common.css's .skeleton-card/
-       .skeleton-line shimmer classes. Each Student/Category/
-       Section/Result list page writes this into #list_id (via
-       the existing setListToView()) immediately before its
-       first DataService call for a page, then replaces it with
-       the real cards the moment that call's callback fires -
-       real .list-item cards already fade in on insert (see
-       common.css's appCardFadeIn), so the transition from
-       skeleton to real data reads as a smooth reveal rather
-       than a jarring swap.
-
-       intCount - how many placeholder cards to render (list
-                  pages pass roughly how many real cards will
-                  likely fit on screen, e.g. 6)
-       ====================================================== */
-
+    /
     function getSkeletonCardsHtml(intCount)
     {
         var iCount = intCount || 6;
@@ -566,25 +540,7 @@ var CommonUtils = (function ()
 
 
 
-    /* ======================================================
-       Highlight Matching Search Text
-
-       UI MODERNIZATION PASS (this pass)
-       WHY: while a search narrows the currently loaded page
-       down to matching rows, it should be obvious at a glance
-       why each visible card matched, not just that it did.
-       WHAT: wraps every case-insensitive occurrence of
-       strKeyword inside strText in a
-       <mark class="search-highlight"> tag (styled in
-       common.css). Returns strText unchanged if strKeyword is
-       empty, so callers can run this unconditionally on every
-       row without an extra "is a search even active" check.
-       Escapes strText for HTML first, so a name that happens to
-       contain "<" or "&" can never be interpreted as markup.
-
-       strText    : the raw field value to search within
-       strKeyword : the current search box value
-       ====================================================== */
+   
 
     function highlightMatch(strText, strKeyword)
     {
@@ -609,19 +565,7 @@ var CommonUtils = (function ()
 
 
 
-    /* ======================================================
-       Build the "Showing X-Y of Z" Pagination Summary
-
-       UI MODERNIZATION PASS (this pass)
-       WHY: a "Showing 101-200 of 1348" style summary next to
-       the Prev/Next controls is clearer than a bare "Total: N"
-       count. One shared implementation so Student/Category/
-       Section/Result's pagination bars all word it identically.
-
-       iPage     : current 1-based page number
-       iPageSize : rows per page (100)
-       iTotal    : total record count reported by the backend
-       ====================================================== */
+    
 
     function buildPaginationSummary(iPage, iPageSize, iTotal)
     {
@@ -669,57 +613,7 @@ StorageService.initializeDatabase()
 
 
 
-/* ==========================================================
-   Show / Hide a Full-Screen Loading Overlay
 
-   WHY: showLoader()/hideLoader() used to only exist inside
-   LegacyCompatShim.js, which is loaded on index.html and the
-   four legacy list pages - but signup.js, Settings.script.js,
-   and (this pass) Profile.script.js all needed the same thing
-   on pages that never load that file (signup.html,
-   settings.html, profile.html). Calling an undefined
-   showLoader() there threw immediately and broke the whole
-   click handler before the backend was ever reached - for
-   signup.js specifically, that meant every Sign Up attempt
-   failed silently with a console error, never actually calling
-   DataService.createAccount(). Moved here instead, since
-   common.js is the one file every page already loads, so
-   there is now exactly one copy used everywhere.
-   WHAT: builds one reusable full-screen overlay (created once,
-   reused after that) with a spinner + message, and toggles it
-   on/off. A request counter means nested show/hide calls (more
-   than one DataService call in flight at once) only hide the
-   overlay once every one of them has finished.
-   WHEN: showLoader() is called right before a DataService call;
-   hideLoader() is called once that call's callback fires.
-
-   ----------------------------------------------------------
-   PROJECT IMPROVEMENTS (UI Modernization pass, this pass)
-   ----------------------------------------------------------
-   ✓ Replaced the old flat, one-directional single-border-side
-     spinner (previously built via a JS-injected <style> tag
-     right here in this function) with a modern circular
-     gradient spinner + fade-in/out overlay + pulsing "Loading
-     Students..." style label, styled from common.css's new
-     "MODERN LOADING INDICATOR" section instead of an inline
-     <style> tag - every page already loads common.css, so the
-     CSS belongs there like everything else.
-   ✓ showLoader(strMessage, iPercent) - iPercent is a new,
-     optional second argument. When a caller knows real
-     progress (0-100), the overlay shows a thin gradient
-     percentage bar under the label; omitted (the vast majority
-     of call sites, which just await a single Google Apps
-     Script response with no incremental progress to report),
-     the bar simply stays hidden - exactly the same look as
-     before, just with the new spinner/label. No existing
-     showLoader(strMessage) call site anywhere in the app needed
-     to change.
-   ✓ The overlay now fades in/out over a CSS transition
-     (appLoadingVisible class) instead of a hard display:none/
-     flex toggle, and hideLoader() waits for that fade to finish
-     before actually removing it from the layout flow (so it
-     stops intercepting clicks only once it's visually gone).
-   ========================================================== */
 
 function getOrCreateLoaderElement()
 {
@@ -775,11 +669,7 @@ function showLoader(strMessage, iPercent)
 
     oLoader.style.display = "flex";
 
-    /* Two rAF ticks (not one) so the browser has definitely
-       painted display:flex/opacity:0 first - otherwise the very
-       first showLoader() call on a page can skip straight to
-       opacity:1 with no visible fade, since display and the
-       class would land in the same paint frame. */
+   
     window.requestAnimationFrame(function ()
     {
         window.requestAnimationFrame(function ()
@@ -819,14 +709,6 @@ function hideLoader()
 
 
 
-/* ==========================================================
-   Automatic Background Synchronization
-
-   As soon as the browser tells us the device is back online,
-   ask DataService to replay anything that was saved while we
-   were offline. This runs on every page because common.js is
-   included everywhere.
-   ========================================================== */
 
 window.addEventListener("online", handleDeviceCameOnline);
 
@@ -846,24 +728,7 @@ function handleDeviceCameOnline()
 
 
 
-/* ==========================================================
-   Keyboard Support for .icon-btn Controls
 
-   ACCESSIBILITY FIX (this pass): the info/edit/copy/share
-   icon buttons rendered on every list card (Student/Category/
-   Section/Result.script.js's createHtmlListItem()) are
-   <span role="button" tabindex="0"> elements, not native
-   <button>s - a <span> gets no keyboard activation for free,
-   only a native <button>/<a> does. Without this, a keyboard-
-   only user could Tab onto one of these (now that it has
-   tabindex="0") but pressing Enter or Space would do nothing.
-
-   One delegated listener here covers every .icon-btn on every
-   page (present and future), instead of repeating the same
-   keydown handler in four separate .script.js files. Space is
-   prevented from scrolling the page, matching how a real
-   <button> already behaves.
-   ========================================================== */
 
 document.addEventListener("keydown", function (objEvent)
 {

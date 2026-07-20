@@ -314,6 +314,15 @@ var ResultScript = (function () {
 	var mInfoIconClicked = false; // using that we can control single click and info button click
 	var mEditIconClicked = false; // using that we can control single click and edit icon click
 
+	// BUG FIX (this pass) - Share icon: same fix as Student.script.js -
+	// the per-card top Share button (onClickShareIcon() below) had no
+	// equivalent flag, so tapping it fell through to
+	// onSingleClickListener()'s guard below (which only checked
+	// Info/Edit), opening the per-card Select Option popup right on
+	// top of/after the Share action - making the top Share icon look
+	// broken even though its own click handler did run.
+	var mShareIconClicked = false;
+
 	var mImageClosed = false;	// Indicates whether the image is removed or not while updating
 	var mFileClosed = false;	// Indicates whether the File is removed or not while updating
 	var TABLE_NAME = "result";
@@ -1765,7 +1774,7 @@ var ResultScript = (function () {
 		var id = selectedData[ SUMMARY_INDEX.RESULT_ID ];
 		sessionStorage.setItem( SESSION_OBJECT.RESULT_ID, id );
 	
-		if( mInfoIconClicked == false && mEditIconClicked == false ) {
+		if( mInfoIconClicked == false && mEditIconClicked == false && mShareIconClicked == false ) { // CHANGED: also check the new Share flag
 
 			openSelectMenu();
 		}	
@@ -2397,6 +2406,7 @@ var ResultScript = (function () {
 		$( '#edit_details' ).modal( 'hide' );
 		mEditIconClicked = false;
 		mInfoIconClicked = false;
+		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 	}
 
 	function scrollEditDetailsPopup() {
@@ -2725,6 +2735,7 @@ var ResultScript = (function () {
 
 		mInfoIconClicked = false;
 		mEditIconClicked = false;
+		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 		$(FORM_FIELD_INFO.LBL_RESULT_ID).text( data[INDEX.RESULT_ID] );
 		$(FORM_FIELD_INFO.LBL_EXAM_NAME).text( data[INDEX.EXAM_NAME] );
 		$(FORM_FIELD_INFO.LBL_SUBJECT).text( data[INDEX.SUBJECT] );
@@ -3009,6 +3020,15 @@ var ResultScript = (function () {
 	// UI/UX POLISH PASS (this pass) - per-card Share button, same
 	// pattern as Student.script.js's onClickShareIcon().
 	function onClickShareIcon( index ) {
+
+		// ADDED: stops onSingleClickListener() from also opening the
+		// Select Option popup right after this Share tap. Share has
+		// no popup-close event to reset this on (unlike Edit/Info),
+		// so it is cleared again on the very next tick - just long
+		// enough to suppress the one delegated click that bubbles up
+		// from this same tap. Same fix as Student.script.js.
+		mShareIconClicked = true;
+		setTimeout( function() { mShareIconClicked = false; }, 0 );
 
 		var selectedData = mSelectedDataList[ index ];
 
