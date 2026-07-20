@@ -120,9 +120,6 @@ var liProfile = document.getElementById("menuProfile");
 
 var btnDashboardSettings = document.getElementById("btnDashboardSettings");
 
-// Phase 6 (Share feature)
-var btnShareApp = document.getElementById("btnShareApp");
-
 var liLogout = document.getElementById("logout");
 
 var lblDashboardTitle = document.getElementById("dashboardTitle");
@@ -1023,9 +1020,6 @@ function registerEvents()
 
     btnDashboardSettings.onclick = goSettings;
 
-    // Phase 6 (Share feature)
-    btnShareApp.onclick = shareApp;
-
     liLogout.onclick = logoutUser;
 
     /* Operations shortcut (Phase 4, extended - Priority 2):
@@ -1339,29 +1333,6 @@ function openResultList()
 function openProfilePage()
 {
     goProfile();
-}
-
-
-
-/* ==========================================================
-   Share the App (Phase 6 - Share Feature)
-
-   Uses the same CommonUtils.shareContent() every other Share
-   button in the app calls - Web Share API first, copy-to-
-   clipboard fallback otherwise. Shares the app's own name and
-   its current URL (location.href), so whoever receives it can
-   open the exact same deployment straight away.
-   ========================================================== */
-
-function shareApp()
-{
-    var strAppName = (typeof AppConfig !== "undefined" && AppConfig.APP_NAME) || document.title || "Student Management System";
-
-    CommonUtils.shareContent(
-        strAppName,
-        "Check out " + strAppName + ":",
-        window.location.href
-    );
 }
 
 

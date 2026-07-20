@@ -1576,6 +1576,15 @@ var ResultScript = (function () {
 			onClickRefresh();
 		});
 
+		// UI/UX POLISH PASS (this pass) - top AppBar Share button,
+		// same pattern as Student.script.js's #btn_share_page binding.
+		$( "#btn_share_page" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			CommonUtils.shareContent( "Result List", "Result List - Student Management System", window.location.href );
+		});
+
 		// --------------------------------------------------
 		// PRIORITY 3 / 6 FIX: the floating down-arrow button
 		// (#btn_float_next_page, resultList.html) is this page's
@@ -2529,8 +2538,13 @@ var ResultScript = (function () {
 			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
+		// UI/UX POLISH PASS (this pass) - per-card Share button, same
+		// pattern as Student.script.js's shareIconHtml/onClickShareIcon().
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share result" onclick="ResultScript.getInstance().onClickShareIcon('+ index +');" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							editIconHtml +
+							shareIconHtml +
 							'<div id="list_item" class="list-item">' +
 							'<li class="list-card-title">'+ seqNumber + subject + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + examName + ( studentName ? ' &middot; ' + studentName : '' ) + '</span></li>' +
@@ -2991,6 +3005,33 @@ var ResultScript = (function () {
 		openEditDetailsPopup();
 		onAddEditDocumentReady();
 	}
+
+	// UI/UX POLISH PASS (this pass) - per-card Share button, same
+	// pattern as Student.script.js's onClickShareIcon().
+	function onClickShareIcon( index ) {
+
+		var selectedData = mSelectedDataList[ index ];
+
+		if( !selectedData ) {
+
+			return;
+		}
+
+		var strSubject = selectedData[ SUMMARY_INDEX.SUBJECT ] || "Result";
+		var strExamName = selectedData[ SUMMARY_INDEX.EXAM_NAME ] || "";
+		var strMarks = selectedData[ SUMMARY_INDEX.MARKS_OBTAINED ] || "";
+		var strGrade = selectedData[ SUMMARY_INDEX.GRADE ] || "";
+		var strResult = selectedData[ SUMMARY_INDEX.RESULT ] || "";
+
+		var strDetails =
+			"Subject: " + strSubject + "\n" +
+			( strExamName ? ( "Exam: " + strExamName + "\n" ) : "" ) +
+			( strMarks ? ( "Marks: " + strMarks + ( strGrade ? ( " (" + strGrade + ")" ) : "" ) + "\n" ) : "" ) +
+			( strResult ? ( "Result: " + strResult ) : "" );
+
+		CommonUtils.shareContent( "Result: " + strSubject, strDetails );
+	}
+
 	// Start - Share Result data
 	function onClickShare(){
 
@@ -3111,6 +3152,7 @@ var ResultScript = (function () {
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,
+			onClickShareIcon: onClickShareIcon,
 			// setSelectedPhoto: setSelectedPhoto,
 			closeImageButton: closeImageButton,
 			closeFileButton: closeFileButton,

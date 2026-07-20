@@ -152,6 +152,14 @@ var categoryHeader = `	<!-- header -->
 			</a>
 		</li>
 		<!-- Add Details Button -->
+		<!-- Share Button (UI/UX POLISH PASS, this pass) - see
+		     StudentHTML.script.js's studentHeader for the full WHY. -->
+		<li id="btn_share_page" class="float-right" title="Share Category List">
+			<a href="#" class="header-icons-L">
+			<i class="fa-solid fa-share-nodes"></i>
+			</a>
+		</li>
+		<!-- /Share Button -->
 		<!-- Refresh Button -->
 		<li id="btn_refresh" class="float-right">
 			<a href="#" class="header-icons-L">

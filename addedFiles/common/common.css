@@ -1005,6 +1005,24 @@ body
 
 .list-container
 {
+    /* PROJECT IMPROVEMENTS (UI/UX polish pass, this pass):
+       CARD ALIGNMENT FIX - this had width:100% but no max-width,
+       so on any screen wider than a phone, every .list-item card
+       stretched edge-to-edge (minus the 20px side padding below)
+       instead of forming a centered column with equal breathing
+       room on both sides - this is the actual cause of cards
+       looking "pushed left"/stretched instead of centered.
+       max-width + margin:0 auto centers this container itself;
+       .list-item cards inside already fill 100% of it, so they
+       end up centered with equal left/right space automatically.
+       On mobile (see the 992px/768px overrides below, both
+       untouched) this container is still effectively full-width
+       since the viewport itself is narrower than max-width, so
+       nothing changes for small screens. */
+    max-width:900px;
+
+    margin:0 auto;
+
     width:100%;
 
     padding:
@@ -2666,6 +2684,18 @@ button:hover
     background: rgba(63,81,181,.12);
 
     color: #3f51b5;
+}
+
+/* SHARE BUTTON PLACEMENT (this pass): color variant for the new
+   per-card Share button, same pattern as .icon-btn-info/.icon-btn-edit
+   above - a distinct tint so Edit and Share are visually
+   distinguishable at a glance despite sitting right next to
+   each other. */
+.icon-btn-share
+{
+    background: rgba(34,197,94,.12);
+
+    color: #16a34a;
 }
 
 .quick-action-btn

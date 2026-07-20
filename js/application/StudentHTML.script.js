@@ -210,6 +210,17 @@ var studentHeader = `	<!-- header -->
 			</a>
 		</li>
 		<!-- Add Details Button -->
+		<!-- Share Button (UI/UX POLISH PASS, this pass) - top AppBar
+		     Share, same CommonUtils.shareContent() (Web Share API,
+		     copy-link/export fallback) used by every per-card Share
+		     button. Click handler bound in Student.script.js's
+		     onListDocumentReady(). -->
+		<li id="btn_share_page" class="float-right" title="Share Student List">
+			<a href="#" class="header-icons-L">
+			<i class="fa-solid fa-share-nodes"></i>
+			</a>
+		</li>
+		<!-- /Share Button -->
 		<!-- Refresh Button -->
 		<li id="btn_refresh" class="float-right">
 			<a href="#" class="header-icons-L">

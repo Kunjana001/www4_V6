@@ -149,6 +149,14 @@ var resultHeader = `	<!-- header -->
 			</a>
 		</li>
 		<!-- Add Details Button -->
+		<!-- Share Button (UI/UX POLISH PASS, this pass) - see
+		     StudentHTML.script.js's studentHeader for the full WHY. -->
+		<li id="btn_share_page" class="float-right" title="Share Result List">
+			<a href="#" class="header-icons-L">
+			<i class="fa-solid fa-share-nodes"></i>
+			</a>
+		</li>
+		<!-- /Share Button -->
 		<!-- Refresh Button -->
 		<li id="btn_refresh" class="float-right">
 			<a href="#" class="header-icons-L">
@@ -357,7 +365,7 @@ var shareMenu = `
 			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
 				<h2 class="modal-title" id="modal_share_title">Share by</h2>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-				<span aria-hidden="true" style="color: black; font-size: xx-large;">×</span>
+				<span aria-hidden="true" style="color: black; font-size: xx-large;">ï¿½</span>
 				</button>
 			</div>
 			<!-- /Modal Header -->

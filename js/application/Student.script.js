@@ -1714,6 +1714,18 @@ function getListData( iRequestedPage )
 			onClickRefresh();
 		});
 
+		// UI/UX POLISH PASS (this pass) - top AppBar Share button.
+		// Shares the page itself (title + current URL) via
+		// CommonUtils.shareContent() (Web Share API, copy-link
+		// fallback) - distinct from the per-card Share buttons,
+		// which share one specific Student's details instead.
+		$( "#btn_share_page" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			CommonUtils.shareContent( "Student List", "Student List - Student Management System", window.location.href );
+		});
+
 		// --------------------------------------------------
 		// PRIORITY 3 / 6 FIX: the floating down-arrow button
 		// (#btn_float_next_page, studentList.html) is this page's
@@ -2960,6 +2972,15 @@ function parseListResponse(objPageResult)
         editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
     }
 
+    // UI/UX POLISH PASS (this pass) - SHARE BUTTON: every card now
+    // gets its own Share button, positioned next to Edit (44px
+    // icon-btn width + gap = 64px offset so the two never overlap).
+    // Reuses CommonUtils.shareContent() (Web Share API, copy-to-
+    // clipboard fallback) via the new onClickShareIcon() below,
+    // same off-the-shelf pattern as onClickInfoIcon/onClickEditIcon
+    // - reads straight from this row's own data, no popup needed.
+    var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share student" onclick="StudentScript.getInstance().onClickShareIcon('+ index +');" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+
     // Quick-action icons: call / WhatsApp / SMS / email, using the
     // mobile and email already present in this row's data - no new
     // lookup or click-handler functions needed, same as how
@@ -2976,8 +2997,6 @@ function parseListResponse(objPageResult)
                 : '' ) +
         '</span>';
 
-    var rollNumber = data[ SUMMARY_INDEX.ROLL_NUMBER ] || '';
-
     // Project Improvements (this pass): initials avatar, generated
     // from the Student's name (first letter of up to the first two
     // words) - no new field/lookup needed, matches the "Better
@@ -2991,11 +3010,6 @@ function parseListResponse(objPageResult)
 
     var avatarHtml = '<span class="list-card-avatar" aria-hidden="true">' + initials + '</span>';
 
-    // Roll Number chip - only rendered when the Student actually has
-    // one, since it's an optional field.
-    var rollBadgeHtml = rollNumber ?
-        '<span class="list-card-badge">Roll ' + rollNumber + '</span>' : '';
-
     // --------------------------------------------------
     // WHY: the outer <ul id="list_card"> used to carry a hard
     // inline box-shadow (a flat black drop-shadow straight on
@@ -3008,12 +3022,26 @@ function parseListResponse(objPageResult)
     // WHAT: this is the master card layout - Category/Section/
     // Result's createHtmlListItem() use the same wrapper markup
     // and classes, just without the quick-action row.
+    //
+    // UI/UX POLISH PASS (this pass) - CARD CONTENT FIX: the Roll
+    // Number badge that used to sit next to the name is removed -
+    // the card is now exactly Avatar / Name / Student Email /
+    // Phone / action buttons, nothing else, per spec. The
+    // subtitle line now shows the Student's own EMAIL (labelless,
+    // just the value, e.g. "gita@student.com") instead of the
+    // phone number - Parent Email is not, and never was, read or
+    // shown anywhere on this card. Phone now gets its own line
+    // right below Email, so both are visible per spec, and the
+    // info icon (which opens the full detail popup) stays paired
+    // with the first line as it always was.
     // --------------------------------------------------
     var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
                         editIconHtml +
+                        shareIconHtml +
                         '<div id="list_item" class="list-item">' +
-                        '<li class="list-card-title">' + avatarHtml + seqNumber + name + rollBadgeHtml + '</li>' +
-                        '<li class="list-card-subtitle">' + infoIconHtml + '<span>' + mobile + '</span></li>' +
+                        '<li class="list-card-title">' + avatarHtml + seqNumber + name + '</li>' +
+                        '<li class="list-card-subtitle">' + infoIconHtml + '<span>' + email + '</span></li>' +
+                        '<li class="list-card-subtitle"><span>' + mobile + '</span></li>' +
                         '<li>' + quickActionsHtml + '</li>' +
                         '</div>' +
                         '</ul>';
@@ -3773,6 +3801,40 @@ function parseListResponse(objPageResult)
 		openEditDetailsPopup();
 		onAddEditDocumentReady();
 	}
+
+	// UI/UX POLISH PASS (this pass) - per-card Share button. Reads
+	// straight from mSelectedDataList[index] (the same row
+	// createHtmlListItem() already rendered), so no extra fetch or
+	// popup is needed - unlike onClickShare()/getShareData() below,
+	// which build a confirmation-dialog-driven email/WhatsApp share
+	// for the OLD selection-menu Share entry point, this is the
+	// direct one-tap Share button now on every card, using the
+	// modern Web-Share-API-first CommonUtils.shareContent() (same
+	// implementation already used by the Student Info popup's Share
+	// button and the Dashboard's, per common.js).
+	function onClickShareIcon( index ) {
+
+		var selectedData = mSelectedDataList[ index ];
+
+		if( !selectedData ) {
+
+			return;
+		}
+
+		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "Student";
+		var strEmail = selectedData[ SUMMARY_INDEX.EMAIL ] || "";
+		var strMobile = selectedData[ SUMMARY_INDEX.MOBILE ] || "";
+		var strRollNumber = selectedData[ SUMMARY_INDEX.ROLL_NUMBER ] || "";
+
+		var strDetails =
+			"Name: " + strName + "\n" +
+			( strRollNumber ? ( "Roll Number: " + strRollNumber + "\n" ) : "" ) +
+			( strMobile ? ( "Mobile: " + strMobile + "\n" ) : "" ) +
+			( strEmail ? ( "Email: " + strEmail ) : "" );
+
+		CommonUtils.shareContent( "Student: " + strName, strDetails );
+	}
+
 	// Start - Share Student data
 	function onClickShare(){
 
@@ -3915,6 +3977,7 @@ function parseListResponse(objPageResult)
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,
+			onClickShareIcon: onClickShareIcon,
 			// setSelectedPhoto: setSelectedPhoto,
 			closeImageButton: closeImageButton,
 			closeFileButton: closeFileButton,
