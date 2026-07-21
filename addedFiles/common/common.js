@@ -504,7 +504,6 @@ var CommonUtils = (function ()
 
 
 
-    /
     function getSkeletonCardsHtml(intCount)
     {
         var iCount = intCount || 6;
