@@ -1293,8 +1293,7 @@ var ResultScript = (function () {
 
 			$( '#result_add' ).off().on( 'click', function() {
 
-				closeSelectMenu();
-				onClickAdd();
+				closeSelectMenu( onClickAdd );
 			});
 		}
 		else {
@@ -1306,8 +1305,7 @@ var ResultScript = (function () {
 
 			$( '#result_edit' ).off().on( 'click', function() {
 
-				closeSelectMenu();
-				onClickEdit();
+				closeSelectMenu( onClickEdit );
 			});
 		}
 		else {
@@ -1611,18 +1609,19 @@ var ResultScript = (function () {
 
 		// --------------------------------------------------
 		// FIX: the floating down-arrow button (#btn_float_next_page,
-		// resultList.html) is this page's export/download control,
-		// same as Student List's. It used to forward to the
-		// pagination Next button (still available via the Prev/Next
-		// bar itself), which didn't match its "download" intent and
-		// left Result List with no export at all. Calls the new
-		// exportResultList() below directly.
+		// resultList.html) must not trigger Export/Download - that
+		// belongs solely to a dedicated Export control. Its actual
+		// intent (a "down arrow" floating action button) is to
+		// scroll the page down, so it now smooth-scrolls the list
+		// container to the bottom instead. exportResultList()
+		// itself is left in place further below, ready to be wired
+		// to a dedicated Export button in future.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			exportResultList();
+			$( "html, body" ).animate( { scrollTop: $( document ).height() }, 300 );
 		});
 
 		//--------- START - FILTER --------------
@@ -2465,7 +2464,21 @@ var ResultScript = (function () {
 		$( '#modal_single_select' ).modal( 'show' );
 	}
 
-	function closeSelectMenu() {
+	// FIX: same modal-backdrop race as Category.script.js's
+	// closeSelectMenu() - hiding this menu and immediately showing
+	// the Add/Edit modal in the same tick left a stray backdrop
+	// blocking clicks on the Add/Edit modal's X/Close buttons. Now
+	// waits for this menu's own "hidden.bs.modal" event before
+	// running an optional follow-up callback.
+	function closeSelectMenu( fnCallback ) {
+
+		if( fnCallback ) {
+
+			$( '#modal_single_select' ).one( 'hidden.bs.modal', function() {
+
+				fnCallback();
+			});
+		}
 
 		$( '#modal_single_select' ).modal( 'hide' );
 	}
@@ -3335,4 +3348,4 @@ var ResultScript = (function () {
 		URL: URL,
 		TABLE_NAME: TABLE_NAME
 	};
-})();screenLeft
+})();

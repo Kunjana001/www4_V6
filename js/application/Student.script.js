@@ -1414,8 +1414,7 @@ function getListData( iRequestedPage )
 
 			$( '#student_edit' ).off().on( 'click', function() {
 
-				closeSelectMenu();
-				onClickEdit();
+				closeSelectMenu( onClickEdit );
 			});
 		}
 		else {
@@ -1758,19 +1757,22 @@ function getListData( iRequestedPage )
 
 		// --------------------------------------------------
 		// FIX: the floating down-arrow button (#btn_float_next_page,
-		// studentList.html) is the Student List's export/download
-		// control. Calls the existing exportStudentList() - the
-		// same function #btn_export already uses - directly; no
-		// new export logic was written. preventDefault() is kept
-		// so this button's click can never be misread as a Back
-		// press via the popstate listener (see #btn_add/#btn_refresh
-		// above) and fall through to navigating to the Dashboard.
+		// studentList.html) must not trigger Export/Download -
+		// exportStudentList() is already reachable from the
+		// dedicated #btn_export button in the search bar, and that
+		// stays the only way to trigger it. This floating button's
+		// actual intent (a "down arrow" floating action button) is
+		// to scroll the page down, so it now smooth-scrolls to the
+		// bottom instead. preventDefault() is kept so this button's
+		// click can never be misread as a Back press via the
+		// popstate listener (see #btn_add/#btn_refresh above) and
+		// fall through to navigating to the Dashboard.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			exportStudentList();
+			$( "html, body" ).animate( { scrollTop: $( document ).height() }, 300 );
 		});
 
 		//--------- START - FILTER --------------
@@ -2861,7 +2863,21 @@ function parseListResponse(objPageResult)
 		$( '#modal_single_select' ).modal( 'show' );
 	}
 
-	function closeSelectMenu() {
+	// FIX: same modal-backdrop race as Category/Section/
+	// Result.script.js's closeSelectMenu() - hiding this menu and
+	// immediately showing the Edit modal in the same tick left a
+	// stray backdrop blocking clicks on the Edit modal's X/Close
+	// buttons. Now waits for this menu's own "hidden.bs.modal"
+	// event before running an optional follow-up callback.
+	function closeSelectMenu( fnCallback ) {
+
+		if( fnCallback ) {
+
+			$( '#modal_single_select' ).one( 'hidden.bs.modal', function() {
+
+				fnCallback();
+			});
+		}
 
 		$( '#modal_single_select' ).modal( 'hide' );
 	}

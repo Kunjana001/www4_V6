@@ -1055,8 +1055,7 @@ var CategoryScript = (function () {
 
 			$( '#category_add' ).off().on( 'click', function() {
 
-				closeSelectMenu();
-				onClickAdd();
+				closeSelectMenu( onClickAdd );
 			});
 		}
 		else {
@@ -1068,8 +1067,7 @@ var CategoryScript = (function () {
 
 			$( '#category_edit' ).off().on( 'click', function() {
 
-				closeSelectMenu();
-				onClickEdit();
+				closeSelectMenu( onClickEdit );
 			});
 		}
 		else {
@@ -1374,19 +1372,19 @@ var CategoryScript = (function () {
 
 		// --------------------------------------------------
 		// FIX: the floating down-arrow button (#btn_float_next_page,
-		// categoryList.html) is this page's export/download
-		// control, same as Student List's. It used to forward to
-		// the pagination Next button (still available via the
-		// Prev/Next bar itself), which didn't match its "download"
-		// intent and left Category List with no export at all.
-		// Calls the new exportCategoryList() below directly - no
-		// new export logic beyond that function.
+		// categoryList.html) must not trigger Export/Download - that
+		// belongs solely to a dedicated Export control. Its actual
+		// intent (a "down arrow" floating action button) is to
+		// scroll the page down, so it now smooth-scrolls the list
+		// container to the bottom instead. exportCategoryList()
+		// itself is left in place further below, ready to be wired
+		// to a dedicated Export button in future.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			exportCategoryList();
+			$( "html, body" ).animate( { scrollTop: $( document ).height() }, 300 );
 		});
 
 		//--------- START - FILTER --------------
@@ -2346,7 +2344,27 @@ var CategoryScript = (function () {
 		$( '#modal_single_select' ).modal( 'show' );
 	}
 
-	function closeSelectMenu() {
+	// FIX: this used to hide #modal_single_select and, in the very
+	// same synchronous tick, show #edit_details right after it
+	// (see the #category_add/#category_edit handlers below). Since
+	// Bootstrap 4's modal('hide') doesn't finish removing its own
+	// backdrop until its CSS fade-out transition completes,
+	// opening a second modal before that finishes state left a
+	// stray .modal-backdrop sitting on top of the Add/Edit modal -
+	// its contents were visible, but the backdrop intercepted every
+	// click, including the X and Close buttons. Now takes an
+	// optional callback and only runs it once #modal_single_select
+	// has actually finished closing (its own "hidden.bs.modal"
+	// event), so the Add/Edit modal never opens mid-transition.
+	function closeSelectMenu( fnCallback ) {
+
+		if( fnCallback ) {
+
+			$( '#modal_single_select' ).one( 'hidden.bs.modal', function() {
+
+				fnCallback();
+			});
+		}
 
 		$( '#modal_single_select' ).modal( 'hide' );
 	}
