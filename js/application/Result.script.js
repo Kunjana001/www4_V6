@@ -1570,7 +1570,16 @@ var ResultScript = (function () {
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_RESULT ) == true ) {
 
-			$( "#btn_add" ).off().on( "click", function() {
+			// FIX: #btn_add wraps an <a href="#"> - without
+			// preventDefault() that anchor's default action changes
+			// the URL hash and pushes a history entry, which
+			// onBackPress()'s popstate listener (see
+			// ResultHTML.script.js) misreads as a Back press and
+			// force-navigates to the Dashboard the instant "+" is
+			// tapped. Same fix already applied in Student.script.js.
+			$( "#btn_add" ).off().on( "click", function( objEvent ) {
+
+				objEvent.preventDefault();
 
 				onClickAdd();
 			});
@@ -1580,7 +1589,13 @@ var ResultScript = (function () {
 			$( "#btn_add" ).hide();
 		}
 
-		$( "#btn_refresh" ).off().on( "click", function() {
+		// FIX: same href="#" / popstate issue as #btn_add above -
+		// preventDefault() stops the click from being misread as a
+		// Back press that would navigate to the Dashboard instead
+		// of just refreshing this list.
+		$( "#btn_refresh" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
 
 			onClickRefresh();
 		});
@@ -1595,19 +1610,19 @@ var ResultScript = (function () {
 		});
 
 		// --------------------------------------------------
-		// PRIORITY 3 / 6 FIX: the floating down-arrow button
-		// (#btn_float_next_page, resultList.html) is this page's
-		// pagination "next page" control. Rather than duplicate
-		// the getListData(mCurrentPage + 1) logic, this just
-		// forwards the click to the real Prev/Next bar's own
-		// Next button (bindPaginationBarListeners() below), which
-		// already respects the disabled state on the last page.
+		// FIX: the floating down-arrow button (#btn_float_next_page,
+		// resultList.html) is this page's export/download control,
+		// same as Student List's. It used to forward to the
+		// pagination Next button (still available via the Prev/Next
+		// bar itself), which didn't match its "download" intent and
+		// left Result List with no export at all. Calls the new
+		// exportResultList() below directly.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			$( "#btn_page_next" ).click();
+			exportResultList();
 		});
 
 		//--------- START - FILTER --------------
@@ -1922,6 +1937,106 @@ var ResultScript = (function () {
 
 		}, 250 );
 	}
+
+	// --------------------------------------------------
+	// WHY: the floating download button (#btn_float_next_page,
+	// resultList.html) needs a real export to call - no export
+	// feature existed anywhere in this file. Same pattern as
+	// Student.script.js's exportStudentList() / Category.script.js's
+	// exportCategoryList(): builds a CSV from mSelectedDataList,
+	// dedupes by Result ID as a safety net, and downloads it
+	// through a temporary <a> link.
+	// --------------------------------------------------
+	function exportResultList() {
+
+		var arrRows = mSelectedDataList;
+
+		if( arrRows == null || arrRows.length == 0 ) {
+
+			CommonUtils.showAlert( "There are no results to export." );
+			return;
+		}
+
+		var arrUniqueRows = [];
+		var objSeenResultIds = {};
+
+		for( var u = 0; u < arrRows.length; u++ ) {
+
+			var resultId = arrRows[ u ][ SUMMARY_INDEX.RESULT_ID ];
+
+			if( objSeenResultIds[ resultId ] === true ) {
+
+				continue; // already exported this Result ID - skip the duplicate
+			}
+
+			objSeenResultIds[ resultId ] = true;
+			arrUniqueRows.push( arrRows[ u ] );
+		}
+
+		arrRows = arrUniqueRows;
+
+		var arrColumns = [
+			JSON_KEY.RESULT_ID,
+			JSON_KEY.STUDENT_ID,
+			JSON_KEY.EXAM_NAME,
+			JSON_KEY.SUBJECT,
+			JSON_KEY.MARKS_OBTAINED,
+			JSON_KEY.GRADE,
+			JSON_KEY.RESULT
+		];
+
+		var arrIndexes = [
+			SUMMARY_INDEX.RESULT_ID,
+			SUMMARY_INDEX.STUDENT_ID,
+			SUMMARY_INDEX.EXAM_NAME,
+			SUMMARY_INDEX.SUBJECT,
+			SUMMARY_INDEX.MARKS_OBTAINED,
+			SUMMARY_INDEX.GRADE,
+			SUMMARY_INDEX.RESULT
+		];
+
+		var strCsv = arrColumns.join( "," ) + "\r\n";
+
+		for( var i = 0; i < arrRows.length; i++ ) {
+
+			var objRow = arrRows[ i ];
+
+			var arrValues = arrIndexes.map( function( intIndex ) {
+
+				var value = objRow[ intIndex ];
+
+				if( value == null ) {
+
+					value = "";
+				}
+
+				return '"' + String( value ).replace( /"/g, '""' ) + '"';
+			});
+
+			strCsv += arrValues.join( "," ) + "\r\n";
+		}
+
+		var objBlob = new Blob( [ strCsv ], { type: "text/csv;charset=utf-8;" } );
+		var strUrl = window.URL.createObjectURL( objBlob );
+
+		var elemLink = document.createElement( "a" );
+		elemLink.href = strUrl;
+		elemLink.download = "results_export_" + new Date().toISOString().slice( 0, 10 ) + ".csv";
+
+		if( typeof ActivityLog !== "undefined" ) {
+
+			ActivityLog.logActivity( "Exported Results" );
+		}
+
+		document.body.appendChild( elemLink );
+		elemLink.click();
+		document.body.removeChild( elemLink );
+
+		window.URL.revokeObjectURL( strUrl );
+
+		CommonUtils.showAlert( "Export completed successfully.", "success" );
+	}
+
 	function onClickListBackButton() {
 
 		if( getMultiSelectStatus() == true ) {
@@ -2545,12 +2660,12 @@ var ResultScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_RESULT ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
 
 		// UI/UX POLISH PASS (this pass) - per-card Share button, same
 		// pattern as Student.script.js's shareIconHtml/onClickShareIcon().
-		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share result" onclick="ResultScript.getInstance().onClickShareIcon('+ index +');" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share result" onclick="ResultScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
 
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							editIconHtml +
@@ -3002,7 +3117,18 @@ var ResultScript = (function () {
 	}
 
 	// Open Edit Result on click of edit icon in the list item
-	function onClickEditIcon( index ) {
+	function onClickEditIcon( index, objEvent ) {
+
+		// FIX: stop this click from bubbling up to the card's own
+		// delegated click handler ($("#list_id").on("click","ul",...)
+		// in onListDocumentReady()), which was opening the "Select
+		// an Option" popup right behind this click and made the
+		// Edit icon look unclickable / made the icon appear to
+		// disappear. Same fix already applied in Student.script.js.
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
 
 		mEditIconClicked = true;
 
@@ -3019,7 +3145,15 @@ var ResultScript = (function () {
 
 	// UI/UX POLISH PASS (this pass) - per-card Share button, same
 	// pattern as Student.script.js's onClickShareIcon().
-	function onClickShareIcon( index ) {
+	function onClickShareIcon( index, objEvent ) {
+
+		// FIX: stop this click from bubbling up to the card's own
+		// delegated click handler, same reasoning as onClickEditIcon()
+		// above.
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
 
 		// ADDED: stops onSingleClickListener() from also opening the
 		// Select Option popup right after this Share tap. Share has
@@ -3201,4 +3335,4 @@ var ResultScript = (function () {
 		URL: URL,
 		TABLE_NAME: TABLE_NAME
 	};
-})();
+})();screenLeft

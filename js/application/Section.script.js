@@ -315,6 +315,7 @@ var SectionScript = (function () {
 
 	var mInfoIconClicked = false; // using that we can control single click and info button click
 	var mEditIconClicked = false; // using that we can control single click and edit icon click
+	var mShareIconClicked = false; // ADDED: same guard pattern as Student.script.js/Result.script.js, keeps the per-card Share tap from also opening the Select an Option popup
 
 	var mImageClosed = false;	// Indicates whether the image is removed or not while updating
 	var mFileClosed = false;	// Indicates whether the File is removed or not while updating
@@ -1471,7 +1472,16 @@ var SectionScript = (function () {
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_SECTION ) == true ) {
 
-			$( "#btn_add" ).off().on( "click", function() {
+			// FIX: #btn_add wraps an <a href="#"> - without
+			// preventDefault() that anchor's default action changes
+			// the URL hash and pushes a history entry, which
+			// onBackPress()'s popstate listener (see
+			// SectionHTML.script.js) misreads as a Back press and
+			// force-navigates to the Dashboard the instant "+" is
+			// tapped. Same fix already applied in Student.script.js.
+			$( "#btn_add" ).off().on( "click", function( objEvent ) {
+
+				objEvent.preventDefault();
 
 				onClickAdd();
 			});
@@ -1481,25 +1491,41 @@ var SectionScript = (function () {
 			$( "#btn_add" ).hide();
 		}
 
-		$( "#btn_refresh" ).off().on( "click", function() {
+		// FIX: same href="#" / popstate issue as #btn_add above -
+		// preventDefault() stops the click from being misread as a
+		// Back press that would navigate to the Dashboard instead
+		// of just refreshing this list.
+		$( "#btn_refresh" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
 
 			onClickRefresh();
 		});
 
+		// FIX: #btn_share_page (top AppBar Share) had no click
+		// handler at all - same pattern as Student.script.js's/
+		// Result.script.js's #btn_share_page binding.
+		$( "#btn_share_page" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			CommonUtils.shareContent( "Section List", "Section List - Student Management System", window.location.href );
+		});
+
 		// --------------------------------------------------
-		// PRIORITY 3 / 6 FIX: the floating down-arrow button
-		// (#btn_float_next_page, sectionList.html) is this page's
-		// pagination "next page" control. Rather than duplicate
-		// the getListData(mCurrentPage + 1) logic, this just
-		// forwards the click to the real Prev/Next bar's own
-		// Next button (bindPaginationBarListeners() below), which
-		// already respects the disabled state on the last page.
+		// FIX: the floating down-arrow button (#btn_float_next_page,
+		// sectionList.html) is this page's export/download control,
+		// same as Student List's. It used to forward to the
+		// pagination Next button (still available via the Prev/Next
+		// bar itself), which didn't match its "download" intent and
+		// left Section List with no export at all. Calls the new
+		// exportSectionList() below directly.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			$( "#btn_page_next" ).click();
+			exportSectionList();
 		});
 
 		//--------- START - FILTER --------------
@@ -1661,7 +1687,7 @@ var SectionScript = (function () {
 		var id = selectedData[ SUMMARY_INDEX.SECTION_ID ];
 		sessionStorage.setItem( SESSION_OBJECT.SECTION_ID, id );
 	
-		if( mInfoIconClicked == false && mEditIconClicked == false ) {
+		if( mInfoIconClicked == false && mEditIconClicked == false && mShareIconClicked == false ) { // CHANGED: also check the new Share flag
 
 			openSelectMenu();
 		}	
@@ -1808,6 +1834,98 @@ var SectionScript = (function () {
 
 		}, 250 );
 	}
+
+	// --------------------------------------------------
+	// WHY: the floating download button (#btn_float_next_page,
+	// sectionList.html) needs a real export to call - no export
+	// feature existed anywhere in this file. Same pattern as
+	// Student.script.js's exportStudentList() / Category.script.js's
+	// exportCategoryList(): builds a CSV from mSelectedDataList,
+	// dedupes by Section ID as a safety net, and downloads it
+	// through a temporary <a> link.
+	// --------------------------------------------------
+	function exportSectionList() {
+
+		var arrRows = mSelectedDataList;
+
+		if( arrRows == null || arrRows.length == 0 ) {
+
+			CommonUtils.showAlert( "There are no sections to export." );
+			return;
+		}
+
+		var arrUniqueRows = [];
+		var objSeenSectionIds = {};
+
+		for( var u = 0; u < arrRows.length; u++ ) {
+
+			var sectionId = arrRows[ u ][ SUMMARY_INDEX.SECTION_ID ];
+
+			if( objSeenSectionIds[ sectionId ] === true ) {
+
+				continue; // already exported this Section ID - skip the duplicate
+			}
+
+			objSeenSectionIds[ sectionId ] = true;
+			arrUniqueRows.push( arrRows[ u ] );
+		}
+
+		arrRows = arrUniqueRows;
+
+		var arrColumns = [
+			JSON_KEY.SECTION_ID,
+			JSON_KEY.NAME,
+			JSON_KEY.CATEGORY_ID
+		];
+
+		var arrIndexes = [
+			SUMMARY_INDEX.SECTION_ID,
+			SUMMARY_INDEX.NAME,
+			SUMMARY_INDEX.CATEGORY_ID
+		];
+
+		var strCsv = arrColumns.join( "," ) + "\r\n";
+
+		for( var i = 0; i < arrRows.length; i++ ) {
+
+			var objRow = arrRows[ i ];
+
+			var arrValues = arrIndexes.map( function( intIndex ) {
+
+				var value = objRow[ intIndex ];
+
+				if( value == null ) {
+
+					value = "";
+				}
+
+				return '"' + String( value ).replace( /"/g, '""' ) + '"';
+			});
+
+			strCsv += arrValues.join( "," ) + "\r\n";
+		}
+
+		var objBlob = new Blob( [ strCsv ], { type: "text/csv;charset=utf-8;" } );
+		var strUrl = window.URL.createObjectURL( objBlob );
+
+		var elemLink = document.createElement( "a" );
+		elemLink.href = strUrl;
+		elemLink.download = "sections_export_" + new Date().toISOString().slice( 0, 10 ) + ".csv";
+
+		if( typeof ActivityLog !== "undefined" ) {
+
+			ActivityLog.logActivity( "Exported Sections" );
+		}
+
+		document.body.appendChild( elemLink );
+		elemLink.click();
+		document.body.removeChild( elemLink );
+
+		window.URL.revokeObjectURL( strUrl );
+
+		CommonUtils.showAlert( "Export completed successfully.", "success" );
+	}
+
 	function onClickListBackButton() {
 
 		if( getMultiSelectStatus() == true ) {
@@ -2287,6 +2405,7 @@ var SectionScript = (function () {
 		$( '#edit_details' ).modal( 'hide' );
 		mEditIconClicked = false;
 		mInfoIconClicked = false;
+		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 	}
 
 	function scrollEditDetailsPopup() {
@@ -2423,8 +2542,14 @@ var SectionScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
 		}
+
+		// FIX (per-card Share icon): this card never had a Share
+		// button at all - only Student.script.js/Result.script.js
+		// did. Added the same icon-btn-share pattern, wired to a
+		// new onClickShareIcon() below.
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share section" onclick="SectionScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
 
 		// --------------------------------------------------
 		// WHY/WHAT: same inline-shadow removal + shared .icon-btn /
@@ -2434,6 +2559,7 @@ var SectionScript = (function () {
 		// --------------------------------------------------
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							editIconHtml +
+							shareIconHtml +
 							'<div id="list_item" class="list-item">' +
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
@@ -2587,6 +2713,7 @@ var SectionScript = (function () {
 
 		mInfoIconClicked = false;
 		mEditIconClicked = false;
+		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 		$(FORM_FIELD_INFO.LBL_SECTION_ID).text( data[INDEX.SECTION_ID] );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
 
@@ -2828,7 +2955,18 @@ var SectionScript = (function () {
 	}
 
 	// Open Edit Section on click of edit icon in the list item
-	function onClickEditIcon( index ) {
+	function onClickEditIcon( index, objEvent ) {
+
+		// FIX: stop this click from bubbling up to the card's own
+		// delegated click handler ($("#list_id").on("click","ul",...)
+		// in onListDocumentReady()), which was opening the "Select
+		// an Option" popup right behind this click and made the
+		// Edit icon look unclickable / made the icon appear to
+		// disappear. Same fix already applied in Student.script.js.
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
 
 		mEditIconClicked = true;
 
@@ -2842,6 +2980,32 @@ var SectionScript = (function () {
 		openEditDetailsPopup();
 		onAddEditDocumentReady();
 	}
+
+	// FIX (per-card Share icon): this page never had a per-card
+	// Share button - same pattern as Student.script.js's/
+	// Result.script.js's onClickShareIcon().
+	function onClickShareIcon( index, objEvent ) {
+
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
+
+		mShareIconClicked = true;
+		setTimeout( function() { mShareIconClicked = false; }, 0 );
+
+		var selectedData = mSelectedDataList[ index ];
+
+		if( !selectedData ) {
+
+			return;
+		}
+
+		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "Section";
+
+		CommonUtils.shareContent( "Section: " + strName, "Name: " + strName );
+	}
+
 	// Start - Share Section data
 	function onClickShare(){
 
@@ -2960,6 +3124,7 @@ var SectionScript = (function () {
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,
+			onClickShareIcon: onClickShareIcon,
 			// setSelectedPhoto: setSelectedPhoto,
 			closeImageButton: closeImageButton,
 			closeFileButton: closeFileButton,

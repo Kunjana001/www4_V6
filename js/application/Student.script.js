@@ -3847,7 +3847,16 @@ function parseListResponse(objPageResult)
 		onAddEditDocumentReady();
 	}
 
-	
+	// UI/UX POLISH PASS (this pass) - per-card Share button. Reads
+	// straight from mSelectedDataList[index] (the same row
+	// createHtmlListItem() already rendered), so no extra fetch or
+	// popup is needed - unlike onClickShare()/getShareData() below,
+	// which build a confirmation-dialog-driven email/WhatsApp share
+	// for the OLD selection-menu Share entry point, this is the
+	// direct one-tap Share button now on every card, using the
+	// modern Web-Share-API-first CommonUtils.shareContent() (same
+	// implementation already used by the Student Info popup's Share
+	// button and the Dashboard's, per common.js).
 	function onClickShareIcon( index, objEvent ) {
 
 		// FIX: stop this click from bubbling up to the card's own
@@ -3974,7 +3983,23 @@ function parseListResponse(objPageResult)
 
 	function getFormattedData( seqNumber, selectedData ) {
 
-		
+		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
+		// pass): this function used to be an entirely commented-out
+		// stub ("Write your code in here") that always returned "".
+		// That meant every use of the Share menu item (single -
+		// #student_share - and multi-select - #multi_share -, both
+		// wired to onClickShare() -> onClickShareByEmail()/
+		// onClickShareByWhatsApp() above) silently sent a
+		// completely blank email or WhatsApp message every time -
+		// a real, live bug, not dead code, since those menu items
+		// are still visible and clickable in the UI.
+		//
+		// Filled in using the real SUMMARY_INDEX fields this file
+		// already defines (getSelectedSummaryListData()/
+		// getMultiSelectData() above already return rows shaped
+		// this way) instead of the stub's placeholder
+		// FIRST_NAME/LAST_NAME/MOBILE_NUMBER fields, which don't
+		// exist on this entity at all.
 		var resultText = "";
 
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
