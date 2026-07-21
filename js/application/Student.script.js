@@ -1707,7 +1707,21 @@ function getListData( iRequestedPage )
 
 			$( "#btn_add" )
 				.attr( "title", "Add New Student" )
-				.off().on( "click", function() {
+				.off().on( "click", function( objEvent ) {
+
+					// FIX: #btn_add wraps an <a href="#"> - without
+					// preventDefault() that anchor's default action
+					// changes the URL hash, which creates a new
+					// history entry. onBackPress() below (see
+					// StudentHTML.script.js) listens for ANY
+					// history "popstate" and treats it as a Back
+					// press, so that hash change was being
+					// misinterpreted as the user pressing Back and
+					// force-navigating to the Dashboard the instant
+					// "+" was tapped. preventDefault() stops the
+					// hash/history change from happening at all, so
+					// only the intended onClickAdd() runs.
+					objEvent.preventDefault();
 
 					clearSessionStorage( SESSION_OBJECT.STUDENT_ID );
 
@@ -1719,7 +1733,13 @@ function getListData( iRequestedPage )
 			$( "#btn_add" ).hide();
 		}
 
-		$( "#btn_refresh" ).off().on( "click", function() {
+		$( "#btn_refresh" ).off().on( "click", function( objEvent ) {
+
+			// FIX: same href="#" / popstate issue as #btn_add above -
+			// preventDefault() stops the click from being
+			// misread as a Back press that would navigate to the
+			// Dashboard instead of just refreshing this list.
+			objEvent.preventDefault();
 
 			onClickRefresh();
 		});
@@ -1737,19 +1757,20 @@ function getListData( iRequestedPage )
 		});
 
 		// --------------------------------------------------
-		// PRIORITY 3 / 6 FIX: the floating down-arrow button
-		// (#btn_float_next_page, studentList.html) is this page's
-		// pagination "next page" control. Rather than duplicate
-		// the getListData(mCurrentPage + 1) logic, this just
-		// forwards the click to the real Prev/Next bar's own
-		// Next button (bindPaginationBarListeners() below), which
-		// already respects the disabled state on the last page.
+		// FIX: the floating down-arrow button (#btn_float_next_page,
+		// studentList.html) is the Student List's export/download
+		// control. Calls the existing exportStudentList() - the
+		// same function #btn_export already uses - directly; no
+		// new export logic was written. preventDefault() is kept
+		// so this button's click can never be misread as a Back
+		// press via the popstate listener (see #btn_add/#btn_refresh
+		// above) and fall through to navigating to the Dashboard.
 		// --------------------------------------------------
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
 
-			$( "#btn_page_next" ).click();
+			exportStudentList();
 		});
 
 		//--------- START - FILTER --------------
@@ -2980,7 +3001,7 @@ function parseListResponse(objPageResult)
     var editIconHtml = '';
     if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-        editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +');" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+        editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
     }
 
     // UI/UX POLISH PASS (this pass) - SHARE BUTTON: every card now
@@ -2990,7 +3011,7 @@ function parseListResponse(objPageResult)
     // clipboard fallback) via the new onClickShareIcon() below,
     // same off-the-shelf pattern as onClickInfoIcon/onClickEditIcon
     // - reads straight from this row's own data, no popup needed.
-    var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share student" onclick="StudentScript.getInstance().onClickShareIcon('+ index +');" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+    var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share student" onclick="StudentScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
 
     // Quick-action icons: call / WhatsApp / SMS / email, using the
     // mobile and email already present in this row's data - no new
@@ -3799,7 +3820,19 @@ function parseListResponse(objPageResult)
 	}
 
 	// Open Edit Student on click of edit icon in the list item
-	function onClickEditIcon( index ) {
+	function onClickEditIcon( index, objEvent ) {
+
+		// FIX: stop this click from bubbling up to the card's own
+		// delegated click handler ($("#list_id").on("click","ul",...)
+		// in onListDocumentReady()), so tapping Edit can never be
+		// intercepted by the card's "open select menu" behavior.
+		// Kept alongside the existing mEditIconClicked flag (used by
+		// onSingleClickListener() as a second guard) rather than
+		// replacing it.
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
 
 		mEditIconClicked = true;
 
@@ -3814,17 +3847,17 @@ function parseListResponse(objPageResult)
 		onAddEditDocumentReady();
 	}
 
-	// UI/UX POLISH PASS (this pass) - per-card Share button. Reads
-	// straight from mSelectedDataList[index] (the same row
-	// createHtmlListItem() already rendered), so no extra fetch or
-	// popup is needed - unlike onClickShare()/getShareData() below,
-	// which build a confirmation-dialog-driven email/WhatsApp share
-	// for the OLD selection-menu Share entry point, this is the
-	// direct one-tap Share button now on every card, using the
-	// modern Web-Share-API-first CommonUtils.shareContent() (same
-	// implementation already used by the Student Info popup's Share
-	// button and the Dashboard's, per common.js).
-	function onClickShareIcon( index ) {
+	
+	function onClickShareIcon( index, objEvent ) {
+
+		// FIX: stop this click from bubbling up to the card's own
+		// delegated click handler, same reasoning as onClickEditIcon()
+		// above - kept alongside the existing mShareIconClicked flag
+		// rather than replacing it.
+		if( objEvent ) {
+
+			objEvent.stopPropagation();
+		}
 
 		// ADDED: stops onSingleClickListener() from also opening the
 		// Select Option popup right after this Share tap. Share has
@@ -3941,23 +3974,7 @@ function parseListResponse(objPageResult)
 
 	function getFormattedData( seqNumber, selectedData ) {
 
-		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
-		// pass): this function used to be an entirely commented-out
-		// stub ("Write your code in here") that always returned "".
-		// That meant every use of the Share menu item (single -
-		// #student_share - and multi-select - #multi_share -, both
-		// wired to onClickShare() -> onClickShareByEmail()/
-		// onClickShareByWhatsApp() above) silently sent a
-		// completely blank email or WhatsApp message every time -
-		// a real, live bug, not dead code, since those menu items
-		// are still visible and clickable in the UI.
-		//
-		// Filled in using the real SUMMARY_INDEX fields this file
-		// already defines (getSelectedSummaryListData()/
-		// getMultiSelectData() above already return rows shaped
-		// this way) instead of the stub's placeholder
-		// FIRST_NAME/LAST_NAME/MOBILE_NUMBER fields, which don't
-		// exist on this entity at all.
+		
 		var resultText = "";
 
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
