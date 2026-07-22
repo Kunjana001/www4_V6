@@ -47,6 +47,9 @@ var btnEye = document.getElementById("togglePassword");
 
 var btnLoginSettings = document.getElementById("btnLoginSettings");
 
+var btnFingerprintLogin = document.getElementById("btnFingerprintLogin");
+var btnFaceLogin = document.getElementById("btnFaceLogin");
+
 var imgLoginLogo = document.getElementById("loginLogo");
 
 var lblLoginTitle = document.getElementById("loginTitle");
@@ -149,6 +152,42 @@ btnLogin.onclick = loginUser;
 btnSignup.onclick = goSignup;
 
 btnLoginSettings.onclick = goSettings;
+
+btnFingerprintLogin.onclick = loginWithFingerprint;
+
+btnFaceLogin.onclick = loginWithFace;
+
+
+/* ==========================================================
+   Show / Hide the Biometric Login Buttons
+
+   Only shown once a credential has actually been registered
+   on THIS device (see BiometricService.isRegistered()) - a
+   fresh install or a device nobody has set biometrics up on
+   yet just sees the normal username/password form.
+   ========================================================== */
+
+(function showBiometricLoginButtons()
+{
+    var strRegisteredUsername = BiometricService.getRegisteredUsername();
+
+    var strRegisteredType = BiometricService.getRegisteredType();
+
+    if (!strRegisteredUsername || !strRegisteredType)
+    {
+        return;
+    }
+
+    if (strRegisteredType === AppConfig.BIOMETRIC.TYPE.FINGERPRINT && BiometricService.isFingerprintSupported())
+    {
+        btnFingerprintLogin.style.display = "";
+    }
+
+    if (strRegisteredType === AppConfig.BIOMETRIC.TYPE.FACE && BiometricService.isFaceSupported())
+    {
+        btnFaceLogin.style.display = "";
+    }
+})();
 
 
 /* ==========================================================
@@ -261,6 +300,22 @@ function loginUser()
         // in Config.js.
         StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Login successful.");
 
+        /* --------------------------------------------------
+           Offer Biometric Setup (asks once)
+
+           Only offered when the device supports at least one
+           biometric method AND nothing is registered on it yet
+           for anyone - if a different biometric is already
+           registered on this (presumably personal) device,
+           don't ask again on every login.
+           -------------------------------------------------- */
+
+        if (!BiometricService.getRegisteredUsername() &&
+            (BiometricService.isFingerprintSupported() || BiometricService.isFaceSupported()))
+        {
+            offerBiometricSetup(objUser.username);
+        }
+
         goDashboard();
     },
     function (objError)
@@ -270,5 +325,149 @@ function loginUser()
         console.log(objError);
 
         CommonUtils.showAlert((objError && objError.message) || "Invalid Username or Password.");
+    });
+}
+
+
+/* ==========================================================
+   Offer Biometric Setup
+
+   Asks once, right after a successful username/password
+   login: "Enable Fingerprint Login?" Yes -> registers it
+   (through BiometricService, then DataService); No -> skips,
+   and the plain login form is used again next time.
+   ========================================================== */
+
+function offerBiometricSetup(strUsername)
+{
+    var strMethodLabel = BiometricService.isFingerprintSupported() ? "Fingerprint" : "Face";
+
+    CommonUtils.showConfirmDialog(
+        "Enable " + strMethodLabel + " Login for faster sign in next time?",
+        "Yes",
+        "No",
+        "Biometric Login"
+    ).then(function (bConfirmed)
+    {
+        if (bConfirmed !== true)
+        {
+            return;
+        }
+
+        var fnRegister = BiometricService.isFingerprintSupported()
+            ? BiometricService.registerFingerprint
+            : BiometricService.registerFace;
+
+        var strType = BiometricService.isFingerprintSupported()
+            ? AppConfig.BIOMETRIC.TYPE.FINGERPRINT
+            : AppConfig.BIOMETRIC.TYPE.FACE;
+
+        fnRegister(strUsername, function (mCredential)
+        {
+            DataService.registerBiometric(strUsername, mCredential, strType, function ()
+            {
+                CommonUtils.showToast(strMethodLabel + " Login enabled.", "success");
+            },
+            function (objError)
+            {
+                console.log(objError);
+
+                CommonUtils.showToast("Could not enable " + strMethodLabel + " Login. You can try again from Settings.", "error");
+            });
+        },
+        function (objError)
+        {
+            console.log(objError);
+
+            CommonUtils.showToast((objError && objError.message) || "Could not set up " + strMethodLabel + " Login.", "error");
+        });
+    });
+}
+
+
+/* ==========================================================
+   Log In With Fingerprint
+
+   BiometricService confirms the device's own fingerprint
+   matches, then DataService.loginWithBiometric() confirms
+   that credential is still valid for its registered account -
+   never Session.login() directly (see BiometricService.js /
+   DataService.js's "never bypass DataService" note).
+   ========================================================== */
+
+function loginWithFingerprint()
+{
+    showLoader("Verifying Fingerprint...");
+
+    BiometricService.authenticateFingerprint(function (strCredentialId)
+    {
+        completeBiometricLogin(strCredentialId);
+    },
+    function (objError)
+    {
+        hideLoader();
+
+        console.log(objError);
+
+        CommonUtils.showAlert((objError && objError.message) || "Fingerprint not recognized.");
+    });
+}
+
+
+/* ==========================================================
+   Log In With Face
+   ========================================================== */
+
+function loginWithFace()
+{
+    showLoader("Verifying Face...");
+
+    BiometricService.authenticateFace(function (objDescriptor)
+    {
+        completeBiometricLogin(objDescriptor);
+    },
+    function (objError)
+    {
+        hideLoader();
+
+        console.log(objError);
+
+        CommonUtils.showAlert((objError && objError.message) || "Face not recognized.");
+    });
+}
+
+
+/* ==========================================================
+   Complete a Biometric Login
+
+   Shared by loginWithFingerprint() and loginWithFace() once
+   BiometricService has confirmed the device's own biometric
+   matched - both then finish the exact same way loginUser()
+   does (DataService -> Session -> ActivityLog -> Dashboard).
+   ========================================================== */
+
+function completeBiometricLogin(mCredential)
+{
+    var strRegisteredUsername = BiometricService.getRegisteredUsername();
+
+    DataService.loginWithBiometric(strRegisteredUsername, mCredential, function (objUser)
+    {
+        hideLoader();
+
+        Session.login(objUser.username, objUser.role);
+
+        ActivityLog.logActivity("Login");
+
+        StorageService.saveValue(AppConfig.STORAGE_KEYS.POST_REDIRECT_TOAST, "Login successful.");
+
+        goDashboard();
+    },
+    function (objError)
+    {
+        hideLoader();
+
+        console.log(objError);
+
+        CommonUtils.showAlert((objError && objError.message) || "Biometric login failed. Please log in with your username and password.");
     });
 }

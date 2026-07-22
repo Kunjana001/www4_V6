@@ -187,6 +187,55 @@
 
     </section>
 
+    <!-- ================= Biometric Login Card =================
+         Only meaningful for a logged-in user (it registers a
+         credential for Session.getUsername()) - same hide-when-
+         logged-out pattern as the Change Password card below.
+         Wired up in Settings.script.js. -->
+
+    <section class="settings-card" id="biometricSettingsSection">
+
+        <div class="settings-row-text" style="margin-bottom: 18px;">
+
+            <i class="fa-solid fa-fingerprint"></i>
+
+            <div>
+
+                <h3>Biometric Login</h3>
+
+                <p>Use your fingerprint or face instead of typing your password on this device.</p>
+
+            </div>
+
+        </div>
+
+        <div class="settings-input-group">
+
+            <label>
+
+                <input type="radio" name="biometricOption" id="radBiometricDisabled" value="disabled">
+                Disabled
+
+            </label>
+
+            <label>
+
+                <input type="radio" name="biometricOption" id="radBiometricFingerprint" value="fingerprint">
+                Fingerprint
+
+            </label>
+
+            <label>
+
+                <input type="radio" name="biometricOption" id="radBiometricFace" value="face">
+                Face ID
+
+            </label>
+
+        </div>
+
+    </section>
+
     <!-- ================= Change Password Card =================
          Moved here from Profile (brief item 5 - "Change
          Password belongs inside Settings"). Same three fields
@@ -402,6 +451,8 @@
 <script src="../common/settings.js"></script>
 
 <script src="../common/activity.js"></script>
+
+<script src="../js/BiometricService.js"></script>
 
 <script src="../js/Settings.script.js"></script>
 

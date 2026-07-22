@@ -390,7 +390,13 @@ var DataService = (function ()
             verifyUsernameExists,
 
         resetPassword:
-            resetPassword
+            resetPassword,
+
+        registerBiometric:
+            registerBiometric,
+
+        loginWithBiometric:
+            loginWithBiometric
 
     };
 
@@ -2501,6 +2507,193 @@ var DataService = (function ()
         function (objError)
         {
             CommonUtils.logError("DataService.resetPassword (GOOGLE unreachable)", objError);
+
+            fnError(objError);
+        });
+    }
+
+
+
+    /* ======================================================
+       Register Biometric Credential
+
+       Called by login.js right after BiometricService has
+       already created/enrolled the credential on THIS device.
+       This function's only job is to tell the backend that
+       credential belongs to strUsername, so a later
+       loginWithBiometric() call from any device can be
+       checked against the Users sheet - never bypassing
+       DataService/Google the way a device-only check would.
+
+       strUsername    : the account this credential unlocks
+       strCredentialId : the WebAuthn credential id (fingerprint)
+                        or JSON-encoded face descriptor (face),
+                        exactly as BiometricService produced it
+       strType        : AppConfig.BIOMETRIC.TYPE.FINGERPRINT or
+                        .FACE
+       fnSuccess      : function(objUser)
+       fnError        : function(objError)
+       ====================================================== */
+
+    function registerBiometric(strUsername, strCredentialId, strType, fnSuccess, fnError)
+    {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strRegisterMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE has no Users sheet to save the credential
+        // against - the credential is already saved locally by
+        // BiometricService, so there is nothing further to do here.
+        if (isIndexedDbMode(strRegisterMode))
+        {
+            fnSuccess({ username: strUsername });
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strRegisterMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("registerBiometric", { username: strUsername, credentialId: strCredentialId, type: strType })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- GOOGLE: same buildGoogleUrl/callGoogleGet pattern login() uses ----
+
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to register biometric login."));
+            return;
+        }
+
+        callGoogleGet(buildGoogleUrl("registerBiometric", {
+            username: strUsername,
+            credentialId: strCredentialId,
+            type: strType
+
+        }), function (objResponse)
+        {
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error(objResponse ? objResponse.message : "Could not register biometric login."));
+                return;
+            }
+
+            fnSuccess(objResponse.data);
+        },
+        function (objError)
+        {
+            CommonUtils.logError("DataService.registerBiometric (GOOGLE unreachable)", objError);
+
+            fnError(objError);
+        });
+    }
+
+
+
+    /* ======================================================
+       Log In With a Biometric Credential
+
+       Called by login.js after BiometricService's
+       authenticateFingerprint()/authenticateFace() confirms the
+       device's own biometric matched. This is the step that
+       decides whether that credential is actually still valid
+       for strUsername - never Session.login() directly, per
+       the mentor's "never bypass DataService" rule.
+
+       strUsername    : BiometricService.getRegisteredUsername()
+                        - which account this device's credential
+                        belongs to
+       strCredentialId : BiometricService's stored credential id
+                        / descriptor for that device
+       fnSuccess      : function(objUser) - same shape login()
+                        returns (userId/username/fullName/role/
+                        status), so login.js can call
+                        Session.login(objUser.username, objUser.role)
+                        exactly the same way for both paths
+       fnError        : function(objError)
+       ====================================================== */
+
+    function loginWithBiometric(strUsername, strCredentialId, fnSuccess, fnError)
+    {
+        // ADDED: switch by backend mode, per the switchable backend architecture
+        var strLoginMode = getBackendMode();
+
+        // ADDED: INDEXEDDB/OFFLINE - check the locally cached Users
+        // store instead of a network call. The credential itself was
+        // already confirmed by BiometricService (device-level check);
+        // this only re-confirms the account still exists and is Active,
+        // same "Credential Exists?" step the online path performs.
+        if (isIndexedDbMode(strLoginMode))
+        {
+            StorageService.getAllRecords(AppConfig.STORES.USER)
+                .then(function (arrUsers)
+                {
+                    var objMatch = null;
+
+                    for (var intIndex = 0; intIndex < arrUsers.length; intIndex++)
+                    {
+                        if (arrUsers[intIndex].username &&
+                            arrUsers[intIndex].username.toLowerCase() === strUsername.toLowerCase())
+                        {
+                            objMatch = arrUsers[intIndex];
+                            break;
+                        }
+                    }
+
+                    if (!objMatch || objMatch.status !== "Active")
+                    {
+                        fnError(new Error("Biometric login failed. Please log in with your username and password."));
+                        return;
+                    }
+
+                    fnSuccess({
+                        userId: objMatch.user_id,
+                        username: objMatch.username,
+                        fullName: objMatch.fullName,
+                        role: objMatch.role,
+                        status: objMatch.status
+                    });
+                })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ADDED: SPRING branch - placeholder only, rejects clearly
+        if (strLoginMode === AppConfig.BACKEND.SPRING)
+        {
+            callSpringPost("loginBiometric", { username: strUsername, credentialId: strCredentialId })
+                .catch(fnError);
+
+            return;
+        }
+
+        // ---- GOOGLE: same buildGoogleUrl/callGoogleGet pattern login() uses ----
+
+        if (CommonUtils.isOnline() === false)
+        {
+            fnError(new Error("You appear to be offline. Please connect to the internet to log in."));
+            return;
+        }
+
+        callGoogleGet(buildGoogleUrl("loginBiometric", {
+            username: strUsername,
+            credentialId: strCredentialId
+
+        }), function (objResponse)
+        {
+            if (!objResponse || objResponse.success !== true)
+            {
+                fnError(new Error(objResponse ? objResponse.message : "Biometric login failed."));
+                return;
+            }
+
+            fnSuccess(objResponse.data);
+        },
+        function (objError)
+        {
+            CommonUtils.logError("DataService.loginWithBiometric (GOOGLE unreachable)", objError);
 
             fnError(objError);
         });

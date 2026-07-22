@@ -204,6 +204,54 @@ const AppConfig = {
 
 
     /* ======================================================
+       Biometric Login (Fingerprint / Face)
+
+       BiometricService.js is the only file that reads/writes
+       these directly (via StorageService.saveValue/getValue) -
+       every other file that needs to know whether biometric
+       login is turned on, and for whom, goes through
+       BiometricService.isRegistered() instead of touching
+       these keys itself. Same "one gateway" rule DataService.js
+       already follows for Google/IndexedDB/Spring.
+
+       ENABLED_KEY    - true/false, whether the currently
+                        registered device has biometric login
+                        turned on at all.
+       TYPE_KEY       - which kind is registered: "fingerprint"
+                        or "face" (see BIOMETRIC.TYPE below).
+       USER_KEY       - which username the registered credential
+                        belongs to, so a shared/public device
+                        can't let one person's fingerprint log
+                        in as someone else.
+       CREDENTIAL_KEY - the WebAuthn credential id (fingerprint)
+                        or face descriptor (face), base64/JSON
+                        encoded, whichever TYPE_KEY says is in
+                        use.
+       ====================================================== */
+
+    BIOMETRIC: {
+
+        ENABLED_KEY: "BIOMETRIC_ENABLED",
+
+        TYPE_KEY: "BIOMETRIC_TYPE",
+
+        USER_KEY: "BIOMETRIC_USER",
+
+        CREDENTIAL_KEY: "BIOMETRIC_CREDENTIAL",
+
+        TYPE: {
+
+            FINGERPRINT: "fingerprint",
+
+            FACE: "face"
+
+        }
+
+    },
+
+
+
+    /* ======================================================
        Google Apps Script
        ====================================================== */
 

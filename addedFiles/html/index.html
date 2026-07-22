@@ -182,6 +182,32 @@
 
             </button>
 
+            <!-- Biometric Login Buttons: hidden by default, only
+                 shown by login.js when a credential is already
+                 registered on this device for this biometric type. -->
+
+            <button
+                type="button"
+                class="signup"
+                id="btnFingerprintLogin"
+                style="display:none;">
+
+                <i class="fa-solid fa-fingerprint"></i>
+                Login with Fingerprint
+
+            </button>
+
+            <button
+                type="button"
+                class="signup"
+                id="btnFaceLogin"
+                style="display:none;">
+
+                <i class="fa-solid fa-face-smile"></i>
+                Login with Face
+
+            </button>
+
         </div>
 
     </div>
@@ -211,6 +237,8 @@
     <script src="../common/register-sw.js"></script>
     
     <script src="../js/LegacyCompatShim.js"></script>
+
+    <script src="../js/BiometricService.js"></script>
 
     <script src="../js/login.js"></script>
 

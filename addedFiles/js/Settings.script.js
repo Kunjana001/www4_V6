@@ -95,6 +95,13 @@ var sectionBackendSettings = document.getElementById("backendSettingsSection");
 var selBackendMode = document.getElementById("selBackendMode");
 var btnSaveBackend = document.getElementById("btnSaveBackend");
 
+/* ADDED - Biometric Login card elements (see
+   biometricSettingsSection in settings.html) */
+var sectionBiometricSettings = document.getElementById("biometricSettingsSection");
+var radBiometricDisabled = document.getElementById("radBiometricDisabled");
+var radBiometricFingerprint = document.getElementById("radBiometricFingerprint");
+var radBiometricFace = document.getElementById("radBiometricFace");
+
 
 
 /* ==========================================================
@@ -197,6 +204,136 @@ function initializeSettingsPage()
             sectionBackendSettings.style.display = "none";
         }
     }
+
+    /* --------------------------------------------------
+       ADDED - Biometric Login only makes sense for a logged-in
+       user (it registers a credential for Session.getUsername()) -
+       same "hide the whole section" pattern already used above
+       for Change Password.
+       -------------------------------------------------- */
+
+    if (sectionBiometricSettings)
+    {
+        if (Session.isLoggedIn() === true)
+        {
+            sectionBiometricSettings.style.display = "";
+
+            populateBiometricSettingsField();
+
+            radBiometricDisabled.onchange = handleBiometricOptionChanged;
+            radBiometricFingerprint.onchange = handleBiometricOptionChanged;
+            radBiometricFace.onchange = handleBiometricOptionChanged;
+        }
+        else
+        {
+            sectionBiometricSettings.style.display = "none";
+        }
+    }
+}
+
+
+
+/* ==========================================================
+   ADDED - Populate the Biometric Login Field
+
+   Selects whichever radio matches what is currently
+   registered on this device for the logged-in user, or
+   "Disabled" if nothing is registered (or it belongs to a
+   different account on a shared device).
+   ========================================================== */
+
+function populateBiometricSettingsField()
+{
+    if (BiometricService.isRegistered(Session.getUsername()) === false)
+    {
+        radBiometricDisabled.checked = true;
+        return;
+    }
+
+    var strType = BiometricService.getRegisteredType();
+
+    if (strType === AppConfig.BIOMETRIC.TYPE.FINGERPRINT)
+    {
+        radBiometricFingerprint.checked = true;
+    }
+    else if (strType === AppConfig.BIOMETRIC.TYPE.FACE)
+    {
+        radBiometricFace.checked = true;
+    }
+    else
+    {
+        radBiometricDisabled.checked = true;
+    }
+}
+
+
+
+/* ==========================================================
+   ADDED - Handle Biometric Option Changed
+
+   "Disabled" clears any registered credential (locally and, on
+   the next launch, the backend simply stops being asked about
+   it). Picking Fingerprint or Face registers a NEW credential
+   through BiometricService, then saves it via
+   DataService.registerBiometric() - never bypassing
+   DataService, per the mentor's architecture.
+   ========================================================== */
+
+function handleBiometricOptionChanged()
+{
+    var strUsername = Session.getUsername();
+
+    if (radBiometricDisabled.checked === true)
+    {
+        BiometricService.clearRegistration();
+
+        CommonUtils.showToast("Biometric Login disabled.", "success");
+
+        return;
+    }
+
+    var bWantsFingerprint = radBiometricFingerprint.checked === true;
+
+    var strMethodLabel = bWantsFingerprint ? "Fingerprint" : "Face";
+
+    var fnSupported = bWantsFingerprint ? BiometricService.isFingerprintSupported : BiometricService.isFaceSupported;
+
+    if (fnSupported() === false)
+    {
+        CommonUtils.showToast(strMethodLabel + " login is not supported on this device.", "error");
+
+        populateBiometricSettingsField();
+
+        return;
+    }
+
+    var fnRegister = bWantsFingerprint ? BiometricService.registerFingerprint : BiometricService.registerFace;
+
+    var strType = bWantsFingerprint ? AppConfig.BIOMETRIC.TYPE.FINGERPRINT : AppConfig.BIOMETRIC.TYPE.FACE;
+
+    fnRegister(strUsername, function (mCredential)
+    {
+        DataService.registerBiometric(strUsername, mCredential, strType, function ()
+        {
+            CommonUtils.showToast(strMethodLabel + " Login enabled.", "success");
+        },
+        function (objError)
+        {
+            console.log(objError);
+
+            CommonUtils.showToast("Could not save " + strMethodLabel + " Login to your account.", "error");
+
+            populateBiometricSettingsField();
+        });
+    },
+    function (objError)
+    {
+        console.log(objError);
+
+        CommonUtils.showToast((objError && objError.message) || "Could not set up " + strMethodLabel + " Login.", "error");
+
+        populateBiometricSettingsField();
+    });
 }
 
 
