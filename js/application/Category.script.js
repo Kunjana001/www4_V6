@@ -918,6 +918,29 @@ var CategoryScript = (function () {
 		popUpEditForm();
 	}
 
+	// BUG FIX - Add New Category modal's Save/Close/X buttons did nothing
+	//
+	// Why: this used to call OrganizationScript.getInstance() - a
+	// singleton that is not defined ANYWHERE in this project (leftover
+	// from an earlier version of the form where Organization Id was a
+	// dropdown; the HTML markup for it is a plain <input type="text">
+	// now, same as every other place this file touches
+	// FORM_FIELD.ORGANIZATION_ID, e.g. the Edit-mode load at
+	// $(FORM_FIELD.ORGANIZATION_ID).val(...) and the Save handler's
+	// jsonData[JSON_KEY.ORGANIZATION_ID] = $(FORM_FIELD.ORGANIZATION_ID).val()).
+	// Calling a function on an undefined object throws a ReferenceError,
+	// and since this ran synchronously inside onClickAdd() -> ... ->
+	// onAddEditDocumentReady() - BEFORE that same function reaches its
+	// own $('#save_data')/$('#add_edit_header_close')/$('#add_edit_footer_close')
+	// click bindings further down - the exception aborted the rest of
+	// onAddEditDocumentReady() every single time "Add" was clicked, so
+	// none of those three buttons were ever wired up on the Add form.
+	//
+	// What: set the plain text field directly instead, the same way
+	// setFormDefaults() already does for Name right above this call.
+	// organizationList is no longer used (nothing to populate a
+	// dropdown with) but the parameter is left in place since every
+	// caller already passes it - only this function's body changed.
 	function setOrganizationSelection( organizationList ) {
 
 		var mode = getAddEditMode();
@@ -934,8 +957,7 @@ var CategoryScript = (function () {
 			selectedId = DEFAULT.ORGANIZATION_ID; //getSelectedDropdownId( LOCAL_OBJECT.ORGANIZATION_ID );
 		}
 
-		var organizationScript = OrganizationScript.getInstance();
-		organizationScript.populateSelection( organizationList, FORM_FIELD.ORGANIZATION_ID, selectedId );
+		$( FORM_FIELD.ORGANIZATION_ID ).val( selectedId );
 		enableSaveButton( false );
 	}
 
