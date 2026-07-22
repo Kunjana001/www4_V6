@@ -75,47 +75,23 @@ var ThemeManager = (function ()
        like "drak" spread across several files.
        ====================================================== */
 
+    /* AFTER */
     var THEME_LIGHT = "light";
-
     var THEME_DARK = "dark";
-
-    var THEME_BLUE = "blue";
-
-    var THEME_GREEN = "green";
-
-    var THEME_PURPLE = "purple";
-
-    var THEME_ORANGE = "orange";
-
-    /* Added for the Phase 1 Theme System pass (brief item 5) -
-       black/white/yellow, the standard high-legibility palette
-       for low-vision users. common.css's html[data-theme="contrast"]
-       block also raises card/border contrast, not just the 3
-       brand tokens the other themes swap. */
-
-    var THEME_CONTRAST = "contrast";
-
-    /* Added for the UI Modernization pass (this pass) - neutral
-       navy/grey with a more formal font stack, alongside High
-       Contrast above. common.css's html[data-theme="professional"]
-       block also overrides radius/shadow tokens, not just the 3
-       brand tokens the other color themes swap. */
-
-    var THEME_PROFESSIONAL = "professional";
-
-    /* All theme names in one place, in the order they should be
-       offered on the Settings page. common.css has a matching
-       html[data-theme="..."] block for every one of these. */
+    var THEME_SKY_LIGHT = "sky-light";
+    var THEME_SKY_DARK = "sky-dark";
+    var THEME_DESERT_LIGHT = "desert-light";
+    var THEME_DESERT_DARK = "desert-dark";
+    var THEME_MONOCHROME = "monochrome";
 
     var ALL_THEMES = [
-        { id: THEME_LIGHT,        label: "Light",          swatch: "#123b8d" },
-        { id: THEME_DARK,         label: "Dark",           swatch: "#171a22" },
-        { id: THEME_BLUE,         label: "Blue",           swatch: "#1565c0" },
-        { id: THEME_GREEN,        label: "Green",          swatch: "#2e7d32" },
-        { id: THEME_PURPLE,       label: "Purple",         swatch: "#6a1b9a" },
-        { id: THEME_ORANGE,       label: "Orange",         swatch: "#ef6c00" },
-        { id: THEME_PROFESSIONAL, label: "Professional",   swatch: "#2b3a55" },
-        { id: THEME_CONTRAST,     label: "High Contrast",  swatch: "#000000" }
+        { id: THEME_LIGHT,        label: "Default Light", swatch: "#1E40AF" },
+        { id: THEME_DARK,         label: "Default Dark",  swatch: "#0F172A" },
+        { id: THEME_SKY_LIGHT,    label: "Sky Light",     swatch: "#0284C7" },
+        { id: THEME_SKY_DARK,     label: "Sky Dark",      swatch: "#0B132B" },
+        { id: THEME_DESERT_LIGHT, label: "Desert Light",  swatch: "#D97706" },
+        { id: THEME_DESERT_DARK,  label: "Desert Dark",   swatch: "#1C1917" },
+        { id: THEME_MONOCHROME,   label: "Monochrome",    swatch: "#09090B" }
     ];
 
 
@@ -125,59 +101,18 @@ var ThemeManager = (function ()
        ====================================================== */
 
     return {
-
-        THEME_LIGHT:
-
-            THEME_LIGHT,
-
-        THEME_DARK:
-
-            THEME_DARK,
-
-        THEME_BLUE:
-
-            THEME_BLUE,
-
-        THEME_GREEN:
-
-            THEME_GREEN,
-
-        THEME_PURPLE:
-
-            THEME_PURPLE,
-
-        THEME_ORANGE:
-
-            THEME_ORANGE,
-
-        THEME_CONTRAST:
-
-            THEME_CONTRAST,
-
-        THEME_PROFESSIONAL:
-
-            THEME_PROFESSIONAL,
-
-        ALL_THEMES:
-
-            ALL_THEMES,
-
-        getCurrentTheme:
-
-            getCurrentTheme,
-
-        applyTheme:
-
-            applyTheme,
-
-        restoreSavedTheme:
-
-            restoreSavedTheme,
-
-        toggleTheme:
-
-            toggleTheme
-
+        THEME_LIGHT: THEME_LIGHT,
+        THEME_DARK: THEME_DARK,
+        THEME_SKY_LIGHT: THEME_SKY_LIGHT,
+        THEME_SKY_DARK: THEME_SKY_DARK,
+        THEME_DESERT_LIGHT: THEME_DESERT_LIGHT,
+        THEME_DESERT_DARK: THEME_DESERT_DARK,
+        THEME_MONOCHROME: THEME_MONOCHROME,
+        ALL_THEMES: ALL_THEMES,
+        getCurrentTheme: getCurrentTheme,
+        applyTheme: applyTheme,
+        restoreSavedTheme: restoreSavedTheme,
+        toggleTheme: toggleTheme
     };
 
 
@@ -192,6 +127,7 @@ var ThemeManager = (function ()
        like the application did before theming existed.
        ====================================================== */
 
+    /* AFTER */
     function getCurrentTheme()
     {
         var strSavedTheme = StorageService.getValue(AppConfig.STORAGE_KEYS.THEME);

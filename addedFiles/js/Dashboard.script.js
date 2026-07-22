@@ -513,7 +513,7 @@ function loadResultsAndCount()
 
 function initializeSearch()
 {
-    txtSearch.focus();
+   // txtSearch.focus();
 
     txtSearch.oninput = function ()
     {
@@ -843,14 +843,21 @@ function hideSearchResults()
 
 function renderRecentStudents()
 {
-    // FIELD-NAME FIX (this pass): was objStudent.name, which
-    // doesn't exist on a real Student.gs record (the field is
-    // studentName) - every entry in this list was silently
-    // falling back to "Unnamed" until now.
-    renderShortcutList(listRecentStudents, arrCachedStudents, "No students yet.", function (objStudent)
-    {
-        return objStudent.studentName || "Unnamed";
-    });
+    renderShortcutList(
+        listRecentStudents,
+        arrCachedStudents,
+        "No students yet.",
+        function (objStudent)
+        {
+            return (
+                objStudent.studentName ||
+                objStudent.fullName ||
+                objStudent.name ||
+                objStudent.student_name ||
+                "Unnamed"
+            );
+        }
+    );
 }
 
 

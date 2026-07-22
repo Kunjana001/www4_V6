@@ -1552,6 +1552,15 @@ var CategoryScript = (function () {
 
 		renderCurrentPage( arrCategoryRows );
 
+		// UI FIX (this pass): loadOrganizationList() already existed
+		// and already de-dupes by name, but was never actually
+		// called anywhere, so the Filter modal's Organization
+		// dropdown always stayed empty. Calling it here means it
+		// reflects the Organizations seen on whichever page(s) have
+		// been loaded so far - the same accepted, documented
+		// pagination limitation noted above for filtering itself.
+		loadOrganizationList( arrCategoryRows );
+
 		// --------------------------------------------------
 		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
 		// Student.script.js/parseListResponse() - see the WHY/
@@ -2549,7 +2558,7 @@ var CategoryScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_CATEGORY ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit category" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit category" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
 
 		// FIX (per-card Share icon): this card never had a Share
@@ -2557,7 +2566,16 @@ var CategoryScript = (function () {
 		// did. Added the same icon-btn-share pattern, wired to a
 		// new onClickShareIcon() below (same shape as
 		// Student.script.js's).
-		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share category" onclick="CategoryScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share category" onclick="CategoryScript.getInstance().onClickShareIcon('+ index +', event);"><i class="fa-solid fa-share-nodes"></i></span>';
+
+		// UI BRIEF (this pass): Edit/Share used to be two separate
+		// position:absolute spans at different "right" offsets.
+		// Wrapping both in one fixed-position flex row (see
+		// .card-icon-actions in common.css) removes any stacking
+		// ambiguity between the two icons themselves and matches
+		// the exact top:16px/right:16px/gap:8px/z-index:10 layout
+		// requested for every list page's cards.
+		var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
 		// --------------------------------------------------
 		// WHY: the outer <ul id="list_card"> used to carry a hard
@@ -2570,8 +2588,7 @@ var CategoryScript = (function () {
 		// so every list page now shares one consistent card look.
 		// --------------------------------------------------
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
-							editIconHtml +
-							shareIconHtml +
+							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
@@ -2854,33 +2871,46 @@ var CategoryScript = (function () {
 
 		var organizationList = getStorageData( SESSION_OBJECT.ORGANIZATION_LIST );
 
-		// --------------------------------------------------
-		// WHY: setOrganizationFilterSelection() depends on a
-		// separate "OrganizationScript" module that does not
-		// exist anywhere in this project. This is not just a
-		// missing Category helper - it looks like a shared
-		// lookup-list feature that was never migrated to the
-		// PWA at all.
-		// WHAT: Pending PWA Migration. Skipping the dropdown
-		// population for now. The Filter modal still opens
-		// with its existing default "Select All" option, so
-		// showing every Category (no filter) still works -
-		// only filtering by one specific Organization is not
-		// available yet.
-		// WHEN: every time the user clicks the Filter icon.
-		// --------------------------------------------------
-
-		// setOrganizationFilterSelection( organizationList );
+		setOrganizationFilterSelection( organizationList );
 
 		openFilterMenu();
 	}
 
+	// UI FIX (this pass): rewritten to populate #filter_organization_id
+	// directly instead of depending on OrganizationScript, which does
+	// not exist anywhere in this project (Organization is a plain
+	// text field on Category, not its own entity/module - see
+	// setFormDefaults()'s $(FORM_FIELD.ORGANIZATION_ID).val(...) for
+	// the same treatment on the Add/Edit form). organizationList is
+	// the de-duped array of organization name strings built by
+	// loadOrganizationList().
 	function setOrganizationFilterSelection( organizationList ) {
 
-		var selectedId = getFilterSelectionIds( SESSION_OBJECT.ORGANIZATION_ID );
+		if( organizationList == null ) {
 
-		var organizationScript = OrganizationScript.getInstance();
-		organizationScript.populateSelection( organizationList, '#filter_organization_id', selectedId );
+			organizationList = [];
+		}
+
+		var selectedValue = getFilterSelectionIds( SESSION_OBJECT.ORGANIZATION_ID );
+
+		$( '#filter_organization_id' ).empty();
+		$( '#filter_organization_id' ).append( $( '<option value="0">Select All</option>' ) );
+
+		for( var i = 0; i < organizationList.length; i++ ) {
+
+			var strOrganization = organizationList[ i ];
+
+			var option = document.createElement( 'option' );
+			option.value = strOrganization;
+			option.text = strOrganization;
+
+			$( '#filter_organization_id' ).append( option );
+
+			if( strOrganization == selectedValue ) {
+
+				$( '#filter_organization_id' ).val( strOrganization ).change();
+			}
+		}
 	}
 
 	function showFilterInfo( organizationName ) {
@@ -2936,10 +2966,26 @@ var CategoryScript = (function () {
 
 		$(formField).append( newOption );
 		$(formField).trigger( "chosen:updated" );
+
+		// UI FIX (this pass): the filter dropdown was showing every
+		// row's name verbatim, so any duplicate Category rows (or
+		// rows that share the same display name) rendered as
+		// repeated, identical-looking options. Track names already
+		// added and skip repeats so the dropdown only ever shows
+		// each unique value once, keeping the first row's id.
+		var arrSeenNames = [];
+
 		for( var index = 0; index < listData.length; index++ ) {
 
 			var id = listData[ index ][ INDEX.CATEGORY_ID ];
 			var name = listData[ index ][ INDEX.NAME ];	// UPDATE THIS as per Object
+
+			if( arrSeenNames.indexOf( name ) !== -1 ) {
+
+				continue; // already added an option for this name
+			}
+
+			arrSeenNames.push( name );
 
 			var option = document.createElement( 'option' );
 			option.value = id;

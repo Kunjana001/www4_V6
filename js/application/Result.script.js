@@ -2576,19 +2576,59 @@ var ResultScript = (function () {
 	}
 	function showFilter() {
 
-		// --------------------------------------------------
-		// CONNECTION FIX - WHY / WHAT / WHEN
-		// WHY: the Filter icon and the filter-summary text both
-		// call showFilter(), but it was never defined anywhere in
-		// this file - clicking either one threw "Uncaught
-		// ReferenceError: showFilter is not defined" and the
-		// Filter modal never opened.
-		// WHAT: resultList.html's filter modal has no dropdown of
-		// its own to populate - this just opens it, the same
-		// simplified fix already applied to Category.script.js.
-		// WHEN: runs every time the user clicks the Filter icon
-		// or the filter-summary text.
-		// --------------------------------------------------
+		// UI FIX (this pass): resultList.html's filter modal now has
+		// Exam and Result dropdowns. Both are built from the
+		// distinct values already present on the currently loaded
+		// page (SESSION_OBJECT.RESULT_SUMMARY_DATA) - same "current
+		// page only" scope as Category/Section's own filters under
+		// this pagination phase, no new data fetch needed.
+		var resultList = getStorageData( SESSION_OBJECT.RESULT_SUMMARY_DATA );
+
+		if( resultList == null ) {
+
+			resultList = [];
+		}
+
+		var arrExamNames = [];
+		var arrResultValues = [];
+
+		for( var i = 0; i < resultList.length; i++ ) {
+
+			var examName = resultList[ i ][ SUMMARY_INDEX.EXAM_NAME ];
+			var resultValue = resultList[ i ][ SUMMARY_INDEX.RESULT ];
+
+			if( examName && arrExamNames.indexOf( examName ) === -1 ) {
+
+				arrExamNames.push( examName );
+			}
+
+			if( resultValue && arrResultValues.indexOf( resultValue ) === -1 ) {
+
+				arrResultValues.push( resultValue );
+			}
+		}
+
+		$( '#filter_exam_name' ).empty();
+		$( '#filter_exam_name' ).append( $( '<option value="0">Select All</option>' ) );
+
+		for( var e = 0; e < arrExamNames.length; e++ ) {
+
+			var examOption = document.createElement( 'option' );
+			examOption.value = arrExamNames[ e ];
+			examOption.text = arrExamNames[ e ];
+			$( '#filter_exam_name' ).append( examOption );
+		}
+
+		$( '#filter_result' ).empty();
+		$( '#filter_result' ).append( $( '<option value="0">All</option>' ) );
+
+		for( var r = 0; r < arrResultValues.length; r++ ) {
+
+			var resultOption = document.createElement( 'option' );
+			resultOption.value = arrResultValues[ r ];
+			resultOption.text = arrResultValues[ r ];
+			$( '#filter_result' ).append( resultOption );
+		}
 
 		openFilterMenu();
 	}
@@ -2684,16 +2724,24 @@ var ResultScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_RESULT ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
 
 		// UI/UX POLISH PASS (this pass) - per-card Share button, same
 		// pattern as Student.script.js's shareIconHtml/onClickShareIcon().
-		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share result" onclick="ResultScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share result" onclick="ResultScript.getInstance().onClickShareIcon('+ index +', event);"><i class="fa-solid fa-share-nodes"></i></span>';
+
+		// UI BRIEF (this pass): Edit/Share used to be two separate
+		// position:absolute spans at different "right" offsets.
+		// Wrapping both in one fixed-position flex row (see
+		// .card-icon-actions in common.css) removes any stacking
+		// ambiguity between the two icons themselves and matches
+		// the exact top:16px/right:16px/gap:8px/z-index:10 layout
+		// requested for every list page's cards.
+		var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
-							editIconHtml +
-							shareIconHtml +
+							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
 							'<li class="list-card-title">'+ seqNumber + subject + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + examName + ( studentName ? ' &middot; ' + studentName : '' ) + '</span></li>' +
@@ -2977,6 +3025,35 @@ var ResultScript = (function () {
 		if( list == null ) {
 
 			list = [];
+		}
+
+		// UI FIX (this pass): filter the current page's rows by the
+		// selected Exam and/or Result, same "current page only"
+		// scope as the rest of this pagination phase.
+		var selectedExamName = $( '#filter_exam_name' ).val();
+		var selectedResult = $( '#filter_result' ).val();
+
+		if( ( selectedExamName != null && selectedExamName != "0" ) || ( selectedResult != null && selectedResult != "0" ) ) {
+
+			var arrFilteredList = [];
+
+			for( var i = 0; i < list.length; i++ ) {
+
+				var matchesExam = ( selectedExamName == null || selectedExamName == "0" || list[ i ][ SUMMARY_INDEX.EXAM_NAME ] == selectedExamName );
+				var matchesResult = ( selectedResult == null || selectedResult == "0" || list[ i ][ SUMMARY_INDEX.RESULT ] == selectedResult );
+
+				if( matchesExam && matchesResult ) {
+
+					arrFilteredList.push( list[ i ] );
+				}
+			}
+
+			list = arrFilteredList;
+
+			// UI FIX (this pass): same honesty note Category.script.js's
+			// doFilterCategoryList() already established for this
+			// pagination phase.
+			CommonUtils.showAlert( "Showing matches from the currently loaded page only.", "info" );
 		}
 
 		showFilteredList( list );

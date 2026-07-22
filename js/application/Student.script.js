@@ -1917,6 +1917,12 @@ function getListData( iRequestedPage )
                 arrRow[ SectionScript.INDEX.SECTION_ID ] = objSection.section_id;
                 // line 1543
                 arrRow[ SectionScript.INDEX.NAME ] = objSection.name;
+                // UI FIX (this pass): needed so the Section filter
+                // dropdown can be limited to the currently selected
+                // Category (see setSectionFilterSelection() below) -
+                // it was missing entirely, so the filter had no way
+                // to know which Category each Section belonged to.
+                arrRow[ SectionScript.INDEX.CATEGORY_ID ] = objSection.category_id;
 
 				arrSectionRows.push( arrRow );
 			}
@@ -3017,17 +3023,27 @@ function parseListResponse(objPageResult)
     var editIconHtml = '';
     if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-        editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+        editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
     }
 
     // UI/UX POLISH PASS (this pass) - SHARE BUTTON: every card now
-    // gets its own Share button, positioned next to Edit (44px
-    // icon-btn width + gap = 64px offset so the two never overlap).
+    // gets its own Share button, positioned next to Edit inside
+    // the shared .card-icon-actions flex wrapper (see below), so
+    // the two never overlap regardless of icon width.
     // Reuses CommonUtils.shareContent() (Web Share API, copy-to-
     // clipboard fallback) via the new onClickShareIcon() below,
     // same off-the-shelf pattern as onClickInfoIcon/onClickEditIcon
     // - reads straight from this row's own data, no popup needed.
-    var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share student" onclick="StudentScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+    var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share student" onclick="StudentScript.getInstance().onClickShareIcon('+ index +', event);"><i class="fa-solid fa-share-nodes"></i></span>';
+
+    // UI BRIEF (this pass): Edit/Share used to be two separate
+    // position:absolute spans at different "right" offsets.
+    // Wrapping both in one fixed-position flex row (see
+    // .card-icon-actions in common.css) removes any stacking
+    // ambiguity between the two icons themselves and matches the
+    // exact top:16px/right:16px/gap:8px/z-index:10 layout
+    // requested for every list page's cards.
+    var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
     // Quick-action icons: call / WhatsApp / SMS / email, using the
     // mobile and email already present in this row's data - no new
@@ -3084,8 +3100,7 @@ function parseListResponse(objPageResult)
     // with the first line as it always was.
     // --------------------------------------------------
     var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
-                        editIconHtml +
-                        shareIconHtml +
+                        cardIconActionsHtml +
                         '<div id="list_item" class="list-item">' +
                         '<li class="list-card-title">' + avatarHtml + seqNumber + name + '</li>' +
                         '<li class="list-card-subtitle">' + infoIconHtml + '<span>' + email + '</span></li>' +
@@ -3659,8 +3674,18 @@ function parseListResponse(objPageResult)
 		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST );
 		setCategoryFilterSelection( categoryList );
 
-		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST );
-		setSectionFilterSelection( sectionList );
+		setSectionFilterSelection();
+
+		// UI FIX (this pass): re-populate the Section filter with
+		// only the sections belonging to whichever Category is now
+		// selected, every time the Category filter changes - it
+		// previously showed every Section from every Category at
+		// once, with no relationship to the Category dropdown at
+		// all.
+		$( '#filter_category_id' ).off( 'change.sectionDependency' ).on( 'change.sectionDependency', function() {
+
+			setSectionFilterSelection();
+		});
 
 		openFilterMenu();
 	}
@@ -3673,11 +3698,47 @@ function parseListResponse(objPageResult)
 		categoryScript.populateSelection( categoryList, '#filter_category_id', selectedId );
 	}
 
-	function setSectionFilterSelection( sectionList ) {
+	// UI FIX (this pass): Section filter is now dependent on the
+	// selected Category, rather than being built from every Section
+	// record regardless of Category. Reads the Category currently
+	// selected in the #filter_category_id dropdown itself (falling
+	// back to the saved filter selection on first open, before the
+	// user has touched the dropdown) and only passes sections whose
+	// category_id matches through to populateSelection().
+	function setSectionFilterSelection() {
 
-		var selectedId = getFilterSelectionIds( SESSION_OBJECT.SECTION_ID );
+		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST );
+
+		if( sectionList == null ) {
+
+			sectionList = [];
+		}
+
+		var selectedCategoryId = $( '#filter_category_id' ).val();
+
+		if( selectedCategoryId == null || selectedCategoryId == "" ) {
+
+			selectedCategoryId = getFilterSelectionIds( SESSION_OBJECT.CATEGORY_ID );
+		}
 
 		var sectionScript = SectionScript.getInstance();
+
+		if( selectedCategoryId != null && selectedCategoryId != "0" ) {
+
+			var arrFilteredSections = [];
+
+			for( var i = 0; i < sectionList.length; i++ ) {
+
+				if( sectionList[ i ][ SectionScript.INDEX.CATEGORY_ID ] == selectedCategoryId ) {
+
+					arrFilteredSections.push( sectionList[ i ] );
+				}
+			}
+
+			sectionList = arrFilteredSections;
+		}
+
+		var selectedId = getFilterSelectionIds( SESSION_OBJECT.SECTION_ID );
 		sectionScript.populateSelection( sectionList, '#filter_section_id', selectedId );
 	}
 

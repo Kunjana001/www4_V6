@@ -2460,20 +2460,16 @@ var SectionScript = (function () {
 	}
 	function showFilter() {
 
-		// --------------------------------------------------
-		// CONNECTION FIX - WHY / WHAT / WHEN
-		// WHY: the Filter icon and the filter-summary text both
-		// call showFilter(), but it was never defined anywhere in
-		// this file - clicking either one threw "Uncaught
-		// ReferenceError: showFilter is not defined" and the
-		// Filter modal never opened.
-		// WHAT: sectionList.html's filter modal has no dropdown
-		// of its own to populate (unlike Category, which filters
-		// by Organization) - this just opens it, the same
-		// simplified fix already applied to Category.script.js.
-		// WHEN: runs every time the user clicks the Filter icon
-		// or the filter-summary text.
-		// --------------------------------------------------
+		// UI FIX (this pass): sectionList.html's filter modal now has
+		// a Category dropdown (matching Category List's own filter
+		// dropdown pattern) - populate it from the same
+		// SESSION_OBJECT.CATEGORY_LIST already loaded for the Add/
+		// Edit form's Category dropdown, so no new data fetch is
+		// needed.
+		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST );
+
+		var categoryScript = CategoryScript.getInstance();
+		categoryScript.populateSelection( categoryList, '#filter_category_id', "0" );
 
 		openFilterMenu();
 	}
@@ -2566,14 +2562,23 @@ var SectionScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
-			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +', event);" style="position:absolute; top:14px; right:14px;"><i class="fas fa-edit"></i></span>';
+			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
 
 		// FIX (per-card Share icon): this card never had a Share
 		// button at all - only Student.script.js/Result.script.js
 		// did. Added the same icon-btn-share pattern, wired to a
 		// new onClickShareIcon() below.
-		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share section" onclick="SectionScript.getInstance().onClickShareIcon('+ index +', event);" style="position:absolute; top:14px; right:64px;"><i class="fa-solid fa-share-nodes"></i></span>';
+		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share section" onclick="SectionScript.getInstance().onClickShareIcon('+ index +', event);"><i class="fa-solid fa-share-nodes"></i></span>';
+
+		// UI BRIEF (this pass): Edit/Share used to be two separate
+		// position:absolute spans at different "right" offsets.
+		// Wrapping both in one fixed-position flex row (see
+		// .card-icon-actions in common.css) removes any stacking
+		// ambiguity between the two icons themselves and matches
+		// the exact top:16px/right:16px/gap:8px/z-index:10 layout
+		// requested for every list page's cards.
+		var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
 		// --------------------------------------------------
 		// WHY/WHAT: same inline-shadow removal + shared .icon-btn /
@@ -2582,8 +2587,7 @@ var SectionScript = (function () {
 		// every list page shares one consistent card look.
 		// --------------------------------------------------
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
-							editIconHtml +
-							shareIconHtml +
+							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
@@ -2817,6 +2821,33 @@ var SectionScript = (function () {
 			list = [];
 		}
 
+		// UI FIX (this pass): filter the current page's rows by the
+		// selected Category, same "current page only" scope as the
+		// rest of this pagination phase - this does not fetch or
+		// filter anything beyond what's already loaded.
+		var selectedCategoryId = $( '#filter_category_id' ).val();
+
+		if( selectedCategoryId != null && selectedCategoryId != "0" ) {
+
+			var arrFilteredList = [];
+
+			for( var i = 0; i < list.length; i++ ) {
+
+				if( list[ i ][ SUMMARY_INDEX.CATEGORY_ID ] == selectedCategoryId ) {
+
+					arrFilteredList.push( list[ i ] );
+				}
+			}
+
+			list = arrFilteredList;
+
+			// UI FIX (this pass): same honesty note Category.script.js's
+			// doFilterCategoryList() already established for this
+			// pagination phase - a "current page only" filter could
+			// otherwise be misread as the complete result set.
+			CommonUtils.showAlert( "Showing matches from the currently loaded page only.", "info" );
+		}
+
 		showFilteredList( list );
 
 		closeFilterMenu();					
@@ -2947,10 +2978,24 @@ var SectionScript = (function () {
 
 		$(formField).append( newOption );
 		$(formField).trigger( "chosen:updated" );
+
+		// UI FIX (this pass): same de-dup fix as Category.script.js's
+		// populateSelection() - skip rows whose display name was
+		// already added, so the dropdown only shows each unique
+		// value once.
+		var arrSeenNames = [];
+
 		for( var index = 0; index < listData.length; index++ ) {
 
 			var id = listData[ index ][ INDEX.SECTION_ID ];
 			var name = listData[ index ][ INDEX.NAME ];	// UPDATE THIS as per Object
+
+			if( arrSeenNames.indexOf( name ) !== -1 ) {
+
+				continue; // already added an option for this name
+			}
+
+			arrSeenNames.push( name );
 
 			var option = document.createElement( 'option' );
 			option.value = id;

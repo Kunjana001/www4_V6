@@ -35,61 +35,10 @@
    • Works with Bootstrap
    • Works with existing HTML
 
-   ----------------------------------------------------------
-   Project Improvements (UI Modernization pass, this pass)
-   ----------------------------------------------------------
-   ✓ New spacing/radius/transition design tokens (--app-radius/
-     --app-radius-sm/--app-space-*/--app-transition-speed),
-     applied to body/.card/.list-item/.btn/.form-control/
-     .search-box/.modal-content/.table - so a theme/density
-     change now visibly affects spacing, corners and animation
-     speed everywhere, building on Phase 1's font-family
-     switching so a "theme" is a full visual system, not just a
-     recolor.
-   ✓ Fixed .list-item and .table hard-coding
-     "background:white"/"border:1px solid #ececec" - real bugs
-     that meant every Student/Category/Section/Result list card
-     ignored the theme entirely no matter which color theme was
-     picked. Both cascade-winning duplicate blocks of .card/
-     .form-control/.table/.list-item further down this file
-     were also tokenized, since CSS "last rule wins" meant
-     fixing only the first copy of each had no visible effect.
-   ✓ Added a Professional theme (typography/radius/shadow
-     tokens too, not just color) alongside the existing High
-     Contrast theme from Phase 1.
-   ✓ Added Density mode (Comfortable/Compact), set via
-     html[data-density] the same way Theme/Font Size/Font
-     Family are - see theme.js's new DensityManager.
-   ✓ Modern loading indicator (circular gradient spinner, fade
-     in/out, pulsing "Loading..." label, optional percentage
-     bar) replacing the old flat one-directional ring - see the
-     MODERN LOADING INDICATOR section below and common.js's
-     updated getOrCreateLoaderElement()/showLoader().
-   ✓ Skeleton loading cards (shimmer animation) - see the
-     SKELETON LOADING section below and common.js's new
-     CommonUtils.getSkeletonCardsHtml().
-   ✓ Subtle CSS animations: page fade-in (body), card fade-in
-     (.list-item, reused/deduped from two competing keyframes
-     into one appCardFadeIn), popup pop-in (.modal-content),
-     Dashboard tile stagger-in (dashboard.css).
-   ✓ Search-match highlighting (mark.search-highlight) and a
-     small inline search spinner (.search-spinner) - used by
-     each list page's searchList() via the new
-     CommonUtils.highlightMatch().
-   ✓ Pagination bar styling (.pagination-summary, .btn-page-nav),
-     reusing the existing .pagination-area layout class.
-   ✓ Mobile tweaks for the loader/skeleton/pagination summary.
-
 ==========================================================*/
 
 /*==========================================================
     PHASE 1 - MODERN UI PASS (fonts)
-
-    WHY: brief asks for switchable Poppins / Inter / Nunito /
-    Roboto fonts from Settings. Pulling all four here (instead
-    of adding <link> tags to every HTML page) keeps this a
-    CSS-only change, per the brief's "keep the same HTML" rule
-    for this pass.
 ==========================================================*/
 
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap");
@@ -164,334 +113,97 @@ img
 
 
 /*==========================================================
-    ROOT VARIABLES
+    ROOT VARIABLES (Doc 1 theme values - Light theme)
 ==========================================================*/
 
-:root
+:root,
+html[data-theme="light"]
 {
+    /* Brand & Primary Colors */
+    --app-theme-color: #1E40AF;
+    --app-theme-dark: #1E3A8A;
+    --app-accent: #2563EB;
 
-    /* Brand */
-
-    /* --------------------------------------------------------
-       Project Improvements (this pass) - Color Palette
-
-       WHY: brief asks for a specific Material/Glassmorphism
-       palette (Primary #1E40AF, Secondary #3B82F6, Success
-       #16A34A, Warning #F59E0B, Error #DC2626, Background
-       #F4F7FC, Border #E5E7EB) while keeping the existing blue
-       branding. Only the values below changed - every other
-       theme swatch (blue/green/purple/orange/contrast/
-       professional further down this file) and every rule that
-       reads these variables is untouched, since they already
-       pull color through var(--app-theme-color) etc. instead of
-       hardcoding a hex value.
-       -------------------------------------------------------- */
-
-    --app-theme-color:#1E40AF;
-
-    --app-theme-dark:#1e3a8a;
-
-    --app-accent:#3B82F6;
-
-
-
-    /* --------------------------------------------------------
-       PHASE 1 - MODERN UI PASS (Font Family)
-
-       WHY: brief item 4 asks for a switchable font (Poppins /
-       Inter / Nunito / Roboto) from Settings, the same
-       "pick one of a fixed list, remember it" pattern the
-       color Theme and Font Size settings already use.
-       WHAT: one variable every element already inherits from
-       body, overridden per html[data-font-family="..."] below
-       (set by the new FontFamilyManager in theme.js). Poppins
-       is the default so a first visit (or an older saved
-       profile with no font-family choice yet) picks up the
-       new look automatically.
-       -------------------------------------------------------- */
-
+    /* Font */
     --app-font-family:
         "Poppins", Arial, Helvetica, sans-serif;
 
+    /* Backgrounds */
+    --app-bg-color: #F4F7FC;
+    --app-card-bg: #FFFFFF;
+    --app-modal-bg: #FFFFFF;
 
+    /* High-Contrast Text */
+    --app-text-color: #1F2937;
+    --app-text-light: #4B5563;
+    --app-heading: #111827;
 
-    /* Background */
+    /* Borders & Status Colors */
+    --app-border: #E5E7EB;
+    --app-success: #16A34A;
+    --app-danger: #DC2626;
+    --app-warning: #D97706;
 
-    --app-bg-color:#F4F7FC;
-
-    --app-card-bg:#ffffff;
-
-    --app-modal-bg:#ffffff;
-
-
-
-    /* Text */
-
-    --app-text-color:#222222;
-
-    --app-text-light:#666666;
-
-    --app-heading:#16336e;
-
-
-
-    /* Border */
-
-    --app-border:#E5E7EB;
-
-
-
-    /* Success */
-
-    --app-success:#16A34A;
-
-
-
-    /* Danger */
-
-    --app-danger:#DC2626;
-
-
-
-    /* Warning */
-
-    --app-warning:#F59E0B;
-
-
+    /* Radii & Transitions */
+    --app-radius: 16px;
+    --app-radius-sm: 8px;
+    --app-space-xs: 6px;
+    --app-space-sm: 12px;
+    --app-space-md: 18px;
+    --app-space-lg: 24px;
+    --app-transition-speed: .25s;
 
     /* Shadows */
+    --shadow-small: 0 2px 8px rgba(0,0,0,.08);
+    --shadow-medium: 0 6px 18px rgba(0,0,0,.12);
 
-    --shadow-small:
-
-        0 2px 8px rgba(0,0,0,.08);
-
-    --shadow-medium:
-
-        0 6px 18px rgba(0,0,0,.12);
-
-
-
-    /* --------------------------------------------------------
-       UI MODERNIZATION PASS (this pass) - Spacing/Radius/
-       Transition tokens
-
-       WHY: the theme system only ever swapped 3-4 color
-       variables plus (as of Phase 1) font-family - spacing,
-       border radius, and transition speed were still the same
-       fixed values no matter which theme/density was active.
-       WHAT: a second set of tokens, applied to .card/.list-item/
-       .btn/.form-control/.modal-content further down this file,
-       that the new Density mode below (html[data-density]) can
-       override the same way color themes already override
-       --app-theme-color etc.
-       -------------------------------------------------------- */
-
-    /* UI MODERNIZATION FIX (this pass): brief asks for 16px
-       rounded corners specifically - was 12px. --app-radius-sm
-       (used for smaller inner controls like inputs/badges) is
-       left at 8px on purpose, same ratio as before, just scaled
-       from the new base. Every .card/.list-item/.btn/.modal-content
-       etc. already reads this variable instead of a hardcoded
-       value, so this one change applies everywhere consistently. */
-    --app-radius:16px;
-
-    --app-radius-sm:8px;
-
-    --app-space-xs:6px;
-
-    --app-space-sm:12px;
-
-    --app-space-md:18px;
-
-    --app-space-lg:24px;
-
-    --app-transition-speed:.25s;
-
-
-
-    /* --------------------------------------------------------
-       WHY: .list-item, .page-container, .modal-body/.modal-footer,
-       .table and the whole sidebar (dashboard.css) all style
-       themselves using --color-page-background / --color-surface /
-       --color-border / --color-text-primary / --color-text-secondary
-       / --color-sidebar-* - but none of those custom properties
-       were ever actually declared anywhere in this file (or any
-       other .css file in the project). An undefined CSS variable
-       makes the property that uses it invalid, so the browser just
-       drops that property and falls back to nothing - which is why
-       list cards, the sidebar, and modals were rendering with no
-       background/border/shadow at all, flush against the page
-       background, even though the rules that were SUPPOSED to
-       style them were sitting right there in the file.
-       WHAT: alias every --color-* name that's actually referenced
-       elsewhere to the existing --app-* brand tokens above, so
-       they instantly pick up real values - and automatically
-       follow Light/Dark/Blue/Green/Purple/Orange theme switching,
-       since those tokens are exactly what the theme blocks below
-       already override.
-       -------------------------------------------------------- */
-
+    /* Aliases */
     --color-page-background: var(--app-bg-color);
-
     --color-surface: var(--app-card-bg);
-
     --color-border: var(--app-border);
-
     --color-text-primary: var(--app-heading);
-
     --color-text-secondary: var(--app-text-light);
-
     --color-sidebar-background: var(--app-theme-color);
-
-    --color-sidebar-text: #ffffff;
-
+    --color-sidebar-text: #FFFFFF;
     --color-sidebar-hover: var(--app-theme-dark);
-
 }
 
 /*==========================================================
-    DARK MODE
+    DARK MODE (Doc 1 theme values)
 ==========================================================*/
 
 html[data-theme="dark"]
 {
+    --app-theme-color: #2563EB;
+    --app-theme-dark: #1D4ED8;
+    --app-accent: #3B82F6;
 
-    --app-bg-color:#171a22;
+    --app-bg-color: #0F172A;
+    --app-card-bg: #1E293B;
+    --app-modal-bg: #1E293B;
 
-    --app-card-bg:#222736;
+    --app-text-color: #F8FAFC;
+    --app-text-light: #94A3B8;
+    --app-heading: #FFFFFF;
 
-    --app-modal-bg:#222736;
+    --app-border: #334155;
+    --app-success: #22C55E;
+    --app-danger: #EF4444;
+    --app-warning: #F59E0B;
 
-    --app-text-color:#f5f5f5;
-
-    --app-text-light:#c4c4c4;
-
-    --app-heading:#ffffff;
-
-    --app-border:#444b5d;
-
-    /* Sidebar stays on its own slightly-darker panel tone in Dark
-       Mode instead of the brand color, so it doesn't look like a
-       stray bright-blue strip next to an otherwise dark page. */
-    --color-sidebar-background:#12141c;
-
-    --color-sidebar-hover:#1c1f2b;
-
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #0F172A;
+    --color-sidebar-text: #F8FAFC;
+    --color-sidebar-hover: #1E293B;
 }
+
 
 /*==========================================================
-    ADDITIONAL THEMES
-
-    Six named themes as requested: Light (the :root defaults
-    above), Dark, Blue, Green, Purple, Orange. Each one only
-    needs to override --app-theme-color / --app-theme-dark /
-    --app-accent - every card, button, header, sidebar and
-    filter chip in the app already paints itself from those
-    tokens (or from --color-sidebar-background, which itself
-    reads --app-theme-color), so changing three variables here
-    re-themes the entire application at once.
-==========================================================*/
-
-/* Blue */
-html[data-theme="blue"]
-{
-    --app-theme-color:#1565c0;
-    --app-theme-dark:#0d47a1;
-    --app-accent:#42a5f5;
-}
-
-/* Green */
-html[data-theme="green"]
-{
-    --app-theme-color:#2e7d32;
-    --app-theme-dark:#1b5e20;
-    --app-accent:#66bb6a;
-}
-
-/* Purple */
-html[data-theme="purple"]
-{
-    --app-theme-color:#6a1b9a;
-    --app-theme-dark:#4a148c;
-    --app-accent:#ab47bc;
-}
-
-/* Orange */
-html[data-theme="orange"]
-{
-    --app-theme-color:#ef6c00;
-    --app-theme-dark:#d84315;
-    --app-accent:#ffa726;
-}
-
-/* High Contrast - added for the Theme System Enhancement task
-   (brief item 5). Not just a recolor: black/white/yellow with
-   a heavier accent is the standard high-legibility combination
-   for low-vision users, so this intentionally does NOT follow
-   the "just swap 3 brand tokens" pattern the themes above use -
-   it also raises card/border contrast, which is why it is not
-   simply "another color option" implemented purely through
-   --app-theme-color. */
-html[data-theme="contrast"]
-{
-    --app-theme-color:#000000;
-    --app-theme-dark:#000000;
-    --app-accent:#ffd400;
-
-    --app-bg-color:#ffffff;
-    --app-card-bg:#ffffff;
-    --app-modal-bg:#ffffff;
-    --app-text-color:#000000;
-    --app-text-light:#000000;
-    --app-heading:#000000;
-    --app-border:#000000;
-
-    --color-sidebar-background:#000000;
-    --color-sidebar-hover:#242424;
-}
-
-html[data-theme="contrast"] .card,
-html[data-theme="contrast"] .list-item,
-html[data-theme="contrast"] .panel,
-html[data-theme="contrast"] .settings-card
-{
-    border:2px solid #000000;
-}
-
-/* Professional - added for the UI Modernization pass. Neutral
-   navy/grey, a more formal font stack, tighter radius, flatter
-   shadows - unlike the color-only themes above, this overrides
-   the typography/radius/shadow tokens too, so it visibly reads
-   as a different "system", not just a recolor. */
-html[data-theme="professional"]
-{
-    --app-theme-color:#2b3a55;
-    --app-theme-dark:#1b2740;
-    --app-accent:#5c7099;
-
-    --app-font-family:
-        "Segoe UI", Georgia, "Times New Roman", serif;
-
-    --app-radius:6px;
-    --app-radius-sm:4px;
-
-    --shadow-small:0 1px 4px rgba(0,0,0,.10);
-    --shadow-medium:0 4px 10px rgba(0,0,0,.14);
-}
-
-/*==========================================================
-    DENSITY (Comfortable / Compact) - added for the UI
-    Modernization pass.
-
-    WHY: density is independent of color (someone may want a
-    compact Dark theme just as much as a compact Light theme),
-    so - like Font Size/Font Family - it is its own attribute
-    (theme.js's new DensityManager sets "data-density" on
-    <html>), not folded into the theme picker.
-    WHAT: shrinks the spacing/radius tokens declared in :root
-    above, so .card/.list-item/.btn/.form-control padding and
-    gaps all tighten up together in one place. Comfortable (the
-    default) matches the app's original spacing exactly.
+    DENSITY (Comfortable / Compact)
 ==========================================================*/
 
 html[data-density="compact"]
@@ -507,11 +219,6 @@ html[data-density="compact"]
 
 /*==========================================================
     FONT FAMILY
-
-    WHY: brief item 4 - Poppins / Inter / Nunito / Roboto,
-    selectable from Settings. Mirrors the data-theme /
-    data-font-size pattern exactly: FontFamilyManager (theme.js)
-    sets one attribute on <html>, this file swaps one variable.
 ==========================================================*/
 
 html[data-font-family="poppins"] { --app-font-family:"Poppins", Arial, Helvetica, sans-serif; }
@@ -521,29 +228,6 @@ html[data-font-family="roboto"]  { --app-font-family:"Roboto", Arial, Helvetica,
 
 /*==========================================================
     FONT SIZE
-
-    WHY: the Theme System Enhancement task also asks for
-    Small / Medium / Large text sizes, set by
-    common/theme.js (FontSizeManager) via a "data-font-size"
-    attribute on <html> - the same pattern already used for
-    "data-theme" above.
-
-    WHAT: almost every font-size in this stylesheet is a
-    fixed px value (not rem), so changing the root font-size
-    alone would not cascade. Instead this scales the whole
-    rendered page uniformly with "zoom", which resizes text
-    AND layout together (unlike transform:scale, it does not
-    cause overflow or clipping). Medium is the default and
-    matches the sizing the app already shipped with, so
-    picking Medium (or never opening Settings) looks
-    unchanged.
-
-    Known limitation: zoom is supported by Chrome, Edge, and
-    Safari 17+ (i.e. the browsers this PWA already targets on
-    Android/iOS/desktop) but not by older Firefox. On a
-    browser that ignores it, the app simply stays at its
-    normal Medium size instead of resizing - it never breaks
-    layout.
 ==========================================================*/
 
 html[data-font-size="small"] body
@@ -563,17 +247,7 @@ html[data-font-size="large"] body
 
 
 /*==========================================================
-    MODERN LOADING INDICATOR (UI Modernization pass, this pass)
-
-    WHY: the old spinner (see common.js's
-    getOrCreateLoaderElement(), before this pass) was a flat,
-    one-directional ring with no fade, no label animation, and
-    no percentage/skeleton support.
-    WHAT: a two-tone circular spinner (gradient ring, not just
-    one border side), a fade-in/out overlay, a pulsing
-    "Loading Students..." style label, and an optional
-    percentage bar - all pure CSS animation, no GIFs, no
-    external animation library.
+    MODERN LOADING INDICATOR
 ==========================================================*/
 
 #appLoadingOverlay
@@ -678,9 +352,6 @@ html[data-font-size="large"] body
     color:var(--app-text-light);
 }
 
-/* Optional percentage bar - only shown when showLoader() is
-   called with a known percentage (see common.js). */
-
 #appLoadingOverlay .appLoadingProgressTrack
 {
     width:160px;
@@ -714,17 +385,7 @@ html[data-font-size="large"] body
 
 
 /*==========================================================
-    SKELETON LOADING (UI Modernization pass, this pass)
-
-    WHY: while the first page of Students/Categories/Sections/
-    Results is in flight, the list area used to just be empty
-    until the response arrived - which reads as a frozen/broken
-    page, especially on a slow connection.
-    WHAT: placeholder cards shaped like a real .list-item (a
-    title-width bar, then two shorter bars), with a shimmering
-    gradient sweep instead of a static grey box. Built by
-    CommonUtils.getSkeletonCardsHtml() in common.js and written
-    into #list_id the same way real cards are.
+    SKELETON LOADING
 ==========================================================*/
 
 .skeleton-card
@@ -740,8 +401,6 @@ html[data-font-size="large"] body
     margin-bottom:var(--app-space-sm);
 }
 
-/* Project Improvements (this pass): avatar + stacked lines,
-   side by side, per the "Skeleton Loading" brief item. */
 .skeleton-card-row
 {
     display:flex;
@@ -820,13 +479,7 @@ html[data-font-size="large"] body
 
 
 /*==========================================================
-    SEARCH HIGHLIGHT (UI Modernization pass, this pass)
-
-    WHY: while a search is narrowing the currently loaded page
-    down to matching rows, it should also be obvious at a
-    glance why each visible card matched. Built by
-    CommonUtils.highlightMatch() in common.js, used by each
-    list page's searchList().
+    SEARCH HIGHLIGHT
 ==========================================================*/
 
 mark.search-highlight
@@ -868,13 +521,7 @@ mark.search-highlight
 
 
 /*==========================================================
-    PAGINATION BAR (UI Modernization pass, this pass)
-
-    WHY: reuses the existing .pagination-area class for layout
-    (declared further down this file), this just styles the
-    Prev/Next buttons and the "Showing X-Y of Z" summary text
-    consistently with the rest of the design system/theme
-    tokens instead of raw Bootstrap defaults.
+    PAGINATION BAR
 ==========================================================*/
 
 .pagination-summary
@@ -921,12 +568,7 @@ mark.search-highlight
 
 
 /*==========================================================
-    MOBILE - LOADER / SKELETON / PAGINATION (UI Modernization
-    pass, this pass)
-
-    Scales the loader panel and skeleton line heights down
-    slightly on narrow screens so neither one overflows or
-    looks oversized on a phone.
+    MOBILE - LOADER / SKELETON / PAGINATION
 ==========================================================*/
 
 @media screen and (max-width:576px)
@@ -976,10 +618,6 @@ body
 
     transition:.25s;
 
-    /* Smooth Animations (UI Modernization pass, this pass -
-       "Page opens"): a very subtle fade so navigating between
-       pages doesn't feel like an abrupt hard cut. Kept short
-       and simple - "do not overdo animations". */
     animation:appPageFadeIn .2s ease;
 }
 
@@ -1005,20 +643,6 @@ body
 
 .list-container
 {
-    /* PROJECT IMPROVEMENTS (UI/UX polish pass, this pass):
-       CARD ALIGNMENT FIX - this had width:100% but no max-width,
-       so on any screen wider than a phone, every .list-item card
-       stretched edge-to-edge (minus the 20px side padding below)
-       instead of forming a centered column with equal breathing
-       room on both sides - this is the actual cause of cards
-       looking "pushed left"/stretched instead of centered.
-       max-width + margin:0 auto centers this container itself;
-       .list-item cards inside already fill 100% of it, so they
-       end up centered with equal left/right space automatically.
-       On mobile (see the 992px/768px overrides below, both
-       untouched) this container is still effectively full-width
-       since the viewport itself is narrower than max-width, so
-       nothing changes for small screens. */
     max-width:700px;
 
     margin:0 auto;
@@ -1145,16 +769,21 @@ body
     z-index:999;
 }
 
+#btn_export
+{
+    position:absolute;
+
+    top:12px;
+
+    right:15px;
+
+    z-index:2;
+}
+
 .input-group
 {
     margin-bottom:10px;
 
-    /* UI BRIEF (this pass): "rounded search box... subtle
-       shadow... same width on every page" - wraps the icon +
-       input as one rounded pill instead of a plain bordered
-       box. overflow:hidden clips the icon/input children
-       (which already lose their own left/right borders via
-       the rules below) to this same rounded shape. */
     border-radius:24px;
 
     border:1px solid var(--color-border);
@@ -1190,13 +819,6 @@ body
 
     box-shadow:none;
 }
-
-/* ----------------------------------------------------------
-   List Page "Export" button - top-right of the toolbar on
-   Student/Category/Section/Result List (#btn_export). Kept
-   small and modern rather than the previous large "Export"
-   pill, per the UI brief.
-   ---------------------------------------------------------- */
 
 .btn-export
 {
@@ -1327,11 +949,6 @@ body
 
     border-radius:50%;
 
-    /* PRIORITY 3 / 6 FIX: .float-button is now also used on a real
-       <button> element (the pagination "next page" control) instead
-       of only a <div>/<a>, so the browser's default button border/
-       font need to be explicitly cleared here - everything else in
-       this rule already applied the same either way. */
     border:none;
 
     font:inherit;
@@ -1362,9 +979,6 @@ body
 
 .page-title
 {
-    /* Project Improvements (this pass): 28px -> 24px per the
-       new typography scale (Page Title 24 / Section Title 20 /
-       Card Title 18 / Body 15 / Small 13). */
     font-size:24px;
 
     font-weight:bold;
@@ -1382,7 +996,6 @@ body
 
 /*==========================================================
     PAGE HEADER
-    (title on the left, search + add on the right)
 ==========================================================*/
 
 .page-header
@@ -1500,20 +1113,6 @@ body
 
 .list-item
 {
-    /* --------------------------------------------------
-       THEME FIX (UI Modernization pass, this pass): this used
-       to be background:white; border:1px solid #ececec; -
-       fixed values that ignored every theme variable that
-       exists. .list-item is the one class Student/Category/
-       Section/Result's createHtmlListItem() all render every
-       card into, so no matter which theme was picked, every
-       list page's cards stayed plain white with a light grey
-       border - the actual reason list cards "didn't visibly
-       change" with the theme. Now reads --app-card-bg/
-       --app-border/--app-radius, the same tokens .card above
-       (and the Professional/High Contrast/Density modes) use.
-       -------------------------------------------------- */
-
     background:var(--app-card-bg);
 
     border-radius:var(--app-radius);
@@ -1529,12 +1128,6 @@ body
     transition:var(--app-transition-speed);
 
     color:var(--app-text-color);
-
-    /* Smooth Animations (UI Modernization pass - "Cards
-       appear"): every card is a freshly inserted DOM node each
-       time a list page (re)renders (setListToView() replaces
-       #list_id's innerHTML wholesale) - this animation replays
-       automatically on every insert, no JS required. */
 
     animation:appCardFadeIn .3s ease both;
 }
@@ -1613,36 +1206,15 @@ body
 {
     border-color:var(--app-theme-color);
 
-    box-shadow:0 0 0 .15rem color-mix(in srgb, var(--app-theme-color) 18%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+    box-shadow:0 0 0 .15rem color-mix(in srgb, var(--app-theme-color) 18%, transparent);
 }
 
-/* ANIMATION FIX (this pass): "Button press" was one of the
-   explicitly requested animations that didn't exist anywhere -
-   every Save/Delete/Cancel/Close button in the app uses class=
-   "form-control" (shared with text <input>s), so this is scoped
-   to the actual button element selector rather than the class
-   alone, otherwise clicking into a text field would visually
-   "press" it too, which would look like a bug, not a feature. */
 button.form-control:active,
 input[type="button"].form-control:active,
 input[type="submit"].form-control:active
 {
     transform: scale(.97);
 }
-
-/* --------------------------------------------------------
-   Project Improvements (this pass) - Validation states
-
-   WHY: brief item "Better Forms" asks for a green checkmark /
-   red error state below each field. This is the CSS foundation
-   only - a .form-control gets .is-valid/.is-invalid and its
-   .form-group gets a .field-feedback child with .field-feedback-
-   valid/.field-feedback-invalid, toggled by whatever validation
-   logic a form already runs (or adds later); no existing form's
-   JS was changed to call this in this pass, since each entity's
-   Add/Edit form validates differently and wiring all of them is
-   a separate, larger change from this CSS pass.
-   -------------------------------------------------------- */
 
 .form-control.is-valid
 {
@@ -1781,21 +1353,6 @@ button.form-control
 
 
 /*==========================================================
-    MODAL
-
-    NOTE: this used to be a full second copy of the modal
-    rules below (.modal-content/.modal-header/.modal-title/
-    .modal-body/.modal-footer), which the later "Bootstrap
-    Modal Improvements" block always overrode anyway since it
-    comes after this one in the cascade. Two competing rule
-    sets for the same selectors was exactly the kind of thing
-    that made popup sizing behave inconsistently, so this is
-    now just the one real definition - see "Bootstrap Modal
-    Improvements" further down for the actual rules.
-==========================================================*/
-
-
-/*==========================================================
     POPUP CONTAINER
 ==========================================================*/
 
@@ -1924,15 +1481,8 @@ hr
 
 /* ==========================================================
    PART 3
-   Search Bar
-   Filter
-   Forms
-   Buttons
-   Shared CRUD Cards
+   Search Bar / Filter / Forms / Buttons / Shared CRUD Cards
    ========================================================== */
-
-
-/* ---------- Search Area ---------- */
 
 .page-container
 {
@@ -1949,9 +1499,6 @@ hr
 
     z-index: 900;
 }
-
-
-/* ---------- Search Box ---------- */
 
 #search,
 .search-box
@@ -1973,36 +1520,12 @@ hr
     transition: all var(--app-transition-speed) ease;
 }
 
-/* ----------------------------------------------------------
-   CONNECTION FIX (Category/Section/Result/Student list pages):
-   #search above sits inside a Bootstrap ".input-group" together
-   with the search icon (and, on the Student page, a Search
-   button) as siblings on the same line. Bootstrap's ".input-group"
-   is a flex row that already sizes each child correctly, but the
-   "width: 100%" set on #search just above this comment fought
-   with that flex sizing and forced #search onto its own full-width
-   line underneath the icon instead of next to it - which is why
-   the search icon appeared alone in its own box with "Search"
-   showing as plain text below it, instead of one single search
-   bar. Restoring Bootstrap's own flex sizing here (flex-grow
-   instead of a fixed width) keeps the icon, the input box, and
-   the Search button all on the same line. This only applies
-   inside ".input-group" - the standalone Dashboard search box
-   (#txtSearch, further above) is a different element and is not
-   affected by this rule.
-   ---------------------------------------------------------- */
-
 .input-group #search
 {
     width: auto;
 
     flex: 1 1 auto;
 
-    /* UI BRIEF (this pass): .input-group itself is now the
-       rounded, shadowed pill (see common.css's .input-group
-       rule) - #search no longer needs its own border/radius/
-       shadow, which would otherwise double up visually inside
-       the pill. */
     border: none;
 
     border-radius: 0;
@@ -2017,20 +1540,16 @@ hr
 
     border-color: var(--app-theme-color);
 
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent);
 }
 
 .input-group #search:focus
 {
-    /* the pill (.input-group:focus-within) already shows the
-       focus ring - avoid a second ring on the input itself */
     border-color: transparent;
 
     box-shadow: none;
 }
 
-
-/* ---------- Record Count ---------- */
 
 #records
 {
@@ -2043,8 +1562,6 @@ hr
     color: var(--color-text-secondary);
 }
 
-
-/* ---------- Filter Icon ---------- */
 
 #filter_icon
 {
@@ -2060,8 +1577,6 @@ hr
     transform: scale(1.1);
 }
 
-
-/* ---------- Filter Tags ---------- */
 
 .filter-items
 {
@@ -2079,7 +1594,7 @@ hr
 
     border-radius: 30px;
 
-    background: color-mix(in srgb, var(--app-theme-color) 8%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+    background: color-mix(in srgb, var(--app-theme-color) 8%, transparent);
 
     color: var(--app-theme-color);
 
@@ -2088,8 +1603,6 @@ hr
     font-weight: 600;
 }
 
-
-/* ---------- Forms ---------- */
 
 .form-group
 {
@@ -2113,11 +1626,9 @@ hr
 {
     border-color: var(--app-theme-color);
 
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent);
 }
 
-
-/* ---------- Labels ---------- */
 
 .form-control-label
 {
@@ -2128,8 +1639,6 @@ hr
     color: var(--color-text-primary);
 }
 
-
-/* ---------- Buttons ---------- */
 
 .btn,
 button
@@ -2145,8 +1654,6 @@ button:hover
     transform: translateY(-1px);
 }
 
-
-/* ---------- Save Button ---------- */
 
 #save_data,
 #btn_filter
@@ -2165,22 +1672,8 @@ button:hover
 }
 
 
-/* ---------- Shared List Card ---------- */
-
 .list-item
 {
-    /* --------------------------------------------------
-       THEME + DENSITY FIX (UI Modernization pass, this pass):
-       this is the block that actually wins the cascade (it is
-       declared later in the file than the earlier .list-item
-       block above) - its border-radius/padding/margin were
-       fixed 10px/15px/12px values, so this is why cards never
-       visibly resized with Density or re-cornered with the
-       Professional/High Contrast themes even after tokenizing
-       the earlier block. Switched to the same --app-radius/
-       --app-space-* tokens used everywhere else.
-       -------------------------------------------------- */
-
     background: var(--color-surface);
 
     border: 1px solid var(--color-border);
@@ -2189,23 +1682,12 @@ button:hover
 
     padding: var(--app-space-md);
 
-    /* UI BRIEF (this pass): the Edit/Share icon buttons are
-       absolutely positioned in the top-right corner (right:14px
-       and right:64px, 44px wide each - see createHtmlListItem()
-       in Student/Category/Section/Result.script.js), covering
-       roughly the rightmost 108px of the card. Reserving that
-       much space on the right keeps title/subtitle text from
-       ever wrapping underneath them. */
     padding-right: calc(var(--app-space-md) + 108px);
 
     margin-bottom: var(--app-space-sm);
 
     transition: var(--app-transition-speed);
 
-    /* Reuses the single shared appCardFadeIn keyframe declared
-       with the earlier .list-item block above, instead of
-       keeping two near-identical fade-in keyframes in the
-       file. */
     animation: appCardFadeIn .25s ease-out;
 }
 
@@ -2216,7 +1698,6 @@ button:hover
     cursor: pointer;
 }
 
-/* UI MODERNIZATION PASS 2 (added) */
 @keyframes list-item-fade-in
 {
     from
@@ -2234,13 +1715,6 @@ button:hover
     }
 }
 
-
-/* ---------- Empty State ----------
-   UI MODERNIZATION PASS 2 (added)
-   Shown by showFilteredList() in Student/Category/Section/
-   Result scripts (via CommonUtils.getEmptyStateHtml()) when a
-   search or filter returns zero rows, instead of leaving the
-   list area blank. */
 
 .empty-state
 {
@@ -2273,7 +1747,7 @@ button:hover
 
     border-radius: 50%;
 
-    background: var(--app-theme-color-light, color-mix(in srgb, var(--app-theme-color) 8%, transparent)); /* Project Improvements (this pass): fallback was hardcoded to the old #123b8d theme blue */
+    background: var(--app-theme-color-light, color-mix(in srgb, var(--app-theme-color) 8%, transparent));
 
     color: var(--app-theme-color);
 
@@ -2303,8 +1777,6 @@ button:hover
 }
 
 
-/* ---------- Bootstrap Card ---------- */
-
 .card
 {
     border-radius: var(--app-radius);
@@ -2327,8 +1799,6 @@ button:hover
 }
 
 
-/* ---------- Helper ---------- */
-
 .popup_container
 {
     padding: 10px;
@@ -2336,16 +1806,8 @@ button:hover
 
 /* ==========================================================
    PART 4
-   Responsive Layout
-   Floating Button
-   Tables
-   Utilities
+   Responsive Layout / Floating Button / Tables / Utilities
    ========================================================== */
-
-
-/* ----------------------------------------------------------
-   Floating Scroll Button
----------------------------------------------------------- */
 
 .float-button
 {
@@ -2367,11 +1829,6 @@ button:hover
 
     border-radius: 50%;
 
-    /* PRIORITY 3 / 6 FIX: .float-button is now also used on a real
-       <button> element (the pagination "next page" control), so
-       the browser's default button border/font need clearing here
-       too - this rule comes later in the cascade than the one
-       above and would otherwise win. */
     border: none;
 
     font: inherit;
@@ -2407,10 +1864,6 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   Bootstrap Modal Improvements
----------------------------------------------------------- */
-
 .modal-content
 {
     border: none;
@@ -2419,11 +1872,6 @@ button:hover
 
     overflow: hidden;
 
-    /* Smooth Animations (UI Modernization pass - "Popup
-       opens"): Bootstrap toggles the "show" class on .modal
-       when it opens, and .modal-content is not recreated, so
-       this needs the animation on the class-add itself rather
-       than an insert-triggered one like .list-item's. */
     animation: appModalPopIn .2s ease;
 }
 
@@ -2480,26 +1928,6 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   Add / Edit Popup (.editDetails) - Sizing Fix
-
-   WHY: the modal-body in the Add/Edit popup (categoryList.html,
-   sectionList.html, resultList.html, studentList.html) used to
-   carry an inline style="overflow: scroll;", which forces a
-   visible scrollbar at all times - even for a short form that
-   fits on screen with room to spare - and does not stop at the
-   viewport edge, so on a tall form it just kept growing the
-   modal instead of scrolling internally. Combined with
-   .modal-content's overflow:hidden above (needed for the
-   rounded corners), that is what produced "extra scrollbars"
-   on short forms and clipped fields on tall ones.
-
-   WHAT: .modal-dialog is capped to a sensible viewport-relative
-   height, .modal-content becomes a column flex box so the
-   header/footer stay put, and only .modal-body scrolls - and
-   only once its content actually needs more room than that.
----------------------------------------------------------- */
-
 .editDetails .modal-dialog
 {
     max-height: calc(100vh - 40px);
@@ -2538,10 +1966,6 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   Bootstrap Tables
----------------------------------------------------------- */
-
 .table
 {
     color: var(--color-text-primary);
@@ -2564,13 +1988,9 @@ button:hover
 
 .table-hover tbody tr:hover
 {
-    background: color-mix(in srgb, var(--app-theme-color) 5%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+    background: color-mix(in srgb, var(--app-theme-color) 5%, transparent);
 }
 
-
-/* ----------------------------------------------------------
-   Card Grid
----------------------------------------------------------- */
 
 .card-grid
 {
@@ -2581,10 +2001,6 @@ button:hover
     grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
 }
 
-
-/* ----------------------------------------------------------
-   Pagination
----------------------------------------------------------- */
 
 .pagination-area
 {
@@ -2599,12 +2015,6 @@ button:hover
     gap: 15px;
 }
 
-
-/* ----------------------------------------------------------
-   Info Card Rows - used by the Category/Section/Result/Student
-   "Info" preview dialogs to show label/value pairs in a clean
-   card layout instead of plain inline paragraphs.
----------------------------------------------------------- */
 
 .info-card
 {
@@ -2689,20 +2099,23 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   List Card Icon Buttons - the small round Info / Edit
-   buttons on every list card, and the colored quick-action
-   buttons (Call / WhatsApp / SMS / Email) on the Student card.
-   Used by createHtmlListItem() in Student/Category/Section/
-   Result.script.js so every list page shares the same look.
----------------------------------------------------------- */
+.card-icon-actions
+{
+    position: absolute;
 
-/* ACCESSIBILITY FIX (this pass): was 30x30px - well under the
-   44x44px minimum WCAG 2.5.5 (Target Size) and Apple/Material's
-   own mobile guidelines both recommend for a tappable control.
-   Icon size itself (font-size below) is unchanged, so this only
-   grows the invisible tappable/clickable area, not how big the
-   icon looks. */
+    top: 16px;
+
+    right: 16px;
+
+    display: flex;
+
+    gap: 8px;
+
+    z-index: 10;
+
+    pointer-events: auto;
+}
+
 .icon-btn
 {
     display: inline-flex;
@@ -2721,23 +2134,6 @@ button:hover
 
     transition: transform .15s ease, background .15s ease;
 
-    /* --------------------------------------------------
-       FIX (Edit/Share buttons disappearing on hover): these
-       are position:absolute siblings of .list-item (set via
-       inline style on each icon span in Student/Category/
-       Section/Result.script.js's createHtmlListItem()) inside
-       a position:relative <ul>, with no z-index of their own.
-       .list-item:hover applies a CSS transform (translateY),
-       and any transform promotes an element into its own
-       stacking context - which then paints above
-       position:absolute siblings that have z-index:auto,
-       regardless of DOM order. So hovering the card (or
-       moving the mouse across it toward a button) made the
-       card itself cover these buttons. An explicit z-index
-       keeps them above the card in every state. pointer-events
-       and overflow are set defensively so nothing upstream can
-       silently make them unclickable or clip them either.
-       -------------------------------------------------- */
     z-index: 5;
     pointer-events: auto;
     overflow: visible;
@@ -2747,8 +2143,6 @@ button:hover
 {
     transform: scale(1.08);
 
-    /* keep the hovered icon above its own sibling icon too,
-       e.g. Share sitting immediately next to Edit */
     z-index: 6;
 }
 
@@ -2757,12 +2151,6 @@ button:hover
     transform: scale(.94);
 }
 
-/* ACCESSIBILITY FIX (this pass): these are <span role="button">
-   elements (see Student/Category/Section/Result.script.js's
-   createHtmlListItem()), not native <button>s, so they need an
-   explicit focus style - without this, a keyboard user tabbing
-   through the list had no visual indication these controls were
-   even focusable, let alone which one currently had focus. */
 .icon-btn:focus-visible
 {
     outline: 2px solid var(--app-theme-color, #1E40AF);
@@ -2783,11 +2171,6 @@ button:hover
     color: #3f51b5;
 }
 
-/* SHARE BUTTON PLACEMENT (this pass): color variant for the new
-   per-card Share button, same pattern as .icon-btn-info/.icon-btn-edit
-   above - a distinct tint so Edit and Share are visually
-   distinguishable at a glance despite sitting right next to
-   each other. */
 .icon-btn-share
 {
     background: rgba(34,197,94,.12);
@@ -2836,10 +2219,6 @@ button:hover
 
     color: var(--color-text-primary);
 
-    /* Project Improvements (this pass): laid out as a flex row so
-       the new avatar circle and Roll Number badge (see
-       Student.script.js's createHtmlListItem()) sit inline with
-       the name instead of stacking underneath it. */
     display: flex;
 
     align-items: center;
@@ -2849,9 +2228,6 @@ button:hover
     flex-wrap: wrap;
 }
 
-/* Project Improvements (this pass): initials avatar for the
-   "Better Cards" brief item. Reuses the same brand gradient as
-   the dashboard's entity-card icons for visual consistency. */
 .list-card-avatar
 {
     flex-shrink: 0;
@@ -2876,9 +2252,6 @@ button:hover
     letter-spacing: .02em;
 }
 
-/* Project Improvements (this pass): small pill badge (e.g. "Roll
-   12") for the "Better Cards" brief item - reused as a generic
-   badge class, not Student-specific. */
 .list-card-badge
 {
     font-size: 11.5px;
@@ -2924,12 +2297,6 @@ button:hover
     justify-content: flex-end;
 }
 
-
-/* ----------------------------------------------------------
-   Toast Notifications - see CommonUtils.showAlert()/showToast()
-   in common.js. Replaces blocking browser alert() popups with
-   small, self-dismissing notifications.
----------------------------------------------------------- */
 
 #toast-container
 {
@@ -3027,13 +2394,6 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   Confirmation Dialog - see CommonUtils.showConfirmDialog() in
-   common.js. Replaces the browser's native confirm() box (which
-   always reads "OK"/"Cancel" and can't be relabeled) with the
-   app's own styled Yes/No or Delete/Cancel dialog.
----------------------------------------------------------- */
-
 .app-confirm-overlay
 {
     position: fixed;
@@ -3055,12 +2415,6 @@ button:hover
 
     background: rgba(15, 23, 42, 0.5);
 
-    /* Project Improvements (this pass): backdrop blur, per the
-       "Better Dialogs" brief item ("blue header, white body,
-       rounded, shadow, fade animation, backdrop blur"). -webkit-
-       prefix kept alongside the standard property for Safari/
-       older mobile WebViews, which is a realistic target given
-       this is a PWA. */
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 
@@ -3086,12 +2440,6 @@ button:hover
 
     box-shadow: var(--shadow-medium);
 
-    /* Project Improvements (this pass): box padding moved onto
-       .app-confirm-title/.app-confirm-message/.app-confirm-actions
-       individually below, so .app-confirm-title can become a
-       full-bleed colored header bar instead of just bold text
-       sharing the body's padding. overflow:hidden clips the
-       header's corners to match the box's own border-radius. */
     padding: 0;
 
     overflow: hidden;
@@ -3105,10 +2453,6 @@ button:hover
 
     font-weight: 700;
 
-    /* Project Improvements (this pass): "Blue header, white body"
-       - matches .app-confirm-btn-confirm's existing brand color
-       so the dialog always tracks whichever theme swatch is
-       active, not a hardcoded blue. */
     background: var(--app-theme-color);
 
     color: #fff;
@@ -3190,10 +2534,6 @@ button:hover
 }
 
 
-/* ----------------------------------------------------------
-   Utility Classes
----------------------------------------------------------- */
-
 .text-center
 {
     text-align: center;
@@ -3239,10 +2579,6 @@ button:hover
     display: none !important;
 }
 
-
-/* ----------------------------------------------------------
-   Responsive Design
----------------------------------------------------------- */
 
 @media screen and (max-width:992px)
 {
@@ -3335,9 +2671,6 @@ button:hover
         padding: 4px 10px;
     }
 
-    /* Touch targets: 30-32px circular icon buttons are below the
-       ~44px minimum recommended tap size - bump them up only on
-       small/touch-sized screens, desktop stays compact. */
     .icon-btn
     {
         width: 40px;
@@ -3368,3 +2701,253 @@ button:hover
 /* ----------------------------------------------------------
    End of common.css
 ---------------------------------------------------------- */
+
+/* FIX: Modal Backdrop and UI spacing issues */
+body.modal-open {
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.modal-backdrop,
+.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+
+/* ==========================================================
+   HIGH-CONTRAST & VISIBILITY OVERRIDES
+   ========================================================== */
+
+.form-control,
+input.form-control,
+select.form-control,
+textarea.form-control {
+    background-color: var(--color-surface) !important;
+    color: var(--app-text-color) !important;
+    border-color: var(--color-border) !important;
+}
+
+.form-control::placeholder {
+    color: var(--app-text-light) !important;
+    opacity: 0.8;
+}
+
+.modal-content {
+    background-color: var(--app-modal-bg) !important;
+    color: var(--app-text-color) !important;
+}
+
+.modal-body {
+    background-color: var(--app-modal-bg) !important;
+    color: var(--app-text-color) !important;
+}
+
+.modal-header {
+    background-color: var(--app-theme-color) !important;
+    color: #FFFFFF !important;
+}
+
+.modal-header .modal-title,
+.modal-header h1,
+.modal-header h2,
+.modal-header h3,
+.modal-header h4 {
+    color: #FFFFFF !important;
+}
+
+.modal-header .close,
+.modal-header .close span {
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+html[data-theme="dark"] .list-item,
+html[data-theme="dark"] .card {
+    background-color: var(--app-card-bg) !important;
+    border-color: var(--app-border) !important;
+    color: var(--app-text-color) !important;
+}
+
+/* ==========================================================
+   SKY THEME (LIGHT & DARK COMBOS)
+   ========================================================== */
+
+html[data-theme="sky-light"] {
+    --app-theme-color: #0284C7;
+    --app-theme-dark: #0369A1;
+    --app-accent: #38BDF8;
+
+    --app-bg-color: #F0F9FF;
+    --app-card-bg: #FFFFFF;
+    --app-modal-bg: #FFFFFF;
+
+    --app-text-color: #0F172A;
+    --app-text-light: #475569;
+    --app-heading: #0369A1;
+
+    --app-border: #BAE6FD;
+    --app-success: #16A34A;
+    --app-danger: #DC2626;
+    --app-warning: #D97706;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #0C4A6E;
+    --color-sidebar-text: #FFFFFF;
+    --color-sidebar-hover: #075985;
+}
+
+html[data-theme="sky-dark"] {
+    --app-theme-color: #38BDF8;
+    --app-theme-dark: #0284C7;
+    --app-accent: #7DD3FC;
+
+    --app-bg-color: #0B132B;
+    --app-card-bg: #1C2541;
+    --app-modal-bg: #1C2541;
+
+    --app-text-color: #F0F9FF;
+    --app-text-light: #94A3B8;
+    --app-heading: #38BDF8;
+
+    --app-border: #1E293B;
+    --app-success: #22C55E;
+    --app-danger: #EF4444;
+    --app-warning: #F59E0B;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #050B1A;
+    --color-sidebar-text: #F0F9FF;
+    --color-sidebar-hover: #1C2541;
+}
+
+/* ==========================================================
+   DESERT THEME (LIGHT & DARK COMBOS)
+   ========================================================== */
+
+html[data-theme="desert-light"] {
+    --app-theme-color: #D97706;
+    --app-theme-dark: #B45309;
+    --app-accent: #F59E0B;
+
+    --app-bg-color: #FFFBEB;
+    --app-card-bg: #FFFFFF;
+    --app-modal-bg: #FFFFFF;
+
+    --app-text-color: #292524;
+    --app-text-light: #78716C;
+    --app-heading: #78350F;
+
+    --app-border: #FDE68A;
+    --app-success: #16A34A;
+    --app-danger: #DC2626;
+    --app-warning: #D97706;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #451A03;
+    --color-sidebar-text: #FFFFFF;
+    --color-sidebar-hover: #78350F;
+}
+
+html[data-theme="desert-dark"] {
+    --app-theme-color: #F59E0B;
+    --app-theme-dark: #D97706;
+    --app-accent: #FBBF24;
+
+    --app-bg-color: #1C1917;
+    --app-card-bg: #292524;
+    --app-modal-bg: #292524;
+
+    --app-text-color: #FAFAF9;
+    --app-text-light: #A8A29E;
+    --app-heading: #F59E0B;
+
+    --app-border: #44403C;
+    --app-success: #22C55E;
+    --app-danger: #EF4444;
+    --app-warning: #F59E0B;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #0C0A09;
+    --color-sidebar-text: #FAFAF9;
+    --color-sidebar-hover: #292524;
+}
+
+/* ==========================================================
+   MONOCHROME THEME (BALANCED LIGHT & DARK COMBINATION)
+   ========================================================== */
+
+html[data-theme="monochrome"] {
+    --app-theme-color: #09090B;
+    --app-theme-dark: #18181B;
+    --app-accent: #3F3F46;
+
+    --app-bg-color: #F4F4F5;
+    --app-card-bg: #FFFFFF;
+    --app-modal-bg: #FFFFFF;
+
+    --app-text-color: #09090B;
+    --app-text-light: #52525B;
+    --app-heading: #09090B;
+
+    --app-border: #D4D4D8;
+    --app-success: #16A34A;
+    --app-danger: #DC2626;
+    --app-warning: #D97706;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #000000;
+    --color-sidebar-text: #FFFFFF;
+    --color-sidebar-hover: #27272A;
+}
+
+html[data-theme="monochrome"] .btn-primary,
+html[data-theme="monochrome"] #save_data,
+html[data-theme="monochrome"] #btn_save_settings,
+html[data-theme="monochrome"] button.form-control,
+html[data-theme="monochrome"] .float-button {
+    background-color: #09090B !important;
+    border: 1px solid #09090B !important;
+    color: #FFFFFF !important;
+}
+
+html[data-theme="monochrome"] .btn-primary *,
+html[data-theme="monochrome"] #save_data *,
+html[data-theme="monochrome"] #btn_save_settings *,
+html[data-theme="monochrome"] button.form-control *,
+html[data-theme="monochrome"] .float-button * {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="monochrome"] .btn-primary:hover,
+html[data-theme="monochrome"] #save_data:hover,
+html[data-theme="monochrome"] #btn_save_settings:hover,
+html[data-theme="monochrome"] button.form-control:hover,
+html[data-theme="monochrome"] .float-button:hover {
+    background-color: #27272A !important;
+    border-color: #27272A !important;
+}
