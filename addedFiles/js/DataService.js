@@ -1252,6 +1252,12 @@ var DataService = (function ()
                             {
                                 var objBackendRecord = arrRawRecords[intRowIndex];
 
+                                // TEMP DEBUG (remove after root-causing "Unnamed" on Dashboard):
+                                if (strStoreName === AppConfig.STORES.STUDENT && intRowIndex === 0)
+                                {
+                                    console.log("[DEBUG] raw STUDENT record from backend:", objBackendRecord);
+                                }
+
                                 var objExisting = objExistingById[objBackendRecord[objEntity.idParam]];
 
                                 arrRecords.push(normalizeRecordId(strStoreName, objEntity.fromBackendFields(objBackendRecord, objExisting)));
