@@ -441,7 +441,21 @@ var CategoryScript = (function () {
 		$(FORM_FIELD.NAME).val(DEFAULT.NAME);
 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
 		setOrganizationSelection( organizationList );
-		enableSaveButton( false );
+
+		/**
+		 * BUG FIX - Save button stayed hidden on Add
+		 *
+		 * Same root cause and same fix already applied in
+		 * Student.script.js's setFormDefaults(): setOrganizationSelection()
+		 * above calls enableSaveButton(false) while it loads, and nothing
+		 * ever turned it back on once the Add form's defaults had finished
+		 * loading - so Save stayed invisible until the user happened to
+		 * type into a field (Name/Organization Id), which is what made the
+		 * "Add New Category" modal look like it had no Save button at all.
+		 * Explicitly showing it here means a new Category can be saved
+		 * with the defaults as-is, matching Student's Add form.
+		 */
+		enableSaveButton( true );
 
 		$( FORM_FIELD.DOCUMENT_DIV ).hide();
 		$( FORM_FIELD.DOCUMENTS_PATH ).text("");

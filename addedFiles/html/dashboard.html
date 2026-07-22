@@ -241,18 +241,21 @@
 
         <div class="search-box">
 
-            <input
-                type="text"
-                id="txtSearch"
-                placeholder="Search anything: students, categories, sections, results, pages...">
+    <span class="search-icon">
+        <i class="fa fa-search"></i>
+    </span>
 
-            <button>
+    <input
+        type="text"
+        id="txtSearch"
+        placeholder="Search students, sections, categories..."
+    />
 
-                <i class="fa-solid fa-magnifying-glass"></i>
+    <button id="btnFilter" class="filter-btn">
+        <i class="fa fa-sliders-h"></i>
+    </button>
 
-            </button>
-
-        </div>
+</div>
 
         <!-- Live results for the search box above, populated by
              Dashboard.script.js as the user types. Hidden until
