@@ -613,7 +613,6 @@ StorageService.initializeDatabase()
 
 
 
-
 function getOrCreateLoaderElement()
 {
     var oLoader = document.getElementById("appLoadingOverlay");
@@ -629,7 +628,6 @@ function getOrCreateLoaderElement()
         "<div class=\"appLoadingPanel\">" +
             "<div class=\"appLoadingSpinner\"></div>" +
             "<div class=\"appLoadingMessage\"></div>" +
-            "<div class=\"appLoadingSubtext\">Please wait...</div>" +
             "<div class=\"appLoadingProgressTrack\">" +
                 "<div class=\"appLoadingProgressFill\"></div>" +
             "</div>" +

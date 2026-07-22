@@ -83,38 +83,30 @@ body {
 }
 
 /* ==========================================================
-   Settings Button (Phase 3)
+   Settings Button (Centered Icon Fix)
    ========================================================== */
-
 .login-settings-btn {
-
     position: absolute;
-
     top: 16px;
     right: 16px;
-
     width: 36px;
     height: 36px;
-
     border: none;
-
     border-radius: 50%;
-
     background: transparent;
-
     color: var(--color-text-secondary);
-
     font-size: 16px;
-
     cursor: pointer;
-
     transition: .2s;
+
+    /* Center the icon inside the button */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .login-settings-btn:hover {
-
     background: var(--color-page-background);
-
     color: var(--color-text-primary);
 }
 
@@ -136,27 +128,18 @@ body {
    ========================================================== */
 
 .input-box {
-
     display: flex;
-
     align-items: center;
-
-    border: 2px solid #1d3f8e;
-
+    border: 2px solid var(--color-border, #1d3f8e);
     border-radius: 12px;
-
     padding: 12px 15px;
-
     margin-bottom: 20px;
-
     transition: 0.3s;
 }
 
 .input-box:focus-within {
-
-    border-color: #123b8d;
-
-    box-shadow: 0px 0px 8px rgba(18, 59, 141, 0.3);
+    border-color: var(--app-theme-color, #123b8d);
+    box-shadow: 0px 0px 8px var(--app-theme-hover, rgba(18, 59, 141, 0.3));
 }
 
 .input-box i {
@@ -258,78 +241,49 @@ button {
     margin-bottom: 15px;
 }
 
-/* Login Button */
-
-#loginBtn {
-
-    background: #123b8d;
-
-    color: white;
-
+/* Primary Action Buttons (#loginBtn, #createAccountBtn, #btnFpVerifyUsername, #btnFpResetPassword) */
+#loginBtn,
+#createAccountBtn,
+#btnFpVerifyUsername,
+#btnFpResetPassword {
+    background: var(--app-theme-color, #123b8d);
+    color: #ffffff;
     border: none;
 }
 
-#loginBtn:hover {
-
-    background: #0f3278;
+#loginBtn:hover,
+#createAccountBtn:hover,
+#btnFpVerifyUsername:hover,
+#btnFpResetPassword:hover {
+    opacity: 0.9;
 }
 
-/* Sign Up Button */
-
-.signup {
-
-    background: white;
-
-    color: #123b8d;
-
-    border: 2px solid #123b8d;
+/* Secondary/Outlined Action Buttons (.signup, #btnCancelForgotPassword) */
+.signup,
+#btnCancelForgotPassword {
+    background: var(--color-surface, #ffffff);
+    color: var(--app-theme-color, #123b8d);
+    border: 2px solid var(--app-theme-color, #123b8d);
 }
 
-.signup:hover {
-
-    background: #123b8d;
-
-    color: white;
+.signup:hover,
+#btnCancelForgotPassword:hover {
+    background: var(--app-theme-color, #123b8d);
+    color: #ffffff;
 }
 
-/* ==========================================================
-   Sign Up Page - Create Account Button
-
-   Same look as #loginBtn on the Login page, just under a
-   different ID because it lives on a different page.
-   ========================================================== */
-
-#createAccountBtn {
-
-    background: #123b8d;
-
-    color: white;
-
-    border: none;
+/* Links & Eye Icons */
+.options a {
+    text-decoration: none;
+    color: var(--app-theme-color, #123b8d);
+    font-weight: bold;
 }
 
-#createAccountBtn:hover {
-
-    background: #0f3278;
-}
-
-/* ==========================================================
-   Sign Up Page - Confirm Password Eye Icon
-
-   Same look/behaviour as #togglePassword, just a second icon
-   for the Confirm Password field.
-   ========================================================== */
-
-#toggleConfirmPassword {
-
-    cursor: pointer;
-
-    color: #666666;
-}
-
-#toggleConfirmPassword:hover {
-
-    color: #123b8d;
+#togglePassword:hover,
+#toggleConfirmPassword:hover,
+#toggleFpNewPassword:hover,
+#toggleFpConfirmPassword:hover {
+    color: var(--app-theme-color, #123b8d);
 }
 
 /* ==========================================================
@@ -531,4 +485,24 @@ button {
         gap: 10px;
     }
 
+}
+
+/* ==========================================================
+   Centered Titles & Spacing Fix
+   ========================================================== */
+.login-card .title,
+.title#fpTitle {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 12px; /* Generous gap between Login & Subtitle */
+}
+
+.login-card .subtitle,
+.subtitle#fpSubtitle {
+    text-align: center;
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin-bottom: 24px; /* Gap between Subtitle & Inputs */
 }

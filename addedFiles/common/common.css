@@ -111,38 +111,36 @@ img
     height:auto;
 }
 
-
 /*==========================================================
-    ROOT VARIABLES (Doc 1 theme values - Light theme)
+    ROOT VARIABLES (Enhanced Light Theme)
 ==========================================================*/
 
 :root,
 html[data-theme="light"]
 {
-    /* Brand & Primary Colors */
-    --app-theme-color: #1E40AF;
-    --app-theme-dark: #1E3A8A;
-    --app-accent: #2563EB;
+    /* Brand & Primary Colors - Rich Royal Blue */
+    --app-theme-color: #2563EB;
+    --app-theme-dark: #1D4ED8;
+    --app-accent: #3B82F6;
 
     /* Font */
-    --app-font-family:
-        "Poppins", Arial, Helvetica, sans-serif;
+    --app-font-family: "Poppins", Arial, Helvetica, sans-serif;
 
     /* Backgrounds */
-    --app-bg-color: #F4F7FC;
+    --app-bg-color: #F8FAFC;
     --app-card-bg: #FFFFFF;
     --app-modal-bg: #FFFFFF;
 
     /* High-Contrast Text */
-    --app-text-color: #1F2937;
-    --app-text-light: #4B5563;
-    --app-heading: #111827;
+    --app-text-color: #0F172A;
+    --app-text-light: #475569;
+    --app-heading: #0F172A;
 
     /* Borders & Status Colors */
-    --app-border: #E5E7EB;
-    --app-success: #16A34A;
-    --app-danger: #DC2626;
-    --app-warning: #D97706;
+    --app-border: #CBD5E1;
+    --app-success: #10B981;
+    --app-danger: #EF4444;
+    --app-warning: #F59E0B;
 
     /* Radii & Transitions */
     --app-radius: 16px;
@@ -154,8 +152,8 @@ html[data-theme="light"]
     --app-transition-speed: .25s;
 
     /* Shadows */
-    --shadow-small: 0 2px 8px rgba(0,0,0,.08);
-    --shadow-medium: 0 6px 18px rgba(0,0,0,.12);
+    --shadow-small: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-medium: 0 8px 24px rgba(15, 23, 42, 0.14);
 
     /* Aliases */
     --color-page-background: var(--app-bg-color);
@@ -169,14 +167,14 @@ html[data-theme="light"]
 }
 
 /*==========================================================
-    DARK MODE (Doc 1 theme values)
+    DARK MODE (Vibrant Slate & Electric Blue)
 ==========================================================*/
 
 html[data-theme="dark"]
 {
-    --app-theme-color: #2563EB;
-    --app-theme-dark: #1D4ED8;
-    --app-accent: #3B82F6;
+    --app-theme-color: #3B82F6;
+    --app-theme-dark: #2563EB;
+    --app-accent: #60A5FA;
 
     --app-bg-color: #0F172A;
     --app-card-bg: #1E293B;
@@ -187,20 +185,19 @@ html[data-theme="dark"]
     --app-heading: #FFFFFF;
 
     --app-border: #334155;
-    --app-success: #22C55E;
-    --app-danger: #EF4444;
-    --app-warning: #F59E0B;
+    --app-success: #34D399;
+    --app-danger: #F87171;
+    --app-warning: #FBBF24;
 
     --color-page-background: var(--app-bg-color);
     --color-surface: var(--app-card-bg);
     --color-border: var(--app-border);
     --color-text-primary: var(--app-heading);
     --color-text-secondary: var(--app-text-light);
-    --color-sidebar-background: #0F172A;
+    --color-sidebar-background: #020617;
     --color-sidebar-text: #F8FAFC;
     --color-sidebar-hover: #1E293B;
 }
-
 
 /*==========================================================
     DENSITY (Comfortable / Compact)
@@ -2771,10 +2768,9 @@ html[data-theme="dark"] .card {
     border-color: var(--app-border) !important;
     color: var(--app-text-color) !important;
 }
-
-/* ==========================================================
-   SKY THEME (LIGHT & DARK COMBOS)
-   ========================================================== */
+/*==========================================================
+    SKY THEME (Vibrant Ocean & Cyan)
+==========================================================*/
 
 html[data-theme="sky-light"] {
     --app-theme-color: #0284C7;
@@ -2785,40 +2781,12 @@ html[data-theme="sky-light"] {
     --app-card-bg: #FFFFFF;
     --app-modal-bg: #FFFFFF;
 
-    --app-text-color: #0F172A;
-    --app-text-light: #475569;
-    --app-heading: #0369A1;
+    --app-text-color: #0C4A6E;
+    --app-text-light: #0369A1;
+    --app-heading: #0C4A6E;
 
     --app-border: #BAE6FD;
-    --app-success: #16A34A;
-    --app-danger: #DC2626;
-    --app-warning: #D97706;
-
-    --color-page-background: var(--app-bg-color);
-    --color-surface: var(--app-card-bg);
-    --color-border: var(--app-border);
-    --color-text-primary: var(--app-heading);
-    --color-text-secondary: var(--app-text-light);
-    --color-sidebar-background: #0C4A6E;
-    --color-sidebar-text: #FFFFFF;
-    --color-sidebar-hover: #075985;
-}
-
-html[data-theme="sky-dark"] {
-    --app-theme-color: #38BDF8;
-    --app-theme-dark: #0284C7;
-    --app-accent: #7DD3FC;
-
-    --app-bg-color: #0B132B;
-    --app-card-bg: #1C2541;
-    --app-modal-bg: #1C2541;
-
-    --app-text-color: #F0F9FF;
-    --app-text-light: #94A3B8;
-    --app-heading: #38BDF8;
-
-    --app-border: #1E293B;
-    --app-success: #22C55E;
+    --app-success: #10B981;
     --app-danger: #EF4444;
     --app-warning: #F59E0B;
 
@@ -2827,14 +2795,41 @@ html[data-theme="sky-dark"] {
     --color-border: var(--app-border);
     --color-text-primary: var(--app-heading);
     --color-text-secondary: var(--app-text-light);
-    --color-sidebar-background: #050B1A;
-    --color-sidebar-text: #F0F9FF;
-    --color-sidebar-hover: #1C2541;
+    --color-sidebar-background: #0284C7;
+    --color-sidebar-text: #FFFFFF;
+    --color-sidebar-hover: #0369A1;
 }
 
-/* ==========================================================
-   DESERT THEME (LIGHT & DARK COMBOS)
-   ========================================================== */
+html[data-theme="sky-dark"] {
+    --app-theme-color: #38BDF8;
+    --app-theme-dark: #0284C7;
+    --app-accent: #7DD3FC;
+
+    --app-bg-color: #082F49;
+    --app-card-bg: #0C4A6E;
+    --app-modal-bg: #0C4A6E;
+
+    --app-text-color: #F0F9FF;
+    --app-text-light: #BAE6FD;
+    --app-heading: #FFFFFF;
+
+    --app-border: #134E4A;
+    --app-success: #34D399;
+    --app-danger: #F87171;
+    --app-warning: #FBBF24;
+
+    --color-page-background: var(--app-bg-color);
+    --color-surface: var(--app-card-bg);
+    --color-border: var(--app-border);
+    --color-text-primary: var(--app-heading);
+    --color-text-secondary: var(--app-text-light);
+    --color-sidebar-background: #032030;
+    --color-sidebar-text: #F0F9FF;
+    --color-sidebar-hover: #0C4A6E;
+}
+/*==========================================================
+    DESERT THEME (Warm Amber & Espresso)
+==========================================================*/
 
 html[data-theme="desert-light"] {
     --app-theme-color: #D97706;
@@ -2845,13 +2840,13 @@ html[data-theme="desert-light"] {
     --app-card-bg: #FFFFFF;
     --app-modal-bg: #FFFFFF;
 
-    --app-text-color: #292524;
-    --app-text-light: #78716C;
-    --app-heading: #78350F;
+    --app-text-color: #451A03;
+    --app-text-light: #78350F;
+    --app-heading: #451A03;
 
     --app-border: #FDE68A;
-    --app-success: #16A34A;
-    --app-danger: #DC2626;
+    --app-success: #10B981;
+    --app-danger: #EF4444;
     --app-warning: #D97706;
 
     --color-page-background: var(--app-bg-color);
@@ -2859,9 +2854,9 @@ html[data-theme="desert-light"] {
     --color-border: var(--app-border);
     --color-text-primary: var(--app-heading);
     --color-text-secondary: var(--app-text-light);
-    --color-sidebar-background: #451A03;
+    --color-sidebar-background: #D97706;
     --color-sidebar-text: #FFFFFF;
-    --color-sidebar-hover: #78350F;
+    --color-sidebar-hover: #B45309;
 }
 
 html[data-theme="desert-dark"] {
@@ -2874,13 +2869,13 @@ html[data-theme="desert-dark"] {
     --app-modal-bg: #292524;
 
     --app-text-color: #FAFAF9;
-    --app-text-light: #A8A29E;
-    --app-heading: #F59E0B;
+    --app-text-light: #D6D3D1;
+    --app-heading: #FFFFFF;
 
     --app-border: #44403C;
-    --app-success: #22C55E;
-    --app-danger: #EF4444;
-    --app-warning: #F59E0B;
+    --app-success: #34D399;
+    --app-danger: #F87171;
+    --app-warning: #FBBF24;
 
     --color-page-background: var(--app-bg-color);
     --color-surface: var(--app-card-bg);
@@ -2891,15 +2886,14 @@ html[data-theme="desert-dark"] {
     --color-sidebar-text: #FAFAF9;
     --color-sidebar-hover: #292524;
 }
-
-/* ==========================================================
-   MONOCHROME THEME (BALANCED LIGHT & DARK COMBINATION)
-   ========================================================== */
+/*==========================================================
+    MONOCHROME THEME (High Contrast Obsidian & Charcoal)
+==========================================================*/
 
 html[data-theme="monochrome"] {
-    --app-theme-color: #09090B;
-    --app-theme-dark: #18181B;
-    --app-accent: #3F3F46;
+    --app-theme-color: #18181B;
+    --app-theme-dark: #09090B;
+    --app-accent: #52525B;
 
     --app-bg-color: #F4F4F5;
     --app-card-bg: #FFFFFF;
@@ -2909,7 +2903,7 @@ html[data-theme="monochrome"] {
     --app-text-light: #52525B;
     --app-heading: #09090B;
 
-    --app-border: #D4D4D8;
+    --app-border: #E4E4E7;
     --app-success: #16A34A;
     --app-danger: #DC2626;
     --app-warning: #D97706;
@@ -2919,7 +2913,7 @@ html[data-theme="monochrome"] {
     --color-border: var(--app-border);
     --color-text-primary: var(--app-heading);
     --color-text-secondary: var(--app-text-light);
-    --color-sidebar-background: #000000;
+    --color-sidebar-background: #18181B;
     --color-sidebar-text: #FFFFFF;
     --color-sidebar-hover: #27272A;
 }

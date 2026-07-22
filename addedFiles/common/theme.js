@@ -85,13 +85,13 @@ var ThemeManager = (function ()
     var THEME_MONOCHROME = "monochrome";
 
     var ALL_THEMES = [
-        { id: THEME_LIGHT,        label: "Default Light", swatch: "#1E40AF" },
+        { id: THEME_LIGHT,        label: "Default Light", swatch: "#2563EB" },
         { id: THEME_DARK,         label: "Default Dark",  swatch: "#0F172A" },
         { id: THEME_SKY_LIGHT,    label: "Sky Light",     swatch: "#0284C7" },
-        { id: THEME_SKY_DARK,     label: "Sky Dark",      swatch: "#0B132B" },
+        { id: THEME_SKY_DARK,     label: "Sky Dark",      swatch: "#082F49" },
         { id: THEME_DESERT_LIGHT, label: "Desert Light",  swatch: "#D97706" },
         { id: THEME_DESERT_DARK,  label: "Desert Dark",   swatch: "#1C1917" },
-        { id: THEME_MONOCHROME,   label: "Monochrome",    swatch: "#09090B" }
+        { id: THEME_MONOCHROME,   label: "Monochrome",    swatch: "#18181B" }
     ];
 
 
