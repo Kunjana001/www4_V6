@@ -263,7 +263,7 @@ var studentSearchBar = `	<!-- Search Bar-->
 	<!-- Search Input -->
 	<div class="form-group" style="margin: -8px;">
 		<div class="input-group mb-4">
-			<input class="form-control" placeholder="Search" id="search" type="text">
+			<input class="form-control" placeholder="Search students..." id="search" type="text">
 			<!-- Search Button: sits inside the same input-group as
 			     #search, right next to the box, on the same line.
 			     Click handler (searchList()) is bound in

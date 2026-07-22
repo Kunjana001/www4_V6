@@ -1511,6 +1511,17 @@ var SectionScript = (function () {
 		});
 
 		// --------------------------------------------------
+		// WHY: new #btn_export button added to sectionSearchBar
+		// in SectionHTML.script.js (top-right of the toolbar)
+		// needs a click handler.
+		// WHAT: calls the existing exportSectionList().
+		// -------------------------------------------------
+		$( "#btn_export" ).off().on( "click", function() {
+
+			exportSectionList();
+		});
+
+		// --------------------------------------------------
 		// FIX: the floating down-arrow button (#btn_float_next_page,
 		// sectionList.html) must not trigger Export/Download - that
 		// belongs solely to a dedicated Export control. Its actual

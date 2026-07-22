@@ -783,12 +783,22 @@ body {
 
     flex-wrap: wrap;
 
-    gap: 10px;
+    gap: 18px;
 }
 
-.shortcut-ops button {
+/* --------------------------------------------------
+   UI BRIEF (this pass): Operations shortcuts changed from
+   text pills ("Add Student" etc.) to circular icon buttons
+   with a label underneath, matching the brief's mockup
+   (circular background, shadow, label underneath). Same
+   existing --app-theme-color used for the circle fill, so no
+   new colors were introduced.
+   -------------------------------------------------- */
+.op-shortcut {
 
     display: flex;
+
+    flex-direction: column;
 
     align-items: center;
 
@@ -796,26 +806,1008 @@ body {
 
     border: none;
 
-    border-radius: 8px;
+    background: none;
 
-    padding: 10px 16px;
+    padding: 4px;
+
+    cursor: pointer;
+
+    transition: transform .15s ease;
+}
+
+.op-shortcut-icon {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 52px;
+
+    height: 52px;
+
+    border-radius: 50%;
 
     background: var(--app-theme-color);
 
     color: #ffffff;
 
+    font-size: 18px;
+
+    box-shadow: var(--shadow-small);
+
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.op-shortcut-label {
+
     font-size: 13px;
 
     font-weight: 600;
 
-    cursor: pointer;
-
-    transition: .2s;
+    color: var(--color-text-primary);
 }
 
-.shortcut-ops button:hover {
+.op-shortcut:hover .op-shortcut-icon {
 
-    opacity: .9;
+    transform: scale(1.06);
+
+    box-shadow: var(--shadow-medium);
+}
+
+.op-shortcut:active .op-shortcut-icon {
+
+    transform: scale(.96);
+}
+
+/* ==========================================================
+   Sidebar Overlay
+
+   Dark tap-to-close backdrop behind the mobile sidebar drawer.
+   Sits just under the sidebar's own z-index (1000) so the
+   sidebar still renders on top of it, and above everything
+   else on the page. Fades in/out together with the sidebar's
+   slide, and stays fully hidden (display:none, not just
+   transparent) while closed so it never intercepts clicks on
+   the rest of the page.
+   ========================================================== */
+
+.sidebar-overlay {
+
+    display: none;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    background: rgba(0, 0, 0, .45);
+
+    z-index: 999;
+
+    opacity: 0;
+
+    transition: opacity .3s ease;
+}
+
+.sidebar-overlay.show {
+
+    display: block;
+
+    opacity: 1;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width:768px) {
+
+    .sidebar {
+
+        position: fixed;
+
+        left: -260px;
+
+        top: 0;
+
+        height: 100%;
+
+        z-index: 1000;
+
+        overflow-y: auto;
+    }
+
+    .sidebar.show {
+
+        left: 0;
+    }
+
+    #menuBtn {
+
+        display: block;
+
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .menu li {
+
+        padding: 14px 20px;
+    }
+
+    .main {
+
+        padding: 20px;
+    }
+
+    .cards {
+
+        grid-template-columns: 1fr;
+    }
+
+}/* ==========================================
+   Student Management System
+   Dashboard Style Sheet
+
+   Consolidated final version - merges:
+   - Glassmorphism cards/panels
+   - Colored icon backgrounds (sidebar menu + quick stats)
+   - Corrected CSS-variable fallbacks (accent color, search tag)
+   - Sidebar overlay with fade + slide animation (tap-outside /
+     swipe-to-close support)
+   ========================================== */
+
+/* ---------- Reset ---------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+
+    font-family: var(--app-font-family, Arial, Helvetica, sans-serif);
+    background: var(--color-page-background);
+}
+
+/* ---------- Main Layout ---------- */
+
+.dashboard {
+
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+
+    width: 260px;
+    background: var(--color-sidebar-background);
+    color: var(--color-sidebar-text);
+    transition: width .3s ease, left .3s ease;
+
+    box-shadow: 4px 0 18px rgba(0, 0, 0, .12);
+}
+
+.logo {
+
+    text-align: center;
+    padding: 32px 20px 26px;
+}
+
+.logo img {
+
+    width: 128px;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    display: inline-block;
+}
+
+.logo h2 {
+
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: .01em;
+}
+
+/* ---------- Menu ---------- */
+
+.menu {
+
+    list-style: none;
+    margin-top: 16px;
+    padding: 0 12px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu li {
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 16px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    transition: background .2s ease, transform .2s ease, padding-left .2s ease;
+}
+
+.menu li i {
+
+    font-size: 16px;
+}
+
+.menu li span {
+
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.menu li:hover {
+
+    background: var(--color-sidebar-hover);
+
+    transform: translateX(2px);
+}
+
+/* Active page: blue background + a thin bright indicator bar
+   on the left edge, so the current page is unmistakable even
+   at a glance. */
+
+.menu .active {
+
+    background: var(--app-accent, #3B82F6);
+}
+
+.menu .active::before {
+
+    content: "";
+
+    position: absolute;
+    left: -12px;
+    top: 8px;
+    bottom: 8px;
+
+    width: 4px;
+
+    border-radius: 0 4px 4px 0;
+
+    background: #ffffff;
+}
+
+.menu .active span {
+
+    font-weight: 600;
+}
+
+/* ---------- Colored Icon Backgrounds ----------
+   Each nav item gets its own small rounded-square icon
+   background so it's easy to identify at a glance, especially
+   on mobile where the sidebar is a full-height overlay. Colors
+   are fixed per item (not theme-driven) so they stay
+   recognizable no matter which color theme is active. */
+
+.menu-icon-bg {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+    flex: none;
+
+    border-radius: 9px;
+
+    color: #ffffff;
+
+    font-size: 15px;
+}
+
+.menu-icon-blue   { background: #2f6fed; }
+.menu-icon-green  { background: #2e9e5b; }
+.menu-icon-purple { background: #8e44ec; }
+.menu-icon-orange { background: #f0883e; }
+.menu-icon-red    { background: #e5484d; }
+.menu-icon-cyan   { background: #17a5b8; }
+.menu-icon-gray   { background: #6b7280; }
+.menu-icon-pink   { background: #ec4899; }
+
+#logout {
+
+    color: #ffe0e0;
+}
+
+/* ---------- Main ---------- */
+
+.main {
+
+    flex: 1;
+    padding: 30px;
+}
+
+/* ---------- Top Bar ---------- */
+
+.topbar {
+
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+#menuBtn {
+
+    display: none;
+
+    border: none;
+    background: none;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+.topbar h1 {
+
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.topbar p {
+
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+/* Settings gear button - lives directly on the Dashboard
+   (Dashboard -> Settings) instead of behind Profile. Pushed to
+   the far right of the topbar so it reads like a page-level
+   action, not part of the title block. */
+
+.topbar-settings-btn {
+
+    margin-left: auto;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: var(--color-surface, #fff);
+    color: var(--app-theme-color);
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+
+    transition: transform .15s ease, background .15s ease;
+}
+
+.topbar-settings-btn:hover {
+
+    background: var(--app-theme-color);
+    color: white;
+
+    transform: rotate(45deg);
+}
+
+/* ---------- Search ---------- */
+
+.search-box {
+
+    display: flex;
+
+    margin-top: 20px;
+
+    margin-bottom: 25px;
+}
+
+.search-box input {
+
+    flex: 1;
+
+    padding: 14px 16px;
+
+    border: 1px solid var(--color-border, #dde1ea);
+
+    border-radius: 12px 0 0 12px;
+
+    outline: none;
+
+    font-size: 15px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.search-box input:focus {
+
+    border-color: var(--app-theme-color);
+
+    box-shadow: 0 0 0 3px rgba(61, 123, 253, .15);
+}
+
+.search-box button {
+
+    width: 60px;
+
+    border: none;
+
+    background: var(--app-theme-color);
+
+    color: white;
+
+    border-radius: 0 12px 12px 0;
+
+    cursor: pointer;
+
+    transition: background .2s ease;
+}
+
+.search-box button:hover {
+
+    background: var(--app-theme-dark);
+}
+
+/* ---------- Dashboard Cards ---------- */
+
+.cards {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+    gap: 25px;
+}
+
+.card {
+
+    /* Glassmorphism: a translucent surface over a soft blur so
+       the page background reads faintly through the card,
+       instead of a flat opaque panel. Falls back to a normal
+       solid card automatically wherever backdrop-filter isn't
+       supported, since --color-surface is still set underneath. */
+
+    background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255, 255, 255, .35);
+
+    border-radius: 16px;
+
+    padding: 28px 24px;
+
+    text-align: left;
+
+    box-shadow: 0px 8px 24px rgba(17, 38, 90, .1);
+
+    cursor: pointer;
+
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.card:hover {
+
+    transform: translateY(-6px);
+
+    box-shadow: 0px 16px 32px rgba(17, 38, 90, .16);
+
+    border-color: var(--app-theme-color);
+}
+
+.card i {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 56px;
+    height: 56px;
+
+    border-radius: 14px;
+
+    font-size: 24px;
+
+    color: #ffffff;
+
+    margin-bottom: 18px;
+
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .18);
+
+    transition: transform .25s ease;
+}
+
+.card:hover i {
+
+    transform: scale(1.08) rotate(-4deg);
+}
+
+#studentCard i  { background: linear-gradient(135deg, #34c17c, #2e9e5b); }
+#categoryCard i { background: linear-gradient(135deg, #a463f2, #8e44ec); }
+#sectionCard i  { background: linear-gradient(135deg, #f7a05c, #f0883e); }
+#resultCard i   { background: linear-gradient(135deg, #ef6a6e, #e5484d); }
+
+.card h3 {
+
+    color: var(--color-text-primary);
+
+    margin-bottom: 6px;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.card p {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13.5px;
+}
+
+.card-count {
+
+    color: var(--app-theme-color) !important;
+
+    font-weight: 700;
+
+    font-size: 22px !important;
+
+    margin-bottom: 6px;
+
+    letter-spacing: -.01em;
+}
+
+/* ---------- Quick Stats / Recent Activity Panels ---------- */
+
+.panel {
+
+    background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255, 255, 255, .3);
+
+    border-radius: 16px;
+
+    padding: 24px;
+
+    margin-top: 22px;
+
+    box-shadow: 0px 6px 18px rgba(17, 38, 90, .08);
+}
+
+.panel-title {
+
+    color: var(--color-text-primary);
+
+    font-size: 16px;
+    font-weight: 700;
+
+    margin-bottom: 18px;
+}
+
+.quick-stats {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+    gap: 14px;
+}
+
+.stat-item {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    background: var(--color-page-background);
+
+    border-radius: 12px;
+
+    padding: 18px 10px;
+
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.stat-item:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0px 6px 14px rgba(17, 38, 90, .1);
+}
+
+.stat-value {
+
+    font-size: 24px;
+
+    font-weight: 800;
+
+    color: var(--app-theme-color);
+}
+
+/* Icon badges for Quick Stats, reusing the same gradient colors
+   already assigned to #studentCard/#categoryCard/#sectionCard/
+   #resultCard i above so the two sections read as one consistent
+   color system. */
+.stat-icon {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    color: #ffffff;
+
+    margin-bottom: 10px;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+}
+
+.stat-icon-students   { background: linear-gradient(135deg, #34c17c, #2e9e5b); }
+.stat-icon-categories { background: linear-gradient(135deg, #a463f2, #8e44ec); }
+.stat-icon-sections   { background: linear-gradient(135deg, #f7a05c, #f0883e); }
+.stat-icon-results    { background: linear-gradient(135deg, #ef6a6e, #e5484d); }
+
+.stat-label {
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+    color: var(--color-text-secondary);
+
+    margin-top: 4px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+}
+
+/* ---------- Live Search Results ---------- */
+
+.search-results {
+
+    display: none;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    margin-top: -15px;
+
+    margin-bottom: 25px;
+}
+
+.search-results.show {
+
+    display: flex;
+}
+
+.search-result-item {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: var(--color-surface);
+
+    box-shadow: 0px 2px 8px rgba(0,0,0,.08);
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    color: var(--color-text-primary);
+}
+
+.search-result-item:hover {
+
+    background: var(--color-page-background);
+}
+
+.search-result-item span {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+.search-result-type {
+
+    flex: 0 0 auto;
+
+    padding: 2px 8px;
+
+    margin-right: 10px;
+
+    border-radius: 999px;
+
+    background: var(--app-theme-color-light, color-mix(in srgb, var(--app-theme-color) 8%, transparent));
+
+    color: var(--app-theme-color) !important;
+
+    font-size: 11px !important;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .03em;
+}
+
+.search-result-label {
+
+    flex: 1;
+
+    text-align: left;
+
+    color: var(--color-text-primary) !important;
+
+    font-size: 14px !important;
+
+    font-weight: 600;
+}
+
+.search-result-sublabel {
+
+    flex: 0 0 auto;
+
+    margin-left: 10px;
+
+    text-align: right;
+}
+
+.search-result-empty {
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: var(--color-page-background);
+
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+
+    text-align: center;
+}
+
+/* ---------- Shortcuts ---------- */
+
+.shortcuts-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 18px;
+}
+
+.shortcut-box {
+
+    background: var(--color-page-background);
+
+    border-radius: 12px;
+
+    padding: 18px;
+}
+
+.shortcut-box-wide {
+
+    grid-column: 1 / -1;
+}
+
+.shortcut-box h4 {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+
+    margin-bottom: 12px;
+}
+
+.shortcut-badge {
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: #ffffff;
+
+    background: var(--app-theme-color);
+
+    padding: 2px 8px;
+
+    border-radius: 20px;
+
+    margin-left: auto;
+}
+
+.shortcut-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.shortcut-list li {
+
+    background: var(--color-surface);
+
+    border-radius: 8px;
+
+    padding: 10px 12px;
+
+    font-size: 13px;
+
+    color: var(--color-text-primary);
+
+    cursor: pointer;
+}
+
+.shortcut-list li:hover {
+
+    box-shadow: 0px 2px 8px rgba(0,0,0,.1);
+}
+
+.shortcut-empty {
+
+    color: var(--color-text-secondary) !important;
+
+    cursor: default !important;
+}
+
+.shortcut-empty:hover {
+
+    box-shadow: none !important;
+}
+
+.shortcut-placeholder-text {
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+.shortcut-ops {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 18px;
+}
+
+/* --------------------------------------------------
+   UI BRIEF (this pass): Operations shortcuts changed from
+   text pills ("Add Student" etc.) to circular icon buttons
+   with a label underneath, matching the brief's mockup
+   (circular background, shadow, label underneath). Same
+   existing --app-theme-color used for the circle fill, so no
+   new colors were introduced.
+   -------------------------------------------------- */
+.op-shortcut {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: none;
+
+    background: none;
+
+    padding: 4px;
+
+    cursor: pointer;
+
+    transition: transform .15s ease;
+}
+
+.op-shortcut-icon {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 52px;
+
+    height: 52px;
+
+    border-radius: 50%;
+
+    background: var(--app-theme-color);
+
+    color: #ffffff;
+
+    font-size: 18px;
+
+    box-shadow: var(--shadow-small);
+
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.op-shortcut-label {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--color-text-primary);
+}
+
+.op-shortcut:hover .op-shortcut-icon {
+
+    transform: scale(1.06);
+
+    box-shadow: var(--shadow-medium);
+}
+
+.op-shortcut:active .op-shortcut-icon {
+
+    transform: scale(.96);
 }
 
 /* ==========================================================

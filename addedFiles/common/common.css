@@ -1019,7 +1019,7 @@ body
        untouched) this container is still effectively full-width
        since the viewport itself is narrower than max-width, so
        nothing changes for small screens. */
-    max-width:900px;
+    max-width:700px;
 
     margin:0 auto;
 
@@ -1148,6 +1148,29 @@ body
 .input-group
 {
     margin-bottom:10px;
+
+    /* UI BRIEF (this pass): "rounded search box... subtle
+       shadow... same width on every page" - wraps the icon +
+       input as one rounded pill instead of a plain bordered
+       box. overflow:hidden clips the icon/input children
+       (which already lose their own left/right borders via
+       the rules below) to this same rounded shape. */
+    border-radius:24px;
+
+    border:1px solid var(--color-border);
+
+    box-shadow:var(--shadow-small);
+
+    overflow:hidden;
+
+    transition:box-shadow .15s ease, border-color .15s ease;
+}
+
+.input-group:focus-within
+{
+    border-color:var(--app-theme-color);
+
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent);
 }
 
 .input-group-text
@@ -1155,31 +1178,51 @@ body
     background:white;
 
     border-right:none;
+
+    border:none;
 }
 
 .input-group .form-control
 {
     border-left:none;
 
+    border:none;
+
     box-shadow:none;
 }
 
 /* ----------------------------------------------------------
-   Student List "Export" button - larger and clearly visible,
-   per request. Only used by #btn_export on studentList.html.
+   List Page "Export" button - top-right of the toolbar on
+   Student/Category/Section/Result List (#btn_export). Kept
+   small and modern rather than the previous large "Export"
+   pill, per the UI brief.
    ---------------------------------------------------------- */
 
 .btn-export
 {
-    font-size:16px;
+    font-size:13px;
 
-    font-weight:bold;
+    font-weight:600;
 
-    padding:10px 22px;
+    padding:6px 14px;
 
-    border-radius:8px;
+    border-radius:20px;
 
     box-shadow:var(--shadow-small);
+
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.btn-export:hover
+{
+    transform:translateY(-1px);
+
+    box-shadow:var(--shadow-medium);
+}
+
+.btn-export:active
+{
+    transform:translateY(0);
 }
 
 .input-group .form-control:focus
@@ -1954,6 +1997,17 @@ hr
     width: auto;
 
     flex: 1 1 auto;
+
+    /* UI BRIEF (this pass): .input-group itself is now the
+       rounded, shadowed pill (see common.css's .input-group
+       rule) - #search no longer needs its own border/radius/
+       shadow, which would otherwise double up visually inside
+       the pill. */
+    border: none;
+
+    border-radius: 0;
+
+    box-shadow: none;
 }
 
 #search:focus,
@@ -1964,6 +2018,15 @@ hr
     border-color: var(--app-theme-color);
 
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-theme-color) 15%, transparent); /* Project Improvements (this pass): was hardcoded to the old #123b8d theme blue */
+}
+
+.input-group #search:focus
+{
+    /* the pill (.input-group:focus-within) already shows the
+       focus ring - avoid a second ring on the input itself */
+    border-color: transparent;
+
+    box-shadow: none;
 }
 
 
@@ -2125,6 +2188,15 @@ button:hover
     border-radius: var(--app-radius);
 
     padding: var(--app-space-md);
+
+    /* UI BRIEF (this pass): the Edit/Share icon buttons are
+       absolutely positioned in the top-right corner (right:14px
+       and right:64px, 44px wide each - see createHtmlListItem()
+       in Student/Category/Section/Result.script.js), covering
+       roughly the rightmost 108px of the card. Reserving that
+       much space on the right keeps title/subtitle text from
+       ever wrapping underneath them. */
+    padding-right: calc(var(--app-space-md) + 108px);
 
     margin-bottom: var(--app-space-sm);
 
@@ -2648,11 +2720,36 @@ button:hover
     cursor: pointer;
 
     transition: transform .15s ease, background .15s ease;
+
+    /* --------------------------------------------------
+       FIX (Edit/Share buttons disappearing on hover): these
+       are position:absolute siblings of .list-item (set via
+       inline style on each icon span in Student/Category/
+       Section/Result.script.js's createHtmlListItem()) inside
+       a position:relative <ul>, with no z-index of their own.
+       .list-item:hover applies a CSS transform (translateY),
+       and any transform promotes an element into its own
+       stacking context - which then paints above
+       position:absolute siblings that have z-index:auto,
+       regardless of DOM order. So hovering the card (or
+       moving the mouse across it toward a button) made the
+       card itself cover these buttons. An explicit z-index
+       keeps them above the card in every state. pointer-events
+       and overflow are set defensively so nothing upstream can
+       silently make them unclickable or clip them either.
+       -------------------------------------------------- */
+    z-index: 5;
+    pointer-events: auto;
+    overflow: visible;
 }
 
 .icon-btn:hover
 {
     transform: scale(1.08);
+
+    /* keep the hovered icon above its own sibling icon too,
+       e.g. Share sitting immediately next to Edit */
+    z-index: 6;
 }
 
 .icon-btn:active

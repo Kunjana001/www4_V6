@@ -202,7 +202,7 @@ var sectionSearchBar = `	<!-- Search Bar-->
 			<div class="input-group-prepend">
 				<span class="input-group-text"><i class="fas fa-search"></i></span>
 			</div>
-			<input class="form-control" placeholder="Search" id="search" type="text">
+			<input class="form-control" placeholder="Search sections..." id="search" type="text">
 		</div>
 	</div>
 	<!-- /Search Input -->
@@ -222,6 +222,14 @@ var sectionSearchBar = `	<!-- Search Bar-->
 			<div id="filter_params" style="display: flex;">
 			</div>
 			<!-- /Filter Parameters -->
+			<!-- Export Button: pushed to the far right of the
+			     records row, top-right of the page - same position
+			     as Student List's #btn_export. Click handler
+			     (exportSectionList()) is bound in
+			     Section.script.js/onListDocumentReady(). -->
+			<button id="btn_export" class="btn btn-success btn-export" type="button" style="margin-left: auto;">
+				<i class="fas fa-file-export"></i> Export
+			</button>
 		</div>
 		
 	</div>
