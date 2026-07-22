@@ -202,10 +202,16 @@ var categorySearchBar = `	<!-- Search Bar-->
 	<!-- Search Input -->
 	<div class="form-group" style="margin: -8px;">
 		<div class="input-group mb-4">
-			<div class="input-group-prepend">
-				<span class="input-group-text"><i class="fas fa-search"></i></span>
-			</div>
 			<input class="form-control" placeholder="Search categories..." id="search" type="text">
+			<!-- Search Button: sits inside the same input-group as
+			     #search, right next to the box, on the same line.
+			     Click handler (searchList()) is bound in
+			     Category.script.js/onListDocumentReady(). -->
+			<div class="input-group-append">
+				<button id="search_icon" class="btn btn-primary" type="button">
+					<i class="fas fa-search"></i> Search
+				</button>
+			</div>
 		</div>
 	</div>
 	<!-- /Search Input -->

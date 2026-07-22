@@ -1359,6 +1359,22 @@ var CategoryScript = (function () {
 		
 		enableSearch( mode );
 
+		// --------------------------------------------------
+		// WHY: new #search_icon button added to categorySearchBar
+		// in CategoryHTML.script.js needs its own click binding -
+		// enableSearch() above only binds #search's oninput event
+		// (MODE_SEARCH_ON_KEYUP), so the Search button next to the
+		// input did nothing.
+		// WHAT: reuses the existing searchList() function - no new
+		// search logic was written. Same pattern as Student List's
+		// #search_icon binding.
+		// WHEN: runs whenever the user clicks the Search button.
+		// --------------------------------------------------
+		$( "#search_icon" ).off().on( "click", function() {
+
+			searchList();
+		});
+
 		$( "#list_id" ).on( "click", "ul", function( event ) {
 
 			addSingleSelectModal( this );
