@@ -199,41 +199,44 @@ var resultSearchBar = `	<!-- Search Bar-->
 	<!-- Search Input -->
 	<div class="form-group" style="margin: -8px;">
 		<div class="input-group mb-4">
-			<div class="input-group-prepend">
-				<span class="input-group-text"><i class="fas fa-search"></i></span>
-			</div>
 			<input class="form-control" placeholder="Search results..." id="search" type="text">
+			<!-- Search Button: sits inside the same input-group as
+			     #search, right next to the box, on the same line -
+			     matches Student List's #search_icon. Click handler
+			     (searchList()) is already bound in
+			     Result.script.js/onListDocumentReady(); this button
+			     was missing from the markup so that handler had
+			     nothing to bind to. -->
+			<div class="input-group-append">
+				<button id="search_icon" class="btn btn-primary" type="button">
+					<i class="fas fa-search"></i> Search
+				</button>
+			</div>
 		</div>
 	</div>
 	<!-- /Search Input -->
-	<!-- Displaying number of Records in the list and filter parameters  -->
-	<div class="row pt-2 mr-0 ml-0" style="width: 100%; max-height: 100px; min-height: max-content;">
-		
-		<div class="row" style="margin-left: 5px; margin-top: 3px; padding-bottom: 10px;">
-			<!-- Displaying number of records -->
-			<h5 id="records" style="padding-top: 2px;"></h5>
-			<!-- /Displaying number of records -->			
-			<!-- Filter Button -->
+	<!-- STANDARDIZED TOOLBAR (identical markup on Student/Category/
+	     Section/Result List): records count + filter on the left,
+	     Export pinned to the far right via .list-toolbar's flexbox
+	     space-between (common.css). IDs are unchanged so existing
+	     click handlers in Result.script.js/onListDocumentReady()
+	     keep working. -->
+	<div class="list-toolbar">
+		<div class="list-toolbar-left">
+			<h5 id="records" style="padding-top: 2px; margin-bottom: 0;"></h5>
 			<a id="filter_icon" onclick="" class="header-icons-L" style="margin-left: 5px; margin-right: 5px;">
 			<i class="fa fa-filter"></i>
 			</a>
-			<!-- /Filter Button -->
-			<!-- Filter Parameters -->
 			<div id="filter_params" style="display: flex;">
 			</div>
-			<!-- /Filter Parameters -->
-			<!-- Export Button: pushed to the far right of the
-			     records row, top-right of the page - same position
-			     as Student List's #btn_export. Click handler
-			     (exportResultList()) is bound in
-			     Result.script.js/onListDocumentReady(). -->
-			<button id="btn_export" class="btn btn-success btn-export" type="button" style="margin-left: auto;">
+		</div>
+		<div class="list-toolbar-right">
+			<button id="btn_export" class="btn btn-success btn-export" type="button">
 				<i class="fas fa-file-export"></i> Export
 			</button>
 		</div>
-		
 	</div>
-	<!-- /Displaying number of Records and filter parameters  -->
+	<!-- /Toolbar -->
 </div>
 <!-- /Search Bar -->`;
 

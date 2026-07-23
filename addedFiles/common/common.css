@@ -766,15 +766,59 @@ body
     z-index:999;
 }
 
+/* ==========================================================
+   FIX - Export button ignored its HTML position
+   ----------------------------------------------------------
+   #btn_export previously had position:absolute; top:12px;
+   right:15px on it. Since .page-container (its nearest
+   positioned ancestor) is fixed/sticky, that rule pinned the
+   button to the top-right corner of the search bar container
+   NO MATTER where it sat in the HTML - so moving the button's
+   markup down to the filter/records row never had any visual
+   effect; it kept rendering beside the search bar. Replaced
+   with a plain, non-positioned rule plus a shared .list-toolbar
+   flex layout (used identically by Student/Category/Section/
+   Result List) that puts filter/records on the left and Export
+   on the far right via justify-content:space-between. No IDs
+   changed, so no click handlers were affected.
+   ========================================================== */
+
+.list-toolbar
+{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    flex-wrap:wrap;
+
+    width:100%;
+
+    margin-top:3px;
+
+    padding-bottom:10px;
+}
+
+.list-toolbar-left
+{
+    display:flex;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+}
+
+.list-toolbar-right
+{
+    margin-left:auto;
+
+    flex:none;
+}
+
 #btn_export
 {
-    position:absolute;
-
-    top:12px;
-
-    right:15px;
-
-    z-index:2;
+    position:static;
 }
 
 .input-group
