@@ -16,6 +16,18 @@
    theme.
    ========================================================== */
 
+/* ==========================================================
+   ROUND 3 FIX - Corrupted Share modal close icon
+   ----------------------------------------------------------
+
+   The Share modal's close button used a mangled replacement
+   character (a stray "?" glyph, likely from a copy/paste
+   encoding mishap) instead of the HTML entity &times; that
+   every other modal in this file uses for its close "x".
+   Fixed to match Single Select / Multi Select / Photo / File
+   modals exactly - no other markup in shareMenu changed.
+   ========================================================== */
+
 // FileName CategoryHTML.script.js: Category Javascript file for Cordova project
 
 // Author : JRC
@@ -380,7 +392,7 @@ var shareMenu = `
 			<div class="modal-header" style="border-bottom: solid; border-bottom-color: #dee2e6;">
 				<h2 class="modal-title" id="modal_share_title">Share by</h2>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-				<span aria-hidden="true" style="color: black; font-size: xx-large;">�</span>
+				<span aria-hidden="true" style="color: black; font-size: xx-large;">&times;</span>
 				</button>
 			</div>
 			<!-- /Modal Header -->
