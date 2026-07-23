@@ -615,20 +615,6 @@ if (elPageTitle) {
      ------------------------------------------------------------ -->
 
 <script src="../addedFiles/js/LegacyCompatShim.js"></script>
-<!--
-     CONNECTION FIX: this page also calls
-     CategoryScript.getInstance() and SectionScript.getInstance()
-     (see loadCategoryList()/loadSectionList()/setCategorySelection()/
-     setSectionSelection() in Student.script.js) to populate the
-     Category/Section dropdowns in the Add/Edit Student form, but
-     Category.script.js and Section.script.js were never loaded on
-     this page - both calls threw "CategoryScript is not defined" /
-     "SectionScript is not defined". Both files are self-contained
-     singletons with no page-specific auto-run code (everything
-     lives inside their own IIFE and only runs when something calls
-     CategoryScript.getInstance()/SectionScript.getInstance()), so
-     they are safe to include here.
--->
 <script src="../js/application/min/Category.script.min.js"></script>
 <script src="../js/application/Category.script.js"></script>
 <script src="../js/application/min/Section.script.min.js"></script>

@@ -4,14 +4,14 @@
 
    Shared stylesheet used by:
 
-   • Login
-   • Dashboard
-   • Student
-   • Category
-   • Section
-   • Result
-   • Settings
-   • Profile
+   â€¢ Login
+   â€¢ Dashboard
+   â€¢ Student
+   â€¢ Category
+   â€¢ Section
+   â€¢ Result
+   â€¢ Settings
+   â€¢ Profile
 
    ----------------------------------------------------------
 
@@ -25,15 +25,15 @@
 
    Design Goals
 
-   • Beginner friendly
-   • Proper comments
-   • Maintainable
-   • Responsive
-   • No duplicated CSS
-   • Hungarian notation compatible
-   • Does NOT change application architecture
-   • Works with Bootstrap
-   • Works with existing HTML
+   â€¢ Beginner friendly
+   â€¢ Proper comments
+   â€¢ Maintainable
+   â€¢ Responsive
+   â€¢ No duplicated CSS
+   â€¢ Hungarian notation compatible
+   â€¢ Does NOT change application architecture
+   â€¢ Works with Bootstrap
+   â€¢ Works with existing HTML
 
 ==========================================================*/
 

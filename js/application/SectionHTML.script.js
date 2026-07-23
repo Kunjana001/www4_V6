@@ -209,27 +209,19 @@ var sectionSearchBar = `	<!-- Search Bar-->
 	<!-- Displaying number of Records in the list and filter parameters  -->
 	<div class="row pt-2 mr-0 ml-0" style="width: 100%; max-height: 100px; min-height: max-content;">
 		
-		<div class="row" style="margin-left: 5px; margin-top: 3px; padding-bottom: 10px;">
+		<div class="row align-items-center" style="width: 100%; margin-left: 5px; margin-top: 3px; padding-bottom: 10px; display: flex;">
 			<!-- Displaying number of records -->
-			<h5 id="records" style="padding-top: 2px;"></h5>
+			<h5 id="records" style="padding-top: 2px; margin-bottom: 0;"></h5>
 			<!-- /Displaying number of records -->			
-			<!-- Filter Button -->
-			<a id="filter_icon" onclick="" class="header-icons-L" style="margin-left: 5px; margin-right: 5px;">
-			<i class="fa fa-filter"></i>
+			<!-- Filter Button (margin-left: auto pushes this and #filter_params to the far right) -->
+			<a id="filter_icon" onclick="" class="header-icons-L" style="margin-left: auto; margin-right: 5px;">
+				<i class="fa fa-filter"></i>
 			</a>
 			<!-- /Filter Button -->
 			<!-- Filter Parameters -->
-			<div id="filter_params" style="display: flex;">
+			<div id="filter_params" style="display: flex; align-items: center;">
 			</div>
 			<!-- /Filter Parameters -->
-			<!-- Export Button: pushed to the far right of the
-			     records row, top-right of the page - same position
-			     as Student List's #btn_export. Click handler
-			     (exportSectionList()) is bound in
-			     Section.script.js/onListDocumentReady(). -->
-			<button id="btn_export" class="btn btn-success btn-export" type="button" style="margin-left: auto;">
-				<i class="fas fa-file-export"></i> Export
-			</button>
 		</div>
 		
 	</div>
