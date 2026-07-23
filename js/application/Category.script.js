@@ -280,6 +280,9 @@ var CategoryScript = (function () {
 	var INDEX = {
 		CATEGORY_ID : value++,		// 1
 		NAME : value++,		// 2
+// old code
+// 		INSTITUTION_ID : value++,		// 3		// 3
+// updated
 		ORGANIZATION_ID : value++,		// 3
 		DESCRIPTION : value++,		// 4		// 4
 	};
@@ -291,6 +294,9 @@ var CategoryScript = (function () {
 	var SUMMARY_INDEX = {
 		CATEGORY_ID : value++,		// 1
 		NAME : value++,		// 2
+// not used anymore
+// 		INSTITUTION_ID : value++,		// 3		// 3
+// fixed
 		ORGANIZATION_ID : value++,		// 3		// 3
 	};
 
@@ -300,6 +306,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "Category",
 		NAME : "Name",
+// old logic
+// 		INSTITUTION_ID : "Institution"
+// updated logic
 		ORGANIZATION_ID : "Organization"
 	};
 
@@ -315,6 +324,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : 0,
 		NAME : "",
+// no longer used
+// 		INSTITUTION_ID : ""
+// changed
 		ORGANIZATION_ID : ""
 	};
 
@@ -323,6 +335,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : '#category_id',
 		NAME : '#name',
+// kept for reference
+// 		INSTITUTION_ID : '#institution_id',
+// updated
 		ORGANIZATION_ID : '#organization_id',
 		DOCUMENT_DIV : '#file_div',
 		DOCUMENTS_PATH : '#file_id',
@@ -335,6 +350,9 @@ var CategoryScript = (function () {
 
 		LBL_CATEGORY_ID : '#lbl_category_id',
 		LBL_NAME : '#lbl_name',
+// old code
+// 		LBL_INSTITUTION_ID : '#lbl_institution_id'
+// fixed
 		LBL_ORGANIZATION_ID : '#lbl_organization_id',
 		LBL_DESCRIPTION : '#lbl_description'
 	};
@@ -344,6 +362,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
+// not used anymore
+// 		INSTITUTION_ID : "institution_id"
+// updated logic
 		ORGANIZATION_ID : "organization_id"
 	};
 
@@ -352,6 +373,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
+// old logic
+// 		INSTITUTION_ID : "institution_id"
+// changed
 		ORGANIZATION_ID : "organization_id"
 	};
 
@@ -360,6 +384,9 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
+// no longer used
+// 		INSTITUTION_ID : "institution_id"
+// updated
 		ORGANIZATION_ID : "organization_id"
 	};
 	//------------------------------SESSION OBJECT--------------------------------------
@@ -369,12 +396,20 @@ var CategoryScript = (function () {
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		CATEGORY_DATA: "CATEGORY_DATA",
 		CATEGORY_SUMMARY_DATA: "CATEGORY_SUMMARY_DATA",
+// kept for reference
+// 		INSTITUTION_LIST: "INSTITUTION_LIST",
+// 		INSTITUTION_ID: "INSTITUTION_ID"
+// fixed
 		ORGANIZATION_LIST: "ORGANIZATION_LIST",
 		ORGANIZATION_ID: "ORGANIZATION_ID"
 	}
-
+// old code
+// 	function setInstitutionListData( institutionList ){
+// updated logic
 	function setOrganizationListData( organizationList ){
-
+// not used anymore
+// 		setStorageData( institutionList, SESSION_OBJECT.INSTITUTION_LIST );
+// changed
 		setStorageData( organizationList, SESSION_OBJECT.ORGANIZATION_LIST );
 	}
 
@@ -387,7 +422,10 @@ var CategoryScript = (function () {
 
 		clearSessionStorage( SESSION_OBJECT.CATEGORY_ID );
 
-
+// old logic
+// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_LIST );
+// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_ID );
+// updated
 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_LIST );
 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_ID );
 
@@ -428,10 +466,14 @@ var CategoryScript = (function () {
 		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
 		var noOfDigits = getOrgNoOfDigits();
 		var fv = FormValidation;
-
+// no longer used
+// 		console.log('Enable the validation for this form');
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.CATEGORY_ID), G_ERROR.MSG.empty_error+LABEL.CATEGORY_ID);
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.NAME), G_ERROR.MSG.empty_error+LABEL.NAME);
+// kept for reference
+// 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.INSTITUTION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.INSTITUTION_ID);
+// updated logic
 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.ORGANIZATION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.ORGANIZATION_ID);
 
 		return bValid;
@@ -439,22 +481,16 @@ var CategoryScript = (function () {
 	function setFormDefaults( categoryId ) {
 		$(FORM_FIELD.CATEGORY_ID).val(categoryId);
 		$(FORM_FIELD.NAME).val(DEFAULT.NAME);
+// old code
+// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
+// 		setInstitutionSelection( institutionList );
+// changed
 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
 		setOrganizationSelection( organizationList );
 
 		/**
 		 * BUG FIX - Save button stayed hidden on Add
-		 *
-		 * Same root cause and same fix already applied in
-		 * Student.script.js's setFormDefaults(): setOrganizationSelection()
-		 * above calls enableSaveButton(false) while it loads, and nothing
-		 * ever turned it back on once the Add form's defaults had finished
-		 * loading - so Save stayed invisible until the user happened to
-		 * type into a field (Name/Organization Id), which is what made the
-		 * "Add New Category" modal look like it had no Save button at all.
-		 * Explicitly showing it here means a new Category can be saved
-		 * with the defaults as-is, matching Student's Add form.
-		 */
+		
 		enableSaveButton( true );
 
 		$( FORM_FIELD.DOCUMENT_DIV ).hide();
@@ -490,6 +526,9 @@ var CategoryScript = (function () {
 	function populateFromLocalStorage( data ){
 		$( FORM_FIELD.CATEGORY_ID ).val( data[ INDEX.CATEGORY_ID ] );
 		$( FORM_FIELD.NAME ).val( data[ INDEX.NAME ] );
+// not used anymore
+// 		$( FORM_FIELD.INSTITUTION_ID ).val( data[ INDEX.INSTITUTION_ID ] ).change();
+// updated
 		$( FORM_FIELD.ORGANIZATION_ID ).val( data[ INDEX.ORGANIZATION_ID ] ).change();
 
 		setDocsImages( data );
@@ -616,6 +655,10 @@ var CategoryScript = (function () {
 
 		$(FORM_FIELD.CATEGORY_ID).val(data[INDEX.CATEGORY_ID]);
 		$(FORM_FIELD.NAME).val(data[INDEX.NAME]);
+// old logic
+// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
+// 		setInstitutionSelection( institutionList );
+// fixed
 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
 		setOrganizationSelection( organizationList );
 
@@ -660,13 +703,27 @@ var CategoryScript = (function () {
 		var jsonData = {};
 		jsonData[ JSON_KEY.CATEGORY_ID ] = ( $(FORM_FIELD.CATEGORY_ID).val() );
 		jsonData[ JSON_KEY.NAME ] = ( $(FORM_FIELD.NAME).val() );
+// no longer used
+// 		jsonData[ JSON_KEY.INSTITUTION_ID ] = ( $(FORM_FIELD.INSTITUTION_ID).val() );
+// updated logic
 		jsonData[ JSON_KEY.ORGANIZATION_ID ] = ( $(FORM_FIELD.ORGANIZATION_ID).val() );
 
 /*
 		// used for file upload
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
-
+// kept for reference
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			jsonData[ JSON_KEY.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
+// 			jsonData[ JSON_KEY.NAME ] = data[ INDEX.NAME ];
+// 			jsonData[ JSON_KEY.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
+//
+// 		}
+// changed
 		// --------------------------------------------------------
 		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
 		// --------------------------------------------------------
@@ -699,10 +756,66 @@ var CategoryScript = (function () {
 		mUploadedFiles = [];		
 		mFile = null;
 		mFileClosed = false;
-
+// old code
+// 		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
+// not used anymore
+// 	function getFormDataAsArray( mode ) {
+//
+// 		var arrayData = [];
+// 		arrayData[ INDEX.CATEGORY_ID ] = ( $( FORM_FIELD.CATEGORY_ID ).val() );
+// 		arrayData[ INDEX.NAME ] = ( $( FORM_FIELD.NAME ).val() );
+// 		arrayData[ INDEX.INSTITUTION_ID ] = ( $( FORM_FIELD.INSTITUTION_ID ).val() );
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			arrayData[ INDEX.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
+// 			arrayData[ INDEX.NAME ] = data[ INDEX.NAME ];
+// 			arrayData[ INDEX.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
+//
+// 		}
+//
+// 		if( mFileList.length > 0 ) {
+//
+// 			arrayData[ INDEX.PHOTO_PATH ] = mFileList[ 0 ];
+// 		}
+//
+// 		mFileList = [];
+//
+// 		mUploadedImage = [];
+// 		mImageClosed = false;
+//
+// 		if( mFile != null ) {
+//
+// 			window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
+//
+// 			function failNative( e ) {
+//
+// 				console.error( 'ResolveNativePath: Error for ' + mFile.uri );
+//
+// 			}
+//
+// 			function successNative( finalPath ) {
+//
+// 				var fileList = [];
+// 				fileList[ 0 ] = finalPath;
+// 				arrayData[ INDEX.DOCUMENT_PATH ] = JSON.stringify( fileList );
+// 			}
+// 		}
+//
+// 		mFile = null;
+//
+// 		mUploadedFiles = [];
+// 		mFileClosed = false;
+//
+//
+// 		console.log( "getFormDataArray: " + arrayData );
+// 		return arrayData;
+// 	}
 	function onConfirmNetworkSaveData() {
 
 		var mode = getAddEditMode();
@@ -727,6 +840,35 @@ var CategoryScript = (function () {
 
 		serverInsertUpdate( url, TYPE, inData, mode, parseInsertUpdateResponse, onErrorInsertUpdate );
 	}
+// old logic
+// 	function onConfirmDbSaveData() {
+//
+// 		var mode = getAddEditMode();
+//
+// 		mJsonData = getFormDataAsArray( mode );
+//
+// 		switch( mode ) {
+// 			case INSERT_DATA:
+//
+// 				var query = getInsertQuery();
+// 				insert( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			case UPDATE_DATA:
+//
+// 				var query = getUpdateQuery();
+// 				update( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			default:
+//
+// 				console.log( "Invalid mode passed to saveFormDataInsertDb, mode = " + mode );
+// 				return false;
+// 		}
+// 	}
+//
+//
+	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 
 		var errorHandlerScript = ErrorHandlerScript.getInstance();
@@ -738,7 +880,9 @@ var CategoryScript = (function () {
 		var message = "Failed to connect to " + APP_NAME + " server.\nPlease check your internet connection and try to save the data again.";
 		showAlertDialog( message, gotoLogin, title, buttonStr );
 	}
-
+// no longer used
+// 	function saveFormData( buttonIndex ) { //pass create table as additional param
+// changed
 	function saveFormData( buttonIndex ) {
 
 		if( buttonIndex == BUTTON_CANCEL ) { // Cancel alert dialog
@@ -751,7 +895,9 @@ var CategoryScript = (function () {
 	}
 
 	function onConfirmSaveFormData() {
-
+// kept for reference
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 		// --------------------------------------------------
 		// WHY: Previously, this function branched between the
 		// old SQLite path (getFormDataAsArray, onConfirmDbSaveData,
@@ -765,7 +911,9 @@ var CategoryScript = (function () {
 		// WHEN: runs when the user confirms Save on the
 		// Add/Edit Category form.
 		// --------------------------------------------------
-
+// old code
+// 			saveNetworkFormData();
+// fixed
 		var mode = getAddEditMode();
 
 		mJsonData = getFormDataAsJson( mode );
@@ -815,12 +963,46 @@ var CategoryScript = (function () {
 			);
 		}
 		else {
-
+// not used anymore
+// 			saveDbFormData();
+// updated logic
 			CommonUtils.logError( "Category.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
-
+// old logic
+// 	function saveDbFormData() {
+// no longer used
+// 		showLoader( "Please wait...", "Fetching data.." );
+//
+// 		onConfirmDbSaveData();
+// 	}
+// 	function saveNetworkFormData() {
+//
+// 		if( mFileList.length == 0 && mFile == null ) {
+//
+// 			showLoader( "Please wait...", "Fetching data..." );
+// 			onConfirmNetworkSaveData();
+// 		}
+// 		else {
+//
+// 			if( mFileList.length > 0 ) { // File selected
+//
+// 				var fileName = "IMG_" + new Date().getTime() + ".jpg";
+// 				var mediaType = "image/jpeg";
+//
+// 				var imageUri = mFileList[0]; // First image data
+//
+// 				uploadFile( fileName, mediaType, imageUri, onFileUploadSuccess, TYPE_UPLOAD_IMAGE );		
+// 			}
+// 			else {
+//
+// 				uploadDocuments();
+// 			}
+//
+// 		}
+// 	}
+// updated
 	// NOTE: uploadDocuments() below still calls uploadFile(), which does
 	// not exist in this PWA. Left untouched (not migrated) because
 	// CategoryHTML.script.js's onFileUploadSuccess() still calls it
@@ -835,12 +1017,15 @@ var CategoryScript = (function () {
 		}
 	
 		function successNative( finalPath ) {
-	
+	// kept for reference
+// 		  console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
 	function deleteRows( deleteDataArray ) {
-
+// old code
+// 		if( getAppMode() == MODE_NETWORK_DB ){
+// updated logic
 		// --------------------------------------------------
 		// WHY: Previously, this function branched between a
 		// network DELETE call and a raw SQLite DELETE query,
@@ -854,25 +1039,55 @@ var CategoryScript = (function () {
 		// WHEN: runs after the user confirms a single or
 		// multi-select delete.
 		// --------------------------------------------------
-
+// not used anymore
+// 			var deleteIds = deleteDataArray.join();
+// 			var jsonData = {
+// 				"category_id": deleteIds // ADD ANY OTHER CONDITION (IF ANY)
+// 			};
+// changed
 		deleteNextRow( 0 );
-
+// old logic
+// 			var inData = JSON.stringify( jsonData );
+//
+// 			console.log( "deleteRows: " + inData );
+// updated
 		function deleteNextRow( numIndex ) {
-
+// no longer used
+// 			var url = getServerUrl() + ROOT_URL + URL;
+// fixed
 			if( numIndex >= deleteDataArray.length ) {
-
+// kept for reference
+// 			var type = "DELETE";
+// updated logic
 				parseDeleteResponse( deleteDataArray.length, null, null );
 				return;
 			}
-
+// old code
+// 			onDelete( url, type, inData, parseDeleteResponse, onErrorDeleteData );
+// 		}
+// 		else{
+// changed
 			DataService.deleteRecord(
-
+// not used anymore
+// 			var query = "DELETE FROM " + TABLE_NAME + " WHERE " + DB_FIELD.CATEGORY_ID;
+//
+// 			var idStr = "";
+// 			for( var i = 0; i < deleteDataArray.length; i++ ) {
+// updated
 				AppConfig.STORES.CATEGORY,
-
+// old logic
+// 				if( i == 0 ) {
+// fixed
 				deleteDataArray[ numIndex ],
-
+// no longer used
+// 					idStr = "?";
+// 				} 
+// 				else {
+// updated logic
 				function() {
-
+// kept for reference
+// 					idStr += ", ?";
+// changed
 					deleteNextRow( numIndex + 1 );
 				},
 
@@ -882,11 +1097,42 @@ var CategoryScript = (function () {
 					hideLoader();
 					CommonUtils.showAlert( "Unable to delete Category." );
 					return;
-				}
+// old code
+// 			}
+//
+// 			query += " IN (" + idStr + ")";
+//
+// 			removeItem( query, deleteDataArray, parseDeleteResponse );
+// updated				}
 			);
 		}
 	}
+// not used anymore
+// 	function onErrorDeleteData( url, jsonData, description, logData, flag ){
 
+
+// old logic
+// 		var errorHandlerScript = ErrorHandlerScript.getInstance();
+// 		errorHandlerScript.saveErrorData( "Category", url, jsonData, description, logData, flag, null );
+// 	}
+//
+// 	function parseDbFormDataResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		var i = 0;
+//
+// 		var data = [];
+// 		data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+// 		data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 		data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 		dataList[ i ] = data;
+//
+// 		parseFormDataResponse( dataList );
+// 	}
+//
+//
+// updated logic
 	// --------------------------------------------------
 	// WHY: categoryList here is [ objCategory ], a plain
 	// DataService object like { category_id, name,
@@ -909,7 +1155,9 @@ var CategoryScript = (function () {
 	// Edit form.
 	// --------------------------------------------------
 	function parseFormDataResponse( categoryList ) {
-
+// no longer used
+// 		setStorageData( categoryList, SESSION_OBJECT.CATEGORY_DATA );
+// changed
 		var arrCategoryRows = [];
 
 		for( var i = 0; i < categoryList.length; i++ ) {
@@ -931,46 +1179,70 @@ var CategoryScript = (function () {
 
 		popUpEditForm();
 	}
+// kept for reference
+// 	// fetch data using 'summary' API and is used for Edit
+// 	function fetchNetworkListData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var appMode = MODE_CORDOVA_APP; // mode = 2 : CordovaApp, mode = 1 : webapp
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /*URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
+//
+//
+// 	// fetch data using 'select' API and is used for Edit
+// 	function fetchNetworkData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var id = getSelectedId();
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT + "?organization_id=" + organizationId + "&category_id="+ id +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
+// 	function setInstitutionSelection( institutionList ) {
+// updated
 
 	// BUG FIX - Add New Category modal's Save/Close/X buttons did nothing
-	//
-	// Why: this used to call OrganizationScript.getInstance() - a
-	// singleton that is not defined ANYWHERE in this project (leftover
-	// from an earlier version of the form where Organization Id was a
-	// dropdown; the HTML markup for it is a plain <input type="text">
-	// now, same as every other place this file touches
-	// FORM_FIELD.ORGANIZATION_ID, e.g. the Edit-mode load at
-	// $(FORM_FIELD.ORGANIZATION_ID).val(...) and the Save handler's
-	// jsonData[JSON_KEY.ORGANIZATION_ID] = $(FORM_FIELD.ORGANIZATION_ID).val()).
-	// Calling a function on an undefined object throws a ReferenceError,
-	// and since this ran synchronously inside onClickAdd() -> ... ->
-	// onAddEditDocumentReady() - BEFORE that same function reaches its
-	// own $('#save_data')/$('#add_edit_header_close')/$('#add_edit_footer_close')
-	// click bindings further down - the exception aborted the rest of
-	// onAddEditDocumentReady() every single time "Add" was clicked, so
-	// none of those three buttons were ever wired up on the Add form.
-	//
-	// What: set the plain text field directly instead, the same way
-	// setFormDefaults() already does for Name right above this call.
-	// organizationList is no longer used (nothing to populate a
-	// dropdown with) but the parameter is left in place since every
-	// caller already passes it - only this function's body changed.
+	
 	function setOrganizationSelection( organizationList ) {
 
 		var mode = getAddEditMode();
-
+// old code
+// 		var selectedId = DEFAULT.INSTITUTION_ID;
+// fixed
 		var selectedId = DEFAULT.ORGANIZATION_ID;
 		if( mode == UPDATE_DATA ) { // Edit
 
 			var data = getSelectedData();	
+// not used anymore
+// 			selectedId = data[ INDEX.INSTITUTION_ID ];
+// updated logic
 			selectedId = data[ INDEX.ORGANIZATION_ID ];
 		}
 		else if( mode == INSERT_DATA ) {
 
 			// Fetch id from the localstorage which previously selected
+// old logic
+// 			selectedId = DEFAULT.INSTITUTION_ID; //getSelectedDropdownId( LOCAL_OBJECT.INSTITUTION_ID );
+// changed
 			selectedId = DEFAULT.ORGANIZATION_ID; //getSelectedDropdownId( LOCAL_OBJECT.ORGANIZATION_ID );
 		}
 
+// no longer used
+// 		var institutionScript = InstitutionScript.getInstance();
+// 		institutionScript.populateSelection( institutionList, FORM_FIELD.INSTITUTION_ID, selectedId );
+// updated
+		var organizationScript = OrganizationScript.getInstance();
+		organizationScript.populateSelection( organizationList, FORM_FIELD.ORGANIZATION_ID, selectedId );
 		$( FORM_FIELD.ORGANIZATION_ID ).val( selectedId );
 		enableSaveButton( false );
 	}
@@ -985,7 +1257,21 @@ var CategoryScript = (function () {
 
 		return selectedId;
 	}
-
+// kept for reference
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbListData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME;
+// 		select( query, option.callback );
+// 	}
+//
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME + " WHERE " + DB_FIELD.CATEGORY_ID + "=" + getSelectedId();
+// 		select( query, option.callback );
+// 	}
+// fixed
 	// --------------------------------------------------
 	// WHY: Previously, this function fetched the record over
 	// the network or from SQLite, relying on functions that
@@ -1000,11 +1286,24 @@ var CategoryScript = (function () {
 
 	// get data for Edit
 	function getData() {
-
+// old code
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated logic
 		DataService.getRecordById(
-
+// not used anymore
+// 			fetchNetworkData({
+// 				callback: parseFormDataResponse
+// 			});
+// 		}
+// 		else {
+// changed
 			AppConfig.STORES.CATEGORY,
-
+// old logic
+// 			fetchDbData({
+// 				callback: parseDbFormDataResponse
+// 			});
+// 		}
+// updated
 			getSelectedId(),
 
 			function( objCategory ) {
@@ -1036,8 +1335,13 @@ var CategoryScript = (function () {
 	// --------------------------------------------------
 
 	// get Summary Data for List
+// no longer used
+// 	function getListData() {
+// fixed
 	function getListData( iRequestedPage ) {
-
+// kept for reference
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated logic
 		// --------------------------------------------------
 		// WHY: nothing told the user a fetch was in progress,
 		// so a slow/failed Google Apps Script call just
@@ -1050,11 +1354,25 @@ var CategoryScript = (function () {
 		// (re)loaded - now for exactly one page at a time
 		// (Performance Optimization Phase), not the whole table.
 		// --------------------------------------------------
-
+// old code
+// 			fetchNetworkListData({
+// 				callback: parseListResponse
+// 			});
+// changed
 		if( iRequestedPage ) {
 
 			mCurrentPage = iRequestedPage;
 		}
+// not used anymore
+// 		else {
+
+
+// old logic
+// 			fetchDbListData({
+// 				callback: parseDbListResponse
+// 			});						
+// 		}
+// fixed
 
 		DataService.getRecordsPage(
 
@@ -1181,6 +1499,10 @@ var CategoryScript = (function () {
 
 			(async () => {
 				mFile = await chooser.getFile();
+// no longer used
+// 				// console.log(file ? file.name : 'canceled');
+// 				// console.log(file ? file.uri : 'canceled');
+// 				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1468,7 +1790,9 @@ var CategoryScript = (function () {
 	}
 
 	function onLoadCacheManager() {
-
+// kept for reference
+// 		loadInstitutionList();
+// changed
 		// --------------------------------------------------
 		// WHY: this used to load cached lookup lists (like
 		// Organizations) before the Category list itself was
@@ -1579,7 +1903,9 @@ var CategoryScript = (function () {
 			}
 		}
 	}
-
+// old code
+// 	function loadInstitutionList() {
+// updated
 	// --------------------------------------------------
 	// Renders exactly one already-fetched page of Categories -
 	// the real-pagination replacement for showFilteredList(),
@@ -1590,7 +1916,10 @@ var CategoryScript = (function () {
 	// edits needed).
 	// --------------------------------------------------
 	function renderCurrentPage( arrCategoryRows ) {
-
+// not used anymore
+// 		var cacheManagerScript = CacheManagerScript.getInstance();
+// 		cacheManagerScript.loadCacheMangerList( CacheManagerScript.LOAD_MODE.INSTITUTION_LIST, loadInstitutionList );
+// fixed
 		mSearchList = arrCategoryRows;
 		mSelectedDataList = arrCategoryRows; // Initializing the Selected data array
 		mMultiSelectedList = []; // Initializing the Selected data array
@@ -1622,6 +1951,13 @@ var CategoryScript = (function () {
 
 		bindPaginationBarListeners();
 	}
+// old logic
+// 	// parse summary list response from server
+// 	function parseListResponse( response, status ) {
+
+// no longer used
+// 		if( response == null || status < 0 ) {
+// changed
 
 	// --------------------------------------------------
 	// Small, self-contained Prev/Next bar - plain HTML/inline
@@ -1630,10 +1966,14 @@ var CategoryScript = (function () {
 	// getEmptyStateHtml for the same approach).
 	// --------------------------------------------------
 	function buildPaginationBarHtml() {
-
+// kept for reference
+// 			response = [];
+// updated
 		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
 		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
-
+// old code
+// 			console.log( "parseListResponse Error: " + status );
+// fixed
 		return (
 			'<div id="pagination_bar" class="pagination-area">' +
 				'<button type="button" id="btn_page_prev" class="btn-page-nav" ' + strPrevDisabled + '>Prev</button>' +
@@ -1692,7 +2032,15 @@ var CategoryScript = (function () {
 				arrOrganizationNames.push( strOrganization );
 			}
 		}
+// not used anymore
+//
+// 			hideLoader();
+//
+// 		setStorageData( response, SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
 
+// old logic
+// 		doFilterCategoryList();
+// changed
 		setOrganizationListData( arrOrganizationNames );
 	}
 	// parse summary list response from the storage
@@ -1755,7 +2103,9 @@ var CategoryScript = (function () {
 	function enableSearch( mode ) {
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
-
+// no longer used
+// 				$("#search").keyup( function (e) {
+// updated
 				// --------------------------------------------------
 				// Universal Search: bound via the native "input" event
 				// instead of jQuery's keyup() - input fires for every
@@ -1768,6 +2118,9 @@ var CategoryScript = (function () {
 				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
+// kept for reference
+// 				});
+// fixed
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -1784,7 +2137,9 @@ var CategoryScript = (function () {
 		resetMultiSelection();
 
 		resetFilterInfo();
-
+// old code
+// 		getListData();
+// updated logic
 		mCurrentPage = 1;
 
 		getListData( 1 );
@@ -1841,6 +2196,9 @@ var CategoryScript = (function () {
 	function onClickDelete() {
 
 		closeSelectMenu();
+// not used anymore
+// 		showConfirmationAlert( "Do you want to delete selected Category?", onConfirmDelete, "Message", buttonLabels );
+// changed
 		showConfirmationAlert( "Do you want to delete selected Category?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -1856,20 +2214,62 @@ var CategoryScript = (function () {
 	// for how that result gets paginated.
 	// --------------------------------------------------
 	function searchList() {
-
+// old logic
+// 		var list = document.getElementById("list_id");
+// 		var listItems = list.getElementsByTagName("ul");
+// updated
 		if( mSearchDebounceTimer ) {
-
+// no longer used
+// 		var input = document.getElementById("search");
+// 		var filter = input.value.toUpperCase();
+//
+// 		for( var i = 0; i < listItems.length; i++ ) {
+//
+// 			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+//
+// 			if( name != null ) {
+//
+// 				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+//
+// 					var categoryData = mSelectedDataList;
+//
+// 					var index = mSearchList.length;
+// 					mSearchList[index] = categoryData[ i ];
+//
+// 					listItems[i].style.display = "";
+// 				} else {
+//
+// 					listItems[i].style.display = "none";
+// 				}
+// 			}
+// fixed
 			clearTimeout( mSearchDebounceTimer );
 		}
-
+// kept for reference
+// 		// Displaying No. of Records
+// 		var totalRecordsLength = listItems.length;
+// 		var searchRecordsLength = $( "ul:visible" ).length - 1;
+// 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
+// 		var totalRecords = "Total: " + totalRecordsLength;
+// 		var searchInput = document.getElementById( "search" ).value;
+// updated logic
 		mSearchDebounceTimer = setTimeout( function() {
-
+// old code
+// 		if( searchInput == "" ) {
+// changed
 			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
 			mCurrentPage = 1;
-
+// not used anymore
+// 			document.getElementById( "records" ).innerText = totalRecords;
+// 		}
+// 		else {
+// updated
 			showLoader( "Searching..." );
 			getListData( 1 );
-
+// old logic
+// 			document.getElementById( "records" ).innerText = searchRecords;
+// 		}
+// fixed
 		}, 250 );
 	}
 
@@ -1995,6 +2395,9 @@ var CategoryScript = (function () {
 
 			closeFilterMenu();
 		} 
+// no longer used
+// 		else if( $('#modal_share_question').hasClass('show')) {
+// updated logic
 		// Final QA fix: this used to check the nonexistent
 		// '#modal_share_question' element (always false, so the
 		// Back button never detected the Share modal was open).
@@ -2065,6 +2468,9 @@ var CategoryScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response[ JSON_KEY.CATEGORY_ID ] );
+// kept for reference
+// 			message = "Category has been added successfully";
+// changed
 			message = "Category saved successfully.";
 			
 			categoryList.push( result );
@@ -2077,6 +2483,9 @@ var CategoryScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
+// old code
+// 			message = "Category has been updated successfully";
+// updated
 			message = "Category updated successfully.";
 
 			for ( var i = 0; i < categoryList.length; i++ ) {
@@ -2110,6 +2519,24 @@ var CategoryScript = (function () {
 			deleteRows( deleteDataArray );
 		}
 	}
+// not used anymore
+// 	function parseDbListResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+//
+// 			var data = [];
+//
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 			dataList[ i ] = data;
+// 		}
+//
+// 		parseListResponse( dataList, 0 );
+// 	}
+//
 	// create an array from the add/edit jsonData. It can be used to update the list after successful Add/Edit operation
 	// It can reduce the number of calls to the server after Edit/Add
 	function getAddEditResultArray( id ) {
@@ -2123,6 +2550,20 @@ var CategoryScript = (function () {
 		// IndexedDB) just assigned. On Update, id is passed as 0
 		// (the existing ID already sits correctly in mJsonData), so
 		// the fallback keeps that path unchanged.
+// old logic
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
+// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_JSON_KEY.INSTITUTION_ID ];
+// 		}
+// 		else {
+//
+// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_INDEX.CATEGORY_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_INDEX.NAME ];
+// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_INDEX.INSTITUTION_ID ];
+// 		}
+// updated logic
 		data[ SUMMARY_INDEX.CATEGORY_ID ] = id || mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
 		data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
 		data[ SUMMARY_INDEX.ORGANIZATION_ID ] = mJsonData[ SUMMARY_JSON_KEY.ORGANIZATION_ID ];
@@ -2189,7 +2630,9 @@ var CategoryScript = (function () {
 			}
 
 			parseListFromStorage();
-
+// no longer used
+// 			showOperationMessage( "Selected Category(s) has been deleted successfully", "Success", null );
+// changed
 			showOperationMessage( "Category deleted successfully.", "Success", null );
 		}
 	}
@@ -2263,6 +2706,8 @@ var CategoryScript = (function () {
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
+// kept for reference
+// 		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2306,6 +2751,8 @@ var CategoryScript = (function () {
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
+// old code
+// 		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2328,7 +2775,9 @@ var CategoryScript = (function () {
 	// reset all the multiple selected rows
 
 	function resetMultiSelection() {
-
+// not used anymore
+// 		if( $( '#modal_share_category' ).hasClass( 'show' )) {
+// updated logic
 		// Final QA fix: this used to check a nonexistent element
 		// ('#modal_share_category', always false) instead of the real
 		// share modal's id, 'modal_share'. Corrected so this
@@ -2372,7 +2821,9 @@ var CategoryScript = (function () {
 	function onClickMultiRowDelete() {
 
 		closeMultiSelectMenu();
-
+// old logic
+// 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+// changed
 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -2380,14 +2831,18 @@ var CategoryScript = (function () {
 	function onClickMultiOption1() {
 
 		closeMultiSelectMenu();
-
+// no longer used
+// 		console.log( "Multiple selection option 1: TBD" );
+// updated
 		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
 	function onClickMultiOption2() {
 
 		closeMultiSelectMenu();
-
+// kept for reference
+// 		console.log( "Multiple selection option 2: TBD" );
+// fixed
 		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
@@ -2534,7 +2989,11 @@ var CategoryScript = (function () {
 */
 
 	function createHtmlListItem( data, index ) {
-
+// old code
+// 		var name = data[ SUMMARY_INDEX.FIRST_FILL_IN ];
+// 		var fillInData = data[ SUMMARY_INDEX._FILL_IN ];
+// 		var seqNumber = index + 1 +') ';
+// updated logic
 		// --------------------------------------------------
 		// WHY: this originally read data[ SUMMARY_INDEX.FIRST_FILL_IN ]
 		// and data[ SUMMARY_INDEX._FILL_IN ] - neither of those keys
@@ -2547,7 +3006,9 @@ var CategoryScript = (function () {
 		// WHEN: runs once per Category card, every time the list is
 		// drawn.
 		// --------------------------------------------------
-
+// not used anymore
+// 		var infoIconHtml = '<i onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');" class="fa fa-info-circle text-info" aria-hidden="true" style=""></i>';
+// changed
 		var name = data[ SUMMARY_INDEX.NAME ];
 		var fillInData = data[ SUMMARY_INDEX.ORGANIZATION_ID ];
 		// PAGINATION FIX: seqNumber is the DISPLAYED row number and must
@@ -2563,11 +3024,19 @@ var CategoryScript = (function () {
 		// handler in common.js.
 		var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View category details" onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
+// old logic
+// 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_INSTITUTION ) == true ) {
+// updated
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_CATEGORY ) == true ) {
+// no longer used
+// 			editIconHtml = '<i onclick="CategoryScript.getInstance().onClickEditIcon('+ index +');" class="fas fa-edit text-info" style="margin-top: 10px;float: right;margin-right: 10px;"></i>';
+// fixed
 
 			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit category" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
-
+// kept for reference
+// 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="box-shadow:2px 3px 3px 1px rgba(0,0,0,0.5);margin-bottom: 5px;">' +
+// updated logic
 		// FIX (per-card Share icon): this card never had a Share
 		// button at all - only Student.script.js/Result.script.js
 		// did. Added the same icon-btn-share pattern, wired to a
@@ -2597,6 +3066,10 @@ var CategoryScript = (function () {
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
+// old code
+// 							'<li style="font-size: 20px;">'+ seqNumber + name + '</li>' +
+// 							'<li style="font-size: 14px;padding-top: 6px; font-weight: 700;">' + infoIconHtml + " " + fillInData + '</li>' +									
+// changed
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
 							'</div>' +
@@ -2648,6 +3121,9 @@ var CategoryScript = (function () {
 		var query = 'CREATE TABLE IF NOT EXISTS ' + TABLE_NAME + ' (' +
 			DB_FIELD.CATEGORY_ID + ' INTEGER PRIMARY KEY ,' +
 			DB_FIELD.NAME + ' TEXT ,' +
+// not used anymore
+// 			DB_FIELD.INSTITUTION_ID + ' TEXT' +
+// updated
 			DB_FIELD.ORGANIZATION_ID + ' TEXT' +
 			')';
 
@@ -2661,6 +3137,9 @@ var CategoryScript = (function () {
 
 			DB_FIELD.CATEGORY_ID + ',' +
 			DB_FIELD.NAME + ',' +
+// old logic
+// 			DB_FIELD.INSTITUTION_ID +
+// fixed
 			DB_FIELD.ORGANIZATION_ID +
 			') VALUES (?, ?, ?)';
 		return query;
@@ -2671,12 +3150,61 @@ var CategoryScript = (function () {
 		var query = 'UPDATE ' + TABLE_NAME + ' SET ' +
 			DB_FIELD.CATEGORY_ID + '=?, ' +
 			DB_FIELD.NAME + '=?, ' +
+// no longer used
+// 			DB_FIELD.INSTITUTION_ID +' =? WHERE ' +
+// updated logic
 			DB_FIELD.ORGANIZATION_ID +' =? WHERE ' +
 			DB_FIELD.CATEGORY_ID + '=' + getSelectedId();
 
 		return query;
 	}
-
+// kept for reference
+//
+// 	function getListFromServer( onSuccess, callback ) {
+//
+// 		var mode = getAppMode();
+//
+// 		if( mode == MODE_NETWORK_DB ) { 
+//
+// 			var sessionId = getSessionId();
+// 			var organizationId = getOrganizationId();
+//
+// 			// mode = 2 : CordovaApp, mode = 1 : webapp
+// 			var appMode = MODE_CORDOVA_APP;
+//
+// 			var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /* OR URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 			fetchDataFromServer( url, onSuccess, onErrorFetchData, callback );
+// 		}
+// 		else {
+//
+// 			var query = "SELECT * FROM " + TABLE_NAME;
+// 			selectList( query, parseLocalData, onSuccess, callback );
+// 		}
+// 	}
+// 	function parseLocalData(response, onSuccess, callback) {
+// 		var dataList = [];
+// 		if( response.rows.length == 0 ) {
+//
+// 			onSuccess( dataList, callback );
+// 		}
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+// 			var data = [];
+//
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+//
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 			dataList[ i ] = data;
+//
+// 			if( i == ( response.rows.length - 1 ) ) {
+//
+// 				onSuccess( dataList, callback );
+// 			}
+// 		}
+// 	}
 
 	function onErrorFetchData( url, description, logData, flag ){
 
@@ -2699,11 +3227,23 @@ var CategoryScript = (function () {
 	function onInfoViewDocumentReady() {
 
 		DataService.getRecordById(
-
+// old code
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 			AppConfig.STORES.CATEGORY,
-
+// not used anymore
+// 			fetchNetworkData({
+// 				callback: parsePreviewResponse
+// 			});
+// 		}
+// 		else {
+// fixed
 			getSelectedId(),
-
+// old logic
+// 			fetchDbData({
+// 				callback: parsePreviewResponse
+// 			});
+// updated logic
 			function( objCategory ) {
 
 				if( objCategory ) {
@@ -2742,7 +3282,32 @@ var CategoryScript = (function () {
 
 			arrCategoryRows.push( arrRow );
 		}
-
+// no longer used
+// 	}
+//
+// 	function parsePreviewResponse( response, statusCode ) {
+//
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			setStorageData( response, SESSION_OBJECT.INSTITUTION_DATA );
+// 		}
+// 		else {
+//
+// 			var i = 0;
+//
+// 			var data = [];			
+//
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+//
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 			var dataList = [];
+// 			dataList.push(data);
+//
+// 			setStorageData( dataList, SESSION_OBJECT.CATEGORY_DATA );
+// 		}
+// changed
 		setStorageData( arrCategoryRows, SESSION_OBJECT.CATEGORY_DATA );
 
 		setPreview();
@@ -2758,6 +3323,9 @@ var CategoryScript = (function () {
 		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( data[INDEX.CATEGORY_ID] );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
+// kept for reference
+// 		$(FORM_FIELD_INFO.LBL_INSTITUTION_ID).text( data[INDEX.INSTITUTION_ID] );
+// updated
 		$(FORM_FIELD_INFO.LBL_ORGANIZATION_ID).text( data[INDEX.ORGANIZATION_ID] );
 
 		$(FORM_FIELD_INFO.LBL_DESCRIPTION).text( data[INDEX.DESCRIPTION] || 'No description provided.' );
@@ -2781,6 +3349,9 @@ var CategoryScript = (function () {
 		// WHEN: runs every time the Info popup is populated.
 		// --------------------------------------------------
 		var photoPath = data[ INDEX.PHOTO_PATH ];
+// old code
+// 		if( photoPath !== "" && photoPath !== null ) {
+// fixed
 		if( photoPath !== undefined && photoPath !== "" && photoPath !== null ) {
 
 			$( '#preview_image_div' ).show();
@@ -2793,6 +3364,10 @@ var CategoryScript = (function () {
 		}
 
 		var docPath = data[ INDEX.DOCUMENT_PATH ];
+// not used anymore
+// 		if( docPath.length > 0 && docPath !== null && docPath !== '' ) {
+// updated logic
+		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 
 			var fileList = JSON.parse( docPath );
@@ -2809,7 +3384,11 @@ var CategoryScript = (function () {
 
 	}
 	function doFilterCategoryList() {
-
+// old logic
+// 		clearSearch();
+//
+// 		var list = getStorageData( SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
+// changed
 		// --------------------------------------------------
 		// Performance Optimization Phase: this used to filter
 		// against the full Category table kept in
@@ -2822,9 +3401,40 @@ var CategoryScript = (function () {
 		// Closing the modal with a note instead of silently
 		// showing wrong/empty results.
 		// --------------------------------------------------
-
+// no longer used
+// 		var institutionId = parseInt( $('#filter_institution_id').val() );
+// 		var institutionName = $( "#filter_institution_id option:selected" ).text();
+// updated
 		CommonUtils.showAlert( "Filtering by Organization isn't available with paginated lists yet - try Search instead." );
-
+// kept for reference
+//
+// 		// Set selected Ids to Session storage
+// 		sessionStorage.setItem( SESSION_OBJECT.INSTITUTION_ID, institutionId );
+//
+// 		if( list == null || list.length <= 0 ){
+//
+// 			showFilteredList( "" );
+// 		}
+// 		else if(  institutionId == 0 ){
+//
+// 			showFilteredList( list );
+// 		}
+// 		else {
+//
+// 			var data = [];
+//
+// 			data = list.filter( item =>  
+// 				( (institutionId > 0)? item[SUMMARY_INDEX.INSTITUTION_ID] == institutionId : ( item[SUMMARY_INDEX.INSTITUTION_ID] != institutionId || item[SUMMARY_INDEX.INSTITUTION_ID] == 0 ) )
+// 			);
+//
+// 			showFilteredList( data );
+// 		}
+//
+//
+//
+// 		showFilterInfo( institutionName );
+// 		closeFilterMenu();					
+// fixed
 		closeFilterMenu();
 	}
 	function showFilteredList( response ) {
@@ -2875,7 +3485,10 @@ var CategoryScript = (function () {
 
 
 	function showFilter() {
-
+// old code
+// 		var institutionList = getStorageData( SESSION_OBJECT.INSTITUTION_LIST );
+// 		setInstitutionFilterSelection( institutionList );
+// updated logic
 		var organizationList = getStorageData( SESSION_OBJECT.ORGANIZATION_LIST );
 
 		setOrganizationFilterSelection( organizationList );
@@ -2883,17 +3496,18 @@ var CategoryScript = (function () {
 		openFilterMenu();
 	}
 
-	// UI FIX (this pass): rewritten to populate #filter_organization_id
-	// directly instead of depending on OrganizationScript, which does
-	// not exist anywhere in this project (Organization is a plain
-	// text field on Category, not its own entity/module - see
-	// setFormDefaults()'s $(FORM_FIELD.ORGANIZATION_ID).val(...) for
-	// the same treatment on the Add/Edit form). organizationList is
-	// the de-duped array of organization name strings built by
-	// loadOrganizationList().
+	// not used anymore
+// 	function setInstitutionFilterSelection( institutionList ) {
+// changed
 	function setOrganizationFilterSelection( organizationList ) {
-
+// old logic
+// 		var selectedId = getFilterSelectionIds( SESSION_OBJECT.INSTITUTION_ID );
+// updated
 		if( organizationList == null ) {
+// no longer used
+// 		var institutionScript = InstitutionScript.getInstance();
+// 		institutionScript.populateSelection( institutionList, '#filter_institution_id', selectedId );
+// fixed
 
 			organizationList = [];
 		}
@@ -2919,19 +3533,33 @@ var CategoryScript = (function () {
 			}
 		}
 	}
-
+// kept for reference
+// 	function showFilterInfo( institutionName ) {
+// updated logic
 	function showFilterInfo( organizationName ) {
 
 		$( '#show_all_div' ).show();
+// old code
+// 		var institutionText = '';
+// 		$( '#institution_name_div' ).hide();
+// 		if( institutionName !== "Select All" && institutionName != null ){
+// changed
 		var organizationText = '';
 		$( '#organization_name_div' ).hide();
 		if( organizationName !== "Select All" && organizationName != null ){
-
+// not used anymore
+// 			institutionText = institutionName;
+// updated
 			organizationText = organizationName;
 			$( '#show_all_div' ).hide();
+// old logic
+// 			$( '#institution_name_div' ).show();
+// fixed
 			$( '#organization_name_div' ).show();
 		}
-
+// no longer used
+// 		$( "#institution_name" ).text( institutionText );
+// updated logic
 		$( "#organization_name" ).text( organizationText );
 	}
 
@@ -2950,7 +3578,10 @@ var CategoryScript = (function () {
 
 	function resetFilterInfo(){
 		// Reset filter info
-
+// kept for reference
+// 		sessionStorage.removeItem( SESSION_OBJECT.INSTITUTION_ID );
+// 		$( '#filter_institution_id' ).val( 0 );
+// changed
 		sessionStorage.removeItem( SESSION_OBJECT.ORGANIZATION_ID );
 		$( '#filter_organization_id' ).val( 0 );
 
@@ -3159,17 +3790,29 @@ var CategoryScript = (function () {
 		// Filled in using this entity's own real SUMMARY_INDEX
 		// fields (Category has no mobile/email of its own).
 		var resultText = "";
-
+// old code
+// /*	Write your code in here
+// 		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
+//
+// 		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
+//
+// updated
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
 		var strOrganization = selectedData[ SUMMARY_INDEX.ORGANIZATION_ID ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
-
+// not used anymore
+// 			resultText += seqNumber +") " + name + "<br>";
+// 			resultText += mobileNumber + "<br><br>";
+// fixed
 			resultText += seqNumber + ") " + strName + "<br>";
 			resultText += "Organization: " + strOrganization + "<br><br>";
 		}
 		else { // Share by WhatsApp
-
+// old logic
+// 			resultText += "_*" + seqNumber +") " + name + "*_\n";
+// 			resultText += "*" + mobileNumber + "*\n\n";
+// updated logic
 			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
 			resultText += "Organization: " + strOrganization + "\n\n";
 		}
@@ -3189,6 +3832,8 @@ var CategoryScript = (function () {
 			onConfirmNetworkSaveData: onConfirmNetworkSaveData,
 			bindFormEventHandlers: bindFormEventHandlers,
 			enableSaveButton:enableSaveButton,
+// kept for reference
+// 			getListFromServer:getListFromServer,
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,

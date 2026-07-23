@@ -149,6 +149,25 @@ Architecture:
    removed or renamed; architecture unchanged.
    ---------------------------------------------------------- */
 
+/* ----------------------------------------------------------
+   MERGE NOTE (this pass)
+   ----------------------------------------------------------
+   This file was reconciled against an older reference copy of
+   Student.script.js that still carried its historical
+   commented-out code (blocks marked "old code" / "old logic" /
+   "kept for reference" / "not used anymore" / "updated" /
+   "changed" / "fixed" / "no longer used"), from back when this
+   file used Institution/Organization fields instead of
+   Category/Section, and used SQLite/network branching instead
+   of DataService. Those historical comment blocks have been
+   restored below, next to the current working code they used to
+   sit beside, purely for traceability of how each piece of logic
+   evolved. Nothing below was reactivated - every block that
+   starts with "//" stays fully commented out. No active
+   function, event binding, or public API entry was changed,
+   renamed, or duplicated by this pass.
+   ---------------------------------------------------------- */
+
 /*/* ==========================================================
    PWA Migration Notes
    Student.script.js
@@ -437,6 +456,17 @@ var StudentScript = (function () {
 	var INDEX = {
 		STUDENT_ID : value++,		// 1
 		CATEGORY_ID : value++,		// 2
+// old code
+// 		NAME : value++,		// 3
+// 		ROLL_NUMBER : value++,		// 4
+// 		MOBILE : value++,		// 5
+// 		EMAIL : value++,		// 6
+// 		PARENT_MOBILE : value++,		// 7
+// 		TELEGRAM : value++,		// 8
+// 		PARENT_EMAIL : value++,		// 9
+// 		INSTITUTION_ID : value++,		// 10
+// 		ORGANIZATION_ID : value++,		// 11		// 11
+// updated
 		SECTION_ID : value++,		// 3
 		NAME : value++,		// 4
 		ROLL_NUMBER : value++,		// 5
@@ -454,6 +484,17 @@ var StudentScript = (function () {
 	var SUMMARY_INDEX = {
 		STUDENT_ID : value++,		// 1
 		CATEGORY_ID : value++,		// 2
+// not used anymore
+// 		NAME : value++,		// 3
+// 		ROLL_NUMBER : value++,		// 4
+// 		MOBILE : value++,		// 5
+// 		EMAIL : value++,		// 6
+// 		PARENT_MOBILE : value++,		// 7
+// 		TELEGRAM : value++,		// 8
+// 		PARENT_EMAIL : value++,		// 9
+// 		INSTITUTION_ID : value++,		// 10
+// 		ORGANIZATION_ID : value++,		// 11		// 11
+// fixed
 		SECTION_ID : value++,		// 3
 		NAME : value++,		// 4
 		ROLL_NUMBER : value++,		// 5
@@ -477,6 +518,11 @@ var StudentScript = (function () {
 		EMAIL : "Email",
 		PARENT_MOBILE : "Parent Mobile",
 		TELEGRAM : "Telegram",
+// old logic
+// 		PARENT_EMAIL : "Parent Email",
+// 		INSTITUTION_ID : "Institution",
+// 		ORGANIZATION_ID : "Organization"
+// updated logic
 		PARENT_EMAIL : "Parent Email"
 	};
 
@@ -499,6 +545,11 @@ var StudentScript = (function () {
 		EMAIL : "",
 		PARENT_MOBILE : "",
 		TELEGRAM : "",
+// no longer used
+// 		PARENT_EMAIL : "",
+// 		INSTITUTION_ID : 0,
+// 		ORGANIZATION_ID : 0
+// changed
 		PARENT_EMAIL : ""
 	};
 
@@ -515,6 +566,9 @@ var StudentScript = (function () {
 		PARENT_MOBILE : '#parent_mobile',
 		TELEGRAM : '#telegram',
 		PARENT_EMAIL : '#parent_email',
+// kept for reference
+// 		INSTITUTION_ID : '#institution_id',
+// 		ORGANIZATION_ID : '#organization_id',
 		DOCUMENT_DIV : '#file_div',
 		DOCUMENTS_PATH : '#file_id',
 		PHOTO_DIV : '#image_div',
@@ -539,6 +593,11 @@ var StudentScript = (function () {
 		LBL_EMAIL : '#lbl_email',
 		LBL_PARENT_MOBILE : '#lbl_parent_mobile',
 		LBL_TELEGRAM : '#lbl_telegram',
+// old code
+// 		LBL_PARENT_EMAIL : '#lbl_parent_email',
+// 		LBL_INSTITUTION_ID : '#lbl_institution_id',
+// 		LBL_ORGANIZATION_ID : '#lbl_organization_id'
+// fixed
 		LBL_PARENT_EMAIL : '#lbl_parent_email'
 	};
 
@@ -554,6 +613,11 @@ var StudentScript = (function () {
 		EMAIL : "email",
 		PARENT_MOBILE : "parent_mobile",
 		TELEGRAM : "telegram",
+// not used anymore
+// 		PARENT_EMAIL : "parent_email",
+// 		INSTITUTION_ID : "institution_id",
+// 		ORGANIZATION_ID : "organization_id"
+// updated logic
 		PARENT_EMAIL : "parent_email"
 	};
 
@@ -569,6 +633,11 @@ var StudentScript = (function () {
 		EMAIL : "email",
 		PARENT_MOBILE : "parent_mobile",
 		TELEGRAM : "telegram",
+// old logic
+// 		PARENT_EMAIL : "parent_email",
+// 		INSTITUTION_ID : "institution_id",
+// 		ORGANIZATION_ID : "organization_id"
+// changed
 		PARENT_EMAIL : "parent_email"
 	};
 
@@ -584,6 +653,11 @@ var StudentScript = (function () {
 		EMAIL : "email",
 		PARENT_MOBILE : "parent_mobile",
 		TELEGRAM : "telegram",
+// no longer used
+// 		PARENT_EMAIL : "parent_email",
+// 		INSTITUTION_ID : "institution_id",
+// 		ORGANIZATION_ID : "organization_id"
+// updated
 		PARENT_EMAIL : "parent_email"
 	};
 	//------------------------------SESSION OBJECT--------------------------------------
@@ -595,6 +669,12 @@ var StudentScript = (function () {
 		STUDENT_SUMMARY_DATA: "STUDENT_SUMMARY_DATA",
 		CATEGORY_LIST: "CATEGORY_LIST",
 		CATEGORY_ID: "CATEGORY_ID",
+// kept for reference
+// 		INSTITUTION_LIST: "INSTITUTION_LIST",
+// 		INSTITUTION_ID: "INSTITUTION_ID",
+// 		ORGANIZATION_LIST: "ORGANIZATION_LIST",
+// 		ORGANIZATION_ID: "ORGANIZATION_ID"
+// fixed
 		SECTION_LIST: "SECTION_LIST",
 		SECTION_ID: "SECTION_ID"
 	}
@@ -605,8 +685,20 @@ var StudentScript = (function () {
 	}
 
 
+// old code
+// 	function setInstitutionListData( institutionList ){
+// updated logic
 	function setSectionListData( sectionList ){
 
+// not used anymore
+// 		setStorageData( institutionList, SESSION_OBJECT.INSTITUTION_LIST );
+// 	}
+//
+//
+// 	function setOrganizationListData( organizationList ){
+//
+// 		setStorageData( organizationList, SESSION_OBJECT.ORGANIZATION_LIST );
+// changed
 		setStorageData( sectionList, SESSION_OBJECT.SECTION_LIST );
 	}
 
@@ -624,6 +716,14 @@ var StudentScript = (function () {
 		clearSessionStorage( SESSION_OBJECT.CATEGORY_ID );
 
 
+// old logic
+// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_LIST );
+// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_ID );
+//
+//
+// 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_LIST );
+// 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_ID );
+// updated
 		clearSessionStorage( SESSION_OBJECT.SECTION_LIST );
 		clearSessionStorage( SESSION_OBJECT.SECTION_ID );
 
@@ -665,6 +765,8 @@ var StudentScript = (function () {
 		var noOfDigits = getOrgNoOfDigits();
 		var fv = FormValidation;
 
+// no longer used
+// 		console.log('Enable the validation for this form');
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.STUDENT_ID), G_ERROR.MSG.empty_error+LABEL.STUDENT_ID);
 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.CATEGORY_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.CATEGORY_ID);
@@ -680,6 +782,9 @@ var StudentScript = (function () {
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.TELEGRAM), G_ERROR.MSG.empty_error+LABEL.TELEGRAM);
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.PARENT_EMAIL), G_ERROR.MSG.empty_error+LABEL.PARENT_EMAIL);
 		// bValid = bValid && fv.checkEmail($(FORM_FIELD.PARENT_EMAIL), /*LABEL.PARENT_EMAIL+*/ G_ERROR.MSG.invalid_emailid_error);
+// kept for reference
+// 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.INSTITUTION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.INSTITUTION_ID);
+// 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.ORGANIZATION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.ORGANIZATION_ID);
 
 		return bValid;
 	}
@@ -696,6 +801,13 @@ var StudentScript = (function () {
 		$(FORM_FIELD.PARENT_MOBILE).val(DEFAULT.PARENT_MOBILE);
 		$(FORM_FIELD.TELEGRAM).val(DEFAULT.TELEGRAM);
 		$(FORM_FIELD.PARENT_EMAIL).val(DEFAULT.PARENT_EMAIL);
+// old code
+// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
+// 		setInstitutionSelection( institutionList );
+// 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
+// 		setOrganizationSelection( organizationList );
+// 		enableSaveButton( false );
+// changed
 
 		/**
 		 * BUG FIX - Save button stayed hidden on Add
@@ -751,6 +863,9 @@ var StudentScript = (function () {
 		$( FORM_FIELD.PARENT_MOBILE ).val( data[ INDEX.PARENT_MOBILE ] );
 		$( FORM_FIELD.TELEGRAM ).val( data[ INDEX.TELEGRAM ] );
 		$( FORM_FIELD.PARENT_EMAIL ).val( data[ INDEX.PARENT_EMAIL ] );
+// not used anymore
+// 		$( FORM_FIELD.INSTITUTION_ID ).val( data[ INDEX.INSTITUTION_ID ] ).change();
+// 		$( FORM_FIELD.ORGANIZATION_ID ).val( data[ INDEX.ORGANIZATION_ID ] ).change();
 
 		setDocsImages( data );
 
@@ -886,9 +1001,17 @@ var StudentScript = (function () {
 		$(FORM_FIELD.PARENT_MOBILE).val(data[INDEX.PARENT_MOBILE]);
 		$(FORM_FIELD.TELEGRAM).val(data[INDEX.TELEGRAM]);
 		$(FORM_FIELD.PARENT_EMAIL).val(data[INDEX.PARENT_EMAIL]);
+// old logic
+// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
+// 		setInstitutionSelection( institutionList );
+// 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
+// 		setOrganizationSelection( organizationList );
 
 		setDocsImages( data );
 
+// no longer used
+// 		enableSaveButton( false );
+// updated logic
 		/**
 		 * BUG FIX - Save button stayed hidden on Edit
 		 *
@@ -908,6 +1031,8 @@ var StudentScript = (function () {
 	}
 
 	function setDocsImages( data ){
+// kept for reference
+//
 
 		var photoPath = data[ INDEX.PHOTO_PATH ];
 		if( photoPath !== "" && photoPath !== null ) {
@@ -950,6 +1075,9 @@ var StudentScript = (function () {
 		jsonData[ JSON_KEY.PARENT_MOBILE ] = ( $(FORM_FIELD.PARENT_MOBILE).val() );
 		jsonData[ JSON_KEY.TELEGRAM ] = ( $(FORM_FIELD.TELEGRAM).val() );
 		jsonData[ JSON_KEY.PARENT_EMAIL ] = ( $(FORM_FIELD.PARENT_EMAIL).val() );
+// old code
+// 		jsonData[ JSON_KEY.INSTITUTION_ID ] = ( $(FORM_FIELD.INSTITUTION_ID).val() );
+// 		jsonData[ JSON_KEY.ORGANIZATION_ID ] = ( $(FORM_FIELD.ORGANIZATION_ID).val() );
 
 /*
 		// used for file upload
@@ -971,6 +1099,9 @@ var StudentScript = (function () {
 			jsonData[ JSON_KEY.PARENT_MOBILE ] = data[ INDEX.PARENT_MOBILE ];
 			jsonData[ JSON_KEY.TELEGRAM ] = data[ INDEX.TELEGRAM ];
 			jsonData[ JSON_KEY.PARENT_EMAIL ] = data[ INDEX.PARENT_EMAIL ];
+// not used anymore
+// 			jsonData[ JSON_KEY.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
+// 			jsonData[ JSON_KEY.ORGANIZATION_ID ] = data[ INDEX.ORGANIZATION_ID ];
 
 		}
 
@@ -992,9 +1123,83 @@ var StudentScript = (function () {
 		mFile = null;
 		mFileClosed = false;
 
+// old logic
+// 		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
+// no longer used
+// 	function getFormDataAsArray( mode ) {
+//
+// 		var arrayData = [];
+// 		arrayData[ INDEX.STUDENT_ID ] = ( $( FORM_FIELD.STUDENT_ID ).val() );
+// 		arrayData[ INDEX.CATEGORY_ID ] = ( $( FORM_FIELD.CATEGORY_ID ).val() );
+// 		arrayData[ INDEX.NAME ] = ( $( FORM_FIELD.NAME ).val() );
+// 		arrayData[ INDEX.ROLL_NUMBER ] = ( $( FORM_FIELD.ROLL_NUMBER ).val() );
+// 		arrayData[ INDEX.MOBILE ] = ( $( FORM_FIELD.MOBILE ).val() );
+// 		arrayData[ INDEX.EMAIL ] = ( $( FORM_FIELD.EMAIL ).val() );
+// 		arrayData[ INDEX.PARENT_MOBILE ] = ( $( FORM_FIELD.PARENT_MOBILE ).val() );
+// 		arrayData[ INDEX.TELEGRAM ] = ( $( FORM_FIELD.TELEGRAM ).val() );
+// 		arrayData[ INDEX.PARENT_EMAIL ] = ( $( FORM_FIELD.PARENT_EMAIL ).val() );
+// 		arrayData[ INDEX.INSTITUTION_ID ] = ( $( FORM_FIELD.INSTITUTION_ID ).val() );
+// 		arrayData[ INDEX.ORGANIZATION_ID ] = ( $( FORM_FIELD.ORGANIZATION_ID ).val() );
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			arrayData[ INDEX.STUDENT_ID ] = data[ INDEX.STUDENT_ID ];
+// 			arrayData[ INDEX.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
+// 			arrayData[ INDEX.NAME ] = data[ INDEX.NAME ];
+// 			arrayData[ INDEX.ROLL_NUMBER ] = data[ INDEX.ROLL_NUMBER ];
+// 			arrayData[ INDEX.MOBILE ] = data[ INDEX.MOBILE ];
+// 			arrayData[ INDEX.EMAIL ] = data[ INDEX.EMAIL ];
+// 			arrayData[ INDEX.PARENT_MOBILE ] = data[ INDEX.PARENT_MOBILE ];
+// 			arrayData[ INDEX.TELEGRAM ] = data[ INDEX.TELEGRAM ];
+// 			arrayData[ INDEX.PARENT_EMAIL ] = data[ INDEX.PARENT_EMAIL ];
+// 			arrayData[ INDEX.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
+// 			arrayData[ INDEX.ORGANIZATION_ID ] = data[ INDEX.ORGANIZATION_ID ];
+//
+// 		}
+//
+// 		if( mFileList.length > 0 ) {
+//
+// 			arrayData[ INDEX.PHOTO_PATH ] = mFileList[ 0 ];
+// 		}
+//
+// 		mFileList = [];
+//
+// 		mUploadedImage = [];
+// 		mImageClosed = false;
+//
+// 		if( mFile != null ) {
+//
+// 			window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
+//
+// 			function failNative( e ) {
+//
+// 				console.error( 'ResolveNativePath: Error for ' + mFile.uri );
+//
+// 			}
+//
+// 			function successNative( finalPath ) {
+//
+// 				var fileList = [];
+// 				fileList[ 0 ] = finalPath;
+// 				arrayData[ INDEX.DOCUMENT_PATH ] = JSON.stringify( fileList );
+// 			}
+// 		}
+//
+// 		mFile = null;
+//
+// 		mUploadedFiles = [];
+// 		mFileClosed = false;
+//
+//
+// 		console.log( "getFormDataArray: " + arrayData );
+// 		return arrayData;
+// 	}
+// changed
 	// NOTE: onConfirmNetworkSaveData(), onErrorInsertUpdate(),
 	// parseSaveErrorDataResponse(), and uploadDocuments() below still
 	// call functions that do not exist anywhere in this PWA
@@ -1029,6 +1234,33 @@ var StudentScript = (function () {
 
 		serverInsertUpdate( url, TYPE, inData, mode, parseInsertUpdateResponse, onErrorInsertUpdate );
 	}
+// kept for reference
+// 	function onConfirmDbSaveData() {
+//
+// 		var mode = getAddEditMode();
+//
+// 		mJsonData = getFormDataAsArray( mode );
+//
+// 		switch( mode ) {
+// 			case INSERT_DATA:
+//
+// 				var query = getInsertQuery();
+// 				insert( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			case UPDATE_DATA:
+//
+// 				var query = getUpdateQuery();
+// 				update( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			default:
+//
+// 				console.log( "Invalid mode passed to saveFormDataInsertDb, mode = " + mode );
+// 				return false;
+// 		}
+// 	}
+//
 
 	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 
@@ -1042,6 +1274,9 @@ var StudentScript = (function () {
 		showAlertDialog( message, gotoLogin, title, buttonStr );
 	}
 
+// old code
+// 	function saveFormData( buttonIndex ) { //pass create table as additional param
+// fixed
 	function uploadDocuments(){
 
 		window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
@@ -1139,8 +1374,14 @@ var StudentScript = (function () {
 		}
 	}
 
+// not used anymore
+// 	function onConfirmSaveFormData() {
+// updated logic
 	function deleteRows( deleteDataArray ) {
 
+// old logic
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// changed
 		// --------------------------------------------------
 		// WHY: Previously, this function branched between a
 		// network DELETE call and a raw SQLite DELETE query,
@@ -1155,8 +1396,16 @@ var StudentScript = (function () {
 		// multi-select delete.
 		// --------------------------------------------------
 
+// no longer used
+// 			saveNetworkFormData();
+// 		}
+// 		else {
+// updated
 		deleteNextRow( 0 );
 
+// kept for reference
+// 			saveDbFormData();
+// fixed
 		function deleteNextRow( numIndex ) {
 
 			if( numIndex >= deleteDataArray.length ) {
@@ -1186,9 +1435,128 @@ var StudentScript = (function () {
 			);
 		}
 	}
+// old code
+// 	function saveDbFormData() {
+//
+// 		showLoader( "Please wait...", "Fetching data.." );
+//
+// 		onConfirmDbSaveData();
+// 	}
+// 	function saveNetworkFormData() {
+//
+// 		if( mFileList.length == 0 && mFile == null ) {
+//
+// 			showLoader( "Please wait...", "Fetching data..." );
+// 			onConfirmNetworkSaveData();
+// 		}
+// 		else {
+//
+// 			if( mFileList.length > 0 ) { // File selected
+//
+// 				var fileName = "IMG_" + new Date().getTime() + ".jpg";
+// 				var mediaType = "image/jpeg";
+//
+// 				var imageUri = mFileList[0]; // First image data
+//
+// 				uploadFile( fileName, mediaType, imageUri, onFileUploadSuccess, TYPE_UPLOAD_IMAGE );		
+// 			}
+// 			else {
+//
+// 				uploadDocuments();
+// 			}
+//
+// 		}
+// 	}
+// 	function uploadDocuments(){
+//
+// 		window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
+//
+// 		function failNative(e) {
+// 		  console.error( 'ResolveNativePath: Error for ' + mFile.uri );
+// 		}
+//
+// 		function successNative( finalPath ) {
+//
+// 		  console.log( finalPath );
+// 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
+// 		}
+// 	}
+// 	function deleteRows( deleteDataArray ) {
+//
+// 		if( getAppMode() == MODE_NETWORK_DB ){
+//
+// 			var deleteIds = deleteDataArray.join();
+// 			var jsonData = {
+// 				"student_id": deleteIds // ADD ANY OTHER CONDITION (IF ANY)
+// 			};
+//
+// 			var inData = JSON.stringify( jsonData );
+//
+// 			console.log( "deleteRows: " + inData );
+//
+// 			var url = getServerUrl() + ROOT_URL + URL;
+//
+// 			var type = "DELETE";
+//
+// 			onDelete( url, type, inData, parseDeleteResponse, onErrorDeleteData );
+// 		}
+// 		else{
+//
+// 			var query = "DELETE FROM " + TABLE_NAME + " WHERE " + DB_FIELD.STUDENT_ID;
+//
+// 			var idStr = "";
+// 			for( var i = 0; i < deleteDataArray.length; i++ ) {
+//
+// 				if( i == 0 ) {
+//
+// 					idStr = "?";
+// 				} 
+// 				else {
+//
+// 					idStr += ", ?";
+// 				}
+// 			}
+//
+// 			query += " IN (" + idStr + ")";
+//
+// 			removeItem( query, deleteDataArray, parseDeleteResponse );
+// 		}
+// 	}
+// 	function onErrorDeleteData( url, jsonData, description, logData, flag ){
+//
+// 		var errorHandlerScript = ErrorHandlerScript.getInstance();
+// 		errorHandlerScript.saveErrorData( "Student", url, jsonData, description, logData, flag, null );
+// 	}
+//
+// 	function parseDbFormDataResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		var i = 0;
+//
+// 		var data = [];
+// 		data[ INDEX.STUDENT_ID ] = response.rows.item( i )[ DB_FIELD.STUDENT_ID ];
+// 		data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+// 		data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 		data[ INDEX.ROLL_NUMBER ] = response.rows.item( i )[ DB_FIELD.ROLL_NUMBER ];
+// 		data[ INDEX.MOBILE ] = response.rows.item( i )[ DB_FIELD.MOBILE ];
+// 		data[ INDEX.EMAIL ] = response.rows.item( i )[ DB_FIELD.EMAIL ];
+// 		data[ INDEX.PARENT_MOBILE ] = response.rows.item( i )[ DB_FIELD.PARENT_MOBILE ];
+// 		data[ INDEX.TELEGRAM ] = response.rows.item( i )[ DB_FIELD.TELEGRAM ];
+// 		data[ INDEX.PARENT_EMAIL ] = response.rows.item( i )[ DB_FIELD.PARENT_EMAIL ];
+// 		data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 		data[ INDEX.ORGANIZATION_ID ] = response.rows.item( i )[ DB_FIELD.ORGANIZATION_ID ];
+// 		dataList[ i ] = data;
+//
+// 		parseFormDataResponse( dataList );
+// 	}
+//
 
 	function parseFormDataResponse( studentList ) {
 
+// not used anymore
+// 		setStorageData( studentList, SESSION_OBJECT.STUDENT_DATA );
+// changed
 		var arrStudentRows = [];
 
 		for( var i = 0; i < studentList.length; i++ ) {
@@ -1228,6 +1596,35 @@ var StudentScript = (function () {
 		popUpEditForm();
 	}
 
+// old logic
+// 	// fetch data using 'summary' API and is used for Edit
+// 	function fetchNetworkListData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var appMode = MODE_CORDOVA_APP; // mode = 2 : CordovaApp, mode = 1 : webapp
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /*URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
+//
+//
+// 	// fetch data using 'select' API and is used for Edit
+// 	function fetchNetworkData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var id = getSelectedId();
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT + "?organization_id=" + organizationId + "&student_id="+ id +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
 	function setCategorySelection( categoryList ) {
 
 		var mode = getAddEditMode();
@@ -1249,22 +1646,59 @@ var StudentScript = (function () {
 		enableSaveButton( false );
 	}
 
+// no longer used
+// 	function setInstitutionSelection( institutionList ) {
+// fixed
 	function setSectionSelection( sectionList ) {
 
 		var mode = getAddEditMode();
 
+// kept for reference
+// 		var selectedId = DEFAULT.INSTITUTION_ID;
+// updated logic
 		var selectedId = DEFAULT.SECTION_ID;
 		if( mode == UPDATE_DATA ) { // Edit
 
 			var data = getSelectedData();	
+// old code
+// 			selectedId = data[ INDEX.INSTITUTION_ID ];
+// changed
 			selectedId = data[ INDEX.SECTION_ID ];
 		}
 		else if( mode == INSERT_DATA ) {
 
 			// Fetch id from the localstorage which previously selected
+// not used anymore
+// 			selectedId = DEFAULT.INSTITUTION_ID; //getSelectedDropdownId( LOCAL_OBJECT.INSTITUTION_ID );
+// updated
 			selectedId = DEFAULT.SECTION_ID; //getSelectedDropdownId( LOCAL_OBJECT.SECTION_ID );
 		}
 
+// old logic
+// 		var institutionScript = InstitutionScript.getInstance();
+// 		institutionScript.populateSelection( institutionList, FORM_FIELD.INSTITUTION_ID, selectedId );
+// 		enableSaveButton( false );
+// 	}
+//
+// 	function setOrganizationSelection( organizationList ) {
+//
+// 		var mode = getAddEditMode();
+//
+// 		var selectedId = DEFAULT.ORGANIZATION_ID;
+// 		if( mode == UPDATE_DATA ) { // Edit
+//
+// 			var data = getSelectedData();	
+// 			selectedId = data[ INDEX.ORGANIZATION_ID ];
+// 		}
+// 		else if( mode == INSERT_DATA ) {
+//
+// 			// Fetch id from the localstorage which previously selected
+// 			selectedId = DEFAULT.ORGANIZATION_ID; //getSelectedDropdownId( LOCAL_OBJECT.ORGANIZATION_ID );
+// 		}
+//
+// 		var organizationScript = OrganizationScript.getInstance();
+// 		organizationScript.populateSelection( organizationList, FORM_FIELD.ORGANIZATION_ID, selectedId );
+// fixed
 		var sectionScript = SectionScript.getInstance();
 		sectionScript.populateSelection( sectionList, FORM_FIELD.SECTION_ID, selectedId );
 		enableSaveButton( false );
@@ -1281,6 +1715,21 @@ var StudentScript = (function () {
 		return selectedId;
 	}
 
+// no longer used
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbListData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME;
+// 		select( query, option.callback );
+// 	}
+//
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME + " WHERE " + DB_FIELD.STUDENT_ID + "=" + getSelectedId();
+// 		select( query, option.callback );
+// 	}
+// updated logic
 	// --------------------------------------------------
 	// WHY: Previously, this function fetched the record over
 	// the network or from SQLite, relying on functions that
@@ -1296,10 +1745,26 @@ var StudentScript = (function () {
 	// get data for Edit
 	function getData() {
 
+// kept for reference
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// changed
 		DataService.getRecordById(
 
+// old code
+// 			fetchNetworkData({
+// 				callback: parseFormDataResponse
+// 			});
+// 		}
+// 		else {
+// updated
 			AppConfig.STORES.STUDENT,
 
+// not used anymore
+// 			fetchDbData({
+// 				callback: parseDbFormDataResponse
+// 			});
+// 		}
+// fixed
 			getSelectedId(),
 
 			function( objStudent ) {
@@ -1322,9 +1787,32 @@ var StudentScript = (function () {
 	/* ==========================================================
    Get Student List
 
+// old logic
+// 	// get Summary Data for List
+// 	function getListData() {
+// no longer used
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated logic
+
    Loads students using DataService.
 
+// kept for reference
+// 			fetchNetworkListData({
+// 				callback: parseListResponse
+// 			});
+// 		}
+// 		else {
+// changed
+
    DataService automatically decides whether to:
+
+// old code
+// 			fetchDbListData({
+// 				callback: parseDbListResponse
+// 			});						
+// 		}
+// 	}
+// fixed
 
    • Load from Google Apps Script
    • Load from IndexedDB
@@ -1387,6 +1875,9 @@ function getListData( iRequestedPage )
 			onInfoViewDocumentReady();
 		});
 
+// not used anymore
+// 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_STUDENT ) == true ) {
+// updated logic
 		// --------------------------------------------------
 		// STUDENT ADD BUTTON FIX (Priority 3):
 		// WHY: this whole listenersSingleClickModal() function
@@ -1408,6 +1899,18 @@ function getListData( iRequestedPage )
 		// untouched and still reused as-is.
 		// --------------------------------------------------
 
+// old logic
+// 			$( '#student_add' ).off().on( 'click', function() {
+//
+// 				closeSelectMenu();
+// 				onClickAdd();
+// 			});
+// 		}
+// 		else {
+//
+// 			$( "#student_add" ).hide();
+// 		}
+// changed
 		$( '#student_add' ).off().hide();
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_STUDENT ) == true ) {
@@ -1492,6 +1995,10 @@ function getListData( iRequestedPage )
 
 			(async () => {
 				mFile = await chooser.getFile();
+// no longer used
+// 				// console.log(file ? file.name : 'canceled');
+// 				// console.log(file ? file.uri : 'canceled');
+// 				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1677,6 +2184,9 @@ function getListData( iRequestedPage )
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_STUDENT ) == true ) {
 
+// kept for reference
+// 			$( "#btn_add" ).off().on( "click", function() {
+// fixed
 			// --------------------------------------------------
 			// STUDENT ADD BUTTON FIX (Priority 3):
 			// WHY: #btn_add is the floating "+" button that lives
@@ -1704,6 +2214,10 @@ function getListData( iRequestedPage )
 			// as-is - no new CRUD logic.
 			// --------------------------------------------------
 
+// old code
+// 				onClickAdd();
+// 			});
+// updated logic
 			$( "#btn_add" )
 				.attr( "title", "Add New Student" )
 				.off().on( "click", function( objEvent ) {
@@ -1858,6 +2372,10 @@ function getListData( iRequestedPage )
 
 	function loadCategoryList() {
 
+// not used anymore
+// 		var cacheManagerScript = CacheManagerScript.getInstance();
+// 		cacheManagerScript.loadCacheMangerList( CacheManagerScript.LOAD_MODE.CATEGORY_LIST, loadInstitutionList );
+// changed
 		// --------------------------------------------------
 		// WHY / WHAT / WHEN: see "CHANGE LOG - CacheManagerScript
 		// Removal Pass" at the top of this file.
@@ -1896,8 +2414,15 @@ function getListData( iRequestedPage )
 		});
 	}
 
+// old logic
+// 	function loadInstitutionList() {
+// updated
 	function loadSectionList() {
 
+// no longer used
+// 		var cacheManagerScript = CacheManagerScript.getInstance();
+// 		cacheManagerScript.loadCacheMangerList( CacheManagerScript.LOAD_MODE.INSTITUTION_LIST, getListData );
+// fixed
 		// --------------------------------------------------
 		// WHY / WHAT / WHEN: see "CHANGE LOG - CacheManagerScript
 		// Removal Pass" at the top of this file.
@@ -1942,12 +2467,22 @@ function getListData( iRequestedPage )
 		});
 	}
 	// parse summary list response from server
+// kept for reference
+// 	function parseListResponse( response, status ) {
+// updated logic
 /* ==========================================================
    Parse Student List
+
+// old code
+// 		if( response == null || status < 0 ) {
+// changed
 
    Saves the student list and refreshes the UI.
 ========================================================== */
 
+// not used anymore
+// 			response = [];
+// updated
 function parseListResponse(objPageResult)
 {
     if (!objPageResult)
@@ -1955,8 +2490,20 @@ function parseListResponse(objPageResult)
         objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
     }
 
+// old logic
+// 			console.log( "parseListResponse Error: " + status );
+// 		}
+//
+// 			hideLoader();
+//
+// 		setStorageData( response, SESSION_OBJECT.STUDENT_SUMMARY_DATA );
+// fixed
     hideLoader();
 
+// no longer used
+// 		doFilterStudentList();
+// 	}
+// updated logic
     var arrStudents = objPageResult.records || [];
 
     // --------------------------------------------------
@@ -2147,6 +2694,9 @@ function parseListResponse(objPageResult)
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
 
+// kept for reference
+// 				$("#search").keyup( function (e) {
+// changed
 				// --------------------------------------------------
 				// Phase 1 (Live Search): bound via the native
 				// "input" event instead of jQuery's keyup() - input
@@ -2162,6 +2712,9 @@ function parseListResponse(objPageResult)
 				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
+// old code
+// 				});
+// updated
 				};
 
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
@@ -2234,16 +2787,55 @@ function parseListResponse(objPageResult)
 	function onClickDelete() {
 
 		closeSelectMenu();
+// not used anymore
+// 		showConfirmationAlert( "Do you want to delete selected Student?", onConfirmDelete, "Message", buttonLabels );
+// fixed
 		showConfirmationAlert( "Do you want to delete selected Student?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 	function searchList() {
 
+// old logic
+// 		var list = document.getElementById("list_id");
+// 		var listItems = list.getElementsByTagName("ul");
+// updated logic
 		if( mSearchDebounceTimer ) {
 
+// no longer used
+// 		var input = document.getElementById("search");
+// 		var filter = input.value.toUpperCase();
+//
+// 		for( var i = 0; i < listItems.length; i++ ) {
+//
+// 			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+//
+// 			if( name != null ) {
+//
+// 				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+//
+// 					var studentData = mSelectedDataList;
+//
+// 					var index = mSearchList.length;
+// 					mSearchList[index] = studentData[ i ];
+//
+// 					listItems[i].style.display = "";
+// 				} else {
+//
+// 					listItems[i].style.display = "none";
+// 				}
+// 			}
+// changed
 			clearTimeout( mSearchDebounceTimer );
 		}
 
+// kept for reference
+// 		// Displaying No. of Records
+// 		var totalRecordsLength = listItems.length;
+// 		var searchRecordsLength = $( "ul:visible" ).length - 1;
+// 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
+// 		var totalRecords = "Total: " + totalRecordsLength;
+// 		var searchInput = document.getElementById( "search" ).value;
+// updated
 		// Project Improvements (this pass): previously filtered only
 		// mSelectedDataList (the current page) client-side, and never
 		// touched mCurrentSearchKeyword at all even though getListData()
@@ -2256,9 +2848,15 @@ function parseListResponse(objPageResult)
 		// Student record, not just the ones already loaded.
 		mSearchDebounceTimer = setTimeout( function() {
 
+// old code
+// 		if( searchInput == "" ) {
+// fixed
 			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
 			mCurrentPage = 1;
 
+// not used anymore
+// 			document.getElementById( "records" ).innerText = totalRecords;
+// updated logic
 			showLoader( "Searching..." );
 			getListData( 1 );
 
@@ -2313,7 +2911,12 @@ function parseListResponse(objPageResult)
 			CommonUtils.showAlert( "There are no students to export." );
 			return;
 		}
+// old logic
+// 		else {
 
+// no longer used
+// 			document.getElementById( "records" ).innerText = searchRecords;
+// updated
 		var arrUniqueRows = [];
 		var objSeenStudentIds = {};
 
@@ -2443,6 +3046,9 @@ function parseListResponse(objPageResult)
 
 			closeFilterMenu();
 		} 
+// kept for reference
+// 		else if( $('#modal_share_question').hasClass('show')) {
+// fixed
 		// Final QA fix: this used to check the nonexistent
 		// '#modal_share_question' element (always false, so the
 		// Back button never detected the Share modal was open).
@@ -2513,6 +3119,9 @@ function parseListResponse(objPageResult)
 			}
 			
 			var result = getAddEditResultArray( response[ JSON_KEY.STUDENT_ID ] );
+// old code
+// 			message = "Student has been added successfully";
+// updated logic
 			message = "Student saved successfully.";
 			
 			studentList.push( result );
@@ -2525,6 +3134,9 @@ function parseListResponse(objPageResult)
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
+// not used anymore
+// 			message = "Student has been updated successfully";
+// changed
 			message = "Student updated successfully.";
 
 			for ( var i = 0; i < studentList.length; i++ ) {
@@ -2568,12 +3180,68 @@ function parseListResponse(objPageResult)
 			deleteRows( deleteDataArray );
 		}
 	}
+// old logic
+// 	function parseDbListResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+//
+// 			var data = [];
+//
+// 			data[ INDEX.STUDENT_ID ] = response.rows.item( i )[ DB_FIELD.STUDENT_ID ];
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 			data[ INDEX.ROLL_NUMBER ] = response.rows.item( i )[ DB_FIELD.ROLL_NUMBER ];
+// 			data[ INDEX.MOBILE ] = response.rows.item( i )[ DB_FIELD.MOBILE ];
+// 			data[ INDEX.EMAIL ] = response.rows.item( i )[ DB_FIELD.EMAIL ];
+// 			data[ INDEX.PARENT_MOBILE ] = response.rows.item( i )[ DB_FIELD.PARENT_MOBILE ];
+// 			data[ INDEX.TELEGRAM ] = response.rows.item( i )[ DB_FIELD.TELEGRAM ];
+// 			data[ INDEX.PARENT_EMAIL ] = response.rows.item( i )[ DB_FIELD.PARENT_EMAIL ];
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+// 			data[ INDEX.ORGANIZATION_ID ] = response.rows.item( i )[ DB_FIELD.ORGANIZATION_ID ];
+// 			dataList[ i ] = data;
+// 		}
+//
+// 		parseListResponse( dataList, 0 );
+// 	}
+//
 	// create an array from the add/edit jsonData. It can be used to update the list after successful Add/Edit operation
 	// It can reduce the number of calls to the server after Edit/Add
 	function getAddEditResultArray( id ) {
 
 		var data = [];
 
+// no longer used
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			data[ SUMMARY_INDEX.STUDENT_ID ] = mJsonData[ SUMMARY_JSON_KEY.STUDENT_ID ];
+// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
+// 			data[ SUMMARY_INDEX.ROLL_NUMBER ] = mJsonData[ SUMMARY_JSON_KEY.ROLL_NUMBER ];
+// 			data[ SUMMARY_INDEX.MOBILE ] = mJsonData[ SUMMARY_JSON_KEY.MOBILE ];
+// 			data[ SUMMARY_INDEX.EMAIL ] = mJsonData[ SUMMARY_JSON_KEY.EMAIL ];
+// 			data[ SUMMARY_INDEX.PARENT_MOBILE ] = mJsonData[ SUMMARY_JSON_KEY.PARENT_MOBILE ];
+// 			data[ SUMMARY_INDEX.TELEGRAM ] = mJsonData[ SUMMARY_JSON_KEY.TELEGRAM ];
+// 			data[ SUMMARY_INDEX.PARENT_EMAIL ] = mJsonData[ SUMMARY_JSON_KEY.PARENT_EMAIL ];
+// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_JSON_KEY.INSTITUTION_ID ];
+// 			data[ SUMMARY_INDEX.ORGANIZATION_ID ] = mJsonData[ SUMMARY_JSON_KEY.ORGANIZATION_ID ];
+// 		}
+// 		else {
+//
+// 			data[ SUMMARY_INDEX.STUDENT_ID ] = mJsonData[ SUMMARY_INDEX.STUDENT_ID ];
+// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_INDEX.CATEGORY_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_INDEX.NAME ];
+// 			data[ SUMMARY_INDEX.ROLL_NUMBER ] = mJsonData[ SUMMARY_INDEX.ROLL_NUMBER ];
+// 			data[ SUMMARY_INDEX.MOBILE ] = mJsonData[ SUMMARY_INDEX.MOBILE ];
+// 			data[ SUMMARY_INDEX.EMAIL ] = mJsonData[ SUMMARY_INDEX.EMAIL ];
+// 			data[ SUMMARY_INDEX.PARENT_MOBILE ] = mJsonData[ SUMMARY_INDEX.PARENT_MOBILE ];
+// 			data[ SUMMARY_INDEX.TELEGRAM ] = mJsonData[ SUMMARY_INDEX.TELEGRAM ];
+// 			data[ SUMMARY_INDEX.PARENT_EMAIL ] = mJsonData[ SUMMARY_INDEX.PARENT_EMAIL ];
+// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_INDEX.INSTITUTION_ID ];
+// 			data[ SUMMARY_INDEX.ORGANIZATION_ID ] = mJsonData[ SUMMARY_INDEX.ORGANIZATION_ID ];
+// 		}
+// fixed
 		// BUG FIX: this used to always read mJsonData's Student ID,
 		// even right after a successful Add - so the row shown on
 		// screen kept the placeholder ID that was in the form
@@ -2655,6 +3323,9 @@ function parseListResponse(objPageResult)
 
 			parseListFromStorage();
 
+// kept for reference
+// 			showOperationMessage( "Selected Student(s) has been deleted successfully", "Success", null );
+// updated logic
 			/**
 			 * MENTOR NOTE (fixed) - Singular/plural grammar
 			 *
@@ -2743,6 +3414,8 @@ function parseListResponse(objPageResult)
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
+// old code
+// 		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2757,6 +3430,9 @@ function parseListResponse(objPageResult)
 		setMultiSelectData(index);
 	}
 
+// not used anymore
+// 	// Set whether multiple selecction is required or not true/false
+// updated
 	// Set whether multiple selection is required or not true/false
 	function setMultiSelectStatus( isActive ) {
 
@@ -2786,6 +3462,8 @@ function parseListResponse(objPageResult)
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
+// old logic
+// 		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2809,6 +3487,9 @@ function parseListResponse(objPageResult)
 
 	function resetMultiSelection() {
 
+// no longer used
+// 		if( $( '#modal_share_student' ).hasClass( 'show' )) {
+// updated logic
 		// Final QA fix: this used to check a nonexistent element
 		// ('#modal_share_student', always false) instead of the real
 		// share modal's id, 'modal_share'. Corrected so this
@@ -2853,6 +3534,9 @@ function parseListResponse(objPageResult)
 
 		closeMultiSelectMenu();
 
+// kept for reference
+// 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+// changed
 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -2861,6 +3545,9 @@ function parseListResponse(objPageResult)
 
 		closeMultiSelectMenu();
 
+// old code
+// 		console.log( "Multiple selection option 1: TBD" );
+// updated
 		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
@@ -2868,6 +3555,9 @@ function parseListResponse(objPageResult)
 
 		closeMultiSelectMenu();
 
+// not used anymore
+// 		console.log( "Multiple selection option 2: TBD" );
+// fixed
 		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
@@ -3009,6 +3699,11 @@ function parseListResponse(objPageResult)
 
 	function createHtmlListItem( data, index ) {
 
+// old logic
+// 		var name = data[ SUMMARY_INDEX.FIRST_FILL_IN ];
+// 		var fillInData = data[ SUMMARY_INDEX._FILL_IN ];
+// 		var seqNumber = index + 1 +') ';
+// updated logic
     var name = data[ SUMMARY_INDEX.NAME ];
     var mobile = data[ SUMMARY_INDEX.MOBILE ] || '';
     var email = data[ SUMMARY_INDEX.EMAIL ] || '';
@@ -3020,6 +3715,11 @@ function parseListResponse(objPageResult)
     // mSearchList array, so it can't be changed to a global number.
     var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
+// no longer used
+// 		var infoIconHtml = '<i onclick="StudentScript.getInstance().onClickInfoIcon('+ index +');" class="fa fa-info-circle text-info" aria-hidden="true" style=""></i>';
+// 		var editIconHtml = '';
+// 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_INSTITUTION ) == true ) {
+// changed
     // ACCESSIBILITY FIX (this pass): role="button" tabindex="0"
     // aria-label added - these are <span>s, not native <button>s,
     // so without these three they were invisible to screen readers
@@ -3030,9 +3730,24 @@ function parseListResponse(objPageResult)
     var editIconHtml = '';
     if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
+// kept for reference
+// 			editIconHtml = '<i onclick="StudentScript.getInstance().onClickEditIcon('+ index +');" class="fas fa-edit text-info" style="margin-top: 10px;float: right;margin-right: 10px;"></i>';
+// 		}
+// 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="box-shadow:2px 3px 3px 1px rgba(0,0,0,0.5);margin-bottom: 5px;">' +
+// 							editIconHtml +
+// 							'<div id="list_item" class="list-item">' +
+// 							'<li style="font-size: 20px;">'+ seqNumber + name + '</li>' +
+// 							'<li style="font-size: 14px;padding-top: 6px; font-weight: 700;">' + infoIconHtml + " " + fillInData + '</li>' +									
+// 							'</div>' +
+// 							'</ul>';
+// updated
         editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit student" onclick="StudentScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
     }
 
+// old code
+// 		return htmlListItem;
+// 	}
+// fixed
     // UI/UX POLISH PASS (this pass) - SHARE BUTTON: every card now
     // gets its own Share button, positioned next to Edit inside
     // the shared .card-icon-actions flex wrapper (see below), so
@@ -3143,6 +3858,10 @@ function parseListResponse(objPageResult)
 	 * actually meant, no behavior change.
 	 */
 	function bindFormEventHandlers() {
+// not used anymore
+// 		$( '#edit_details' ).on( "change", 'select, input, textarea', enableSaveButton );
+// 		$( '#edit_details' ).on( "keyup", 'input, textarea', enableSaveButton );
+// updated logic
 		$( '#edit_details' ).on( "change", 'select, input, textarea', function() { enableSaveButton( true ); } );
 		$( '#edit_details' ).on( "keyup", 'input, textarea', function() { enableSaveButton( true ); } );
 	}
@@ -3181,6 +3900,11 @@ function parseListResponse(objPageResult)
 			DB_FIELD.EMAIL + ' TEXT ,' +
 			DB_FIELD.PARENT_MOBILE + ' TEXT ,' +
 			DB_FIELD.TELEGRAM + ' TEXT ,' +
+// old logic
+// 			DB_FIELD.PARENT_EMAIL + ' TEXT ,' +
+// 			DB_FIELD.INSTITUTION_ID + ' INTEGER ,' +
+// 			DB_FIELD.ORGANIZATION_ID + ' INTEGER' +
+// changed
 			DB_FIELD.PARENT_EMAIL + ' TEXT' +
 			')';
 
@@ -3201,6 +3925,12 @@ function parseListResponse(objPageResult)
 			DB_FIELD.EMAIL + ',' +
 			DB_FIELD.PARENT_MOBILE + ',' +
 			DB_FIELD.TELEGRAM + ',' +
+// no longer used
+// 			DB_FIELD.PARENT_EMAIL + ',' +
+// 			DB_FIELD.INSTITUTION_ID + ',' +
+// 			DB_FIELD.ORGANIZATION_ID +
+// 			') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+// updated
 			DB_FIELD.PARENT_EMAIL +
 			') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 		return query;
@@ -3218,12 +3948,80 @@ function parseListResponse(objPageResult)
 			DB_FIELD.EMAIL + '=?, ' +
 			DB_FIELD.PARENT_MOBILE + '=?, ' +
 			DB_FIELD.TELEGRAM + '=?, ' +
+// kept for reference
+// 			DB_FIELD.PARENT_EMAIL + '=?, ' +
+// 			DB_FIELD.INSTITUTION_ID + '=?, ' +
+// 			DB_FIELD.ORGANIZATION_ID +' =? WHERE ' +
+// fixed
 			DB_FIELD.PARENT_EMAIL +' =? WHERE ' +
 			DB_FIELD.STUDENT_ID + '=' + getSelectedId();
 
 		return query;
 	}
 
+// old code
+//
+// 	function getListFromServer( onSuccess, callback ) {
+//
+// 		var mode = getAppMode();
+//
+// 		if( mode == MODE_NETWORK_DB ) { 
+//
+// 			var sessionId = getSessionId();
+// 			var organizationId = getOrganizationId();
+//
+// 			// mode = 2 : CordovaApp, mode = 1 : webapp
+// 			var appMode = MODE_CORDOVA_APP;
+//
+// 			var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /* OR URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 			fetchDataFromServer( url, onSuccess, onErrorFetchData, callback );
+// 		}
+// 		else {
+//
+// 			var query = "SELECT * FROM " + TABLE_NAME;
+// 			selectList( query, parseLocalData, onSuccess, callback );
+// 		}
+// 	}
+// 	function parseLocalData(response, onSuccess, callback) {
+// 		var dataList = [];
+// 		if( response.rows.length == 0 ) {
+//
+// 			onSuccess( dataList, callback );
+// 		}
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+// 			var data = [];
+//
+// 			data[ INDEX.STUDENT_ID ] = response.rows.item( i )[ DB_FIELD.STUDENT_ID ];
+//
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+//
+// 			data[ INDEX.ROLL_NUMBER ] = response.rows.item( i )[ DB_FIELD.ROLL_NUMBER ];
+//
+// 			data[ INDEX.MOBILE ] = response.rows.item( i )[ DB_FIELD.MOBILE ];
+//
+// 			data[ INDEX.EMAIL ] = response.rows.item( i )[ DB_FIELD.EMAIL ];
+//
+// 			data[ INDEX.PARENT_MOBILE ] = response.rows.item( i )[ DB_FIELD.PARENT_MOBILE ];
+//
+// 			data[ INDEX.TELEGRAM ] = response.rows.item( i )[ DB_FIELD.TELEGRAM ];
+//
+// 			data[ INDEX.PARENT_EMAIL ] = response.rows.item( i )[ DB_FIELD.PARENT_EMAIL ];
+//
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+//
+// 			data[ INDEX.ORGANIZATION_ID ] = response.rows.item( i )[ DB_FIELD.ORGANIZATION_ID ];
+// 			dataList[ i ] = data;
+//
+// 			if( i == ( response.rows.length - 1 ) ) {
+//
+// 				onSuccess( dataList, callback );
+// 			}
+// 		}
+// 	}
 
 	function onErrorFetchData( url, description, logData, flag ){
 
@@ -3250,13 +4048,28 @@ function parseListResponse(objPageResult)
 		// used for every other button in this file.
 		$( '#copy_student_details' ).off().on( 'click', function() {
 
+// not used anymore
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// changed
 			copyStudentDetails();
 		});
 
+// old logic
+// 			fetchNetworkData({
+// 				callback: parsePreviewResponse
+// 			});
+// 		}
+// 		else {
+// updated
 		// Phase 6 (Share feature) - same off()/on() binding pattern as
 		// the Copy button above.
 		$( '#share_student_details' ).off().on( 'click', function() {
 
+// no longer used
+// 			fetchDbData({
+// 				callback: parsePreviewResponse
+// 			});
+// fixed
 			shareStudentDetails();
 		});
 
@@ -3309,6 +4122,48 @@ function parseListResponse(objPageResult)
 			arrStudentRows.push( arrRow );
 		}
 
+// kept for reference
+// 	}
+//
+// 	function parsePreviewResponse( response, statusCode ) {
+//
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			setStorageData( response, SESSION_OBJECT.INSTITUTION_DATA );
+// 		}
+// 		else {
+//
+// 			var i = 0;
+//
+// 			var data = [];			
+//
+// 			data[ INDEX.STUDENT_ID ] = response.rows.item( i )[ DB_FIELD.STUDENT_ID ];
+//
+// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+//
+// 			data[ INDEX.ROLL_NUMBER ] = response.rows.item( i )[ DB_FIELD.ROLL_NUMBER ];
+//
+// 			data[ INDEX.MOBILE ] = response.rows.item( i )[ DB_FIELD.MOBILE ];
+//
+// 			data[ INDEX.EMAIL ] = response.rows.item( i )[ DB_FIELD.EMAIL ];
+//
+// 			data[ INDEX.PARENT_MOBILE ] = response.rows.item( i )[ DB_FIELD.PARENT_MOBILE ];
+//
+// 			data[ INDEX.TELEGRAM ] = response.rows.item( i )[ DB_FIELD.TELEGRAM ];
+//
+// 			data[ INDEX.PARENT_EMAIL ] = response.rows.item( i )[ DB_FIELD.PARENT_EMAIL ];
+//
+// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
+//
+// 			data[ INDEX.ORGANIZATION_ID ] = response.rows.item( i )[ DB_FIELD.ORGANIZATION_ID ];
+// 			var dataList = [];
+// 			dataList.push(data);
+//
+// 			setStorageData( dataList, SESSION_OBJECT.STUDENT_DATA );
+// 		}
+// updated logic
 		// WHY/WHAT: same object -> array-row bridge as
 		// parseFormDataResponse() above, so the Info popup's
 		// setPreview() can actually find the record.
@@ -3363,6 +4218,9 @@ function parseListResponse(objPageResult)
 		var sectionName = getSectionNameById( data[ INDEX.SECTION_ID ] );
 
 		$(FORM_FIELD_INFO.LBL_STUDENT_ID).text( data[INDEX.STUDENT_ID] );
+// old code
+// 		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( data[INDEX.CATEGORY_ID] );
+// changed
 		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( categoryName );
 		$(FORM_FIELD_INFO.LBL_SECTION_ID).text( sectionName );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
@@ -3372,6 +4230,9 @@ function parseListResponse(objPageResult)
 		$(FORM_FIELD_INFO.LBL_PARENT_MOBILE).text( data[INDEX.PARENT_MOBILE] );
 		$(FORM_FIELD_INFO.LBL_TELEGRAM).text( data[INDEX.TELEGRAM] );
 		$(FORM_FIELD_INFO.LBL_PARENT_EMAIL).text( data[INDEX.PARENT_EMAIL] );
+// not used anymore
+// 		$(FORM_FIELD_INFO.LBL_INSTITUTION_ID).text( data[INDEX.INSTITUTION_ID] );
+// 		$(FORM_FIELD_INFO.LBL_ORGANIZATION_ID).text( data[INDEX.ORGANIZATION_ID] );
 
 		// --------------------------------------------------
 		// WHY: INDEX.PHOTO_PATH / INDEX.DOCUMENT_PATH are not
@@ -3385,6 +4246,9 @@ function parseListResponse(objPageResult)
 		// actually defined.
 		// --------------------------------------------------
 		var photoPath = data[ INDEX.PHOTO_PATH ];
+// old logic
+// 		if( photoPath !== "" && photoPath !== null ) {
+// fixed
 		if( photoPath !== undefined && photoPath !== "" && photoPath !== null ) {
 
 			$( '#preview_image_div' ).show();
@@ -3397,6 +4261,9 @@ function parseListResponse(objPageResult)
 		}
 
 		var docPath = data[ INDEX.DOCUMENT_PATH ];
+// no longer used
+// 		if( docPath.length > 0 && docPath !== null && docPath !== '' ) {
+// updated logic
 		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 
 			var fileList = JSON.parse( docPath );
@@ -3546,6 +4413,14 @@ function parseListResponse(objPageResult)
 		var categoryName = $( "#filter_category_id option:selected" ).text();
 
 
+// kept for reference
+// 		var institutionId = parseInt( $('#filter_institution_id').val() );
+// 		var institutionName = $( "#filter_institution_id option:selected" ).text();
+//
+//
+// 		var organizationId = parseInt( $('#filter_organization_id').val() );
+// 		var organizationName = $( "#filter_organization_id option:selected" ).text();
+// changed
 		var sectionId = parseInt( $('#filter_section_id').val() );
 		var sectionName = $( "#filter_section_id option:selected" ).text();
 
@@ -3553,12 +4428,20 @@ function parseListResponse(objPageResult)
 		// Set selected Ids to Session storage
 		sessionStorage.setItem( SESSION_OBJECT.CATEGORY_ID, categoryId );
 
+// old code
+// 		sessionStorage.setItem( SESSION_OBJECT.INSTITUTION_ID, institutionId );
+//
+// 		sessionStorage.setItem( SESSION_OBJECT.ORGANIZATION_ID, organizationId );
+// updated
 		sessionStorage.setItem( SESSION_OBJECT.SECTION_ID, sectionId );
 
 		if( list == null || list.length <= 0 ){
 
 			showFilteredList( "" );
 		}
+// not used anymore
+// 		else if(  categoryId == 0  && institutionId == 0  && organizationId == 0 ){
+// fixed
 		else if(  categoryId == 0  && sectionId == 0 ){
 
 			showFilteredList( list );
@@ -3569,6 +4452,10 @@ function parseListResponse(objPageResult)
 
 			data = list.filter( item =>  
 				( (categoryId > 0)? item[SUMMARY_INDEX.CATEGORY_ID] == categoryId : ( item[SUMMARY_INDEX.CATEGORY_ID] != categoryId || item[SUMMARY_INDEX.CATEGORY_ID] == 0 ) ) &&
+// old logic
+// 				( (institutionId > 0)? item[SUMMARY_INDEX.INSTITUTION_ID] == institutionId : ( item[SUMMARY_INDEX.INSTITUTION_ID] != institutionId || item[SUMMARY_INDEX.INSTITUTION_ID] == 0 ) ) &&
+// 				( (organizationId > 0)? item[SUMMARY_INDEX.ORGANIZATION_ID] == organizationId : ( item[SUMMARY_INDEX.ORGANIZATION_ID] != organizationId || item[SUMMARY_INDEX.ORGANIZATION_ID] == 0 ) )
+// updated logic
 				( (sectionId > 0)? item[SUMMARY_INDEX.SECTION_ID] == sectionId : ( item[SUMMARY_INDEX.SECTION_ID] != sectionId || item[SUMMARY_INDEX.SECTION_ID] == 0 ) )
 			);
 			
@@ -3577,6 +4464,9 @@ function parseListResponse(objPageResult)
 		
 
 
+// no longer used
+// 		showFilterInfo( categoryName, institutionName, organizationName );
+// changed
 		showFilterInfo( categoryName, sectionName );
 		closeFilterMenu();					
 	}
@@ -3608,6 +4498,10 @@ function parseListResponse(objPageResult)
 			htmlContent += createHtmlListItem( data, i );
 		}
 
+// kept for reference
+// 		var list = getStorageData( SESSION_OBJECT.STUDENT_SUMMARY_DATA );
+// 		var totalCount = list ? list.length : 0;
+// updated
 		// --------------------------------------------------
 		// PAGINATION FIX (this pass): appends a Prev/Next bar
 		// (buildPaginationBarHtml()/bindPaginationBarListeners()
@@ -3624,8 +4518,19 @@ function parseListResponse(objPageResult)
 
 		htmlContent += buildPaginationBarHtml();
 
+// old code
+// 		// Displaying No. of Records
+// 		var totalRecords = response.length;
+// fixed
 		var records = CommonUtils.buildPaginationSummary( mCurrentPage, mPageSize, mTotalRecords );
 
+// not used anymore
+// 		var records = "Total: " + totalRecords;
+// 		if( totalRecords < totalCount ) {
+//
+// 			records += "/" + totalCount;
+// 		}
+//
 		document.getElementById( "records" ).innerText = records;
 
 		setListToView( htmlContent );
@@ -3681,6 +4586,13 @@ function parseListResponse(objPageResult)
 		var categoryList = getStorageData( SESSION_OBJECT.CATEGORY_LIST );
 		setCategoryFilterSelection( categoryList );
 
+// old logic
+// 		var institutionList = getStorageData( SESSION_OBJECT.INSTITUTION_LIST );
+// 		setInstitutionFilterSelection( institutionList );
+//
+// 		var organizationList = getStorageData( SESSION_OBJECT.ORGANIZATION_LIST );
+// 		setOrganizationFilterSelection( organizationList );
+// changed
 		setSectionFilterSelection();
 
 		// UI FIX (this pass): re-populate the Section filter with
@@ -3705,6 +4617,9 @@ function parseListResponse(objPageResult)
 		categoryScript.populateSelection( categoryList, '#filter_category_id', selectedId );
 	}
 
+// no longer used
+// 	function setInstitutionFilterSelection( institutionList ) {
+// updated
 	// UI FIX (this pass): Section filter is now dependent on the
 	// selected Category, rather than being built from every Section
 	// record regardless of Category. Reads the Category currently
@@ -3714,6 +4629,9 @@ function parseListResponse(objPageResult)
 	// category_id matches through to populateSelection().
 	function setSectionFilterSelection() {
 
+// kept for reference
+// 		var selectedId = getFilterSelectionIds( SESSION_OBJECT.INSTITUTION_ID );
+// fixed
 		var sectionList = getStorageData( SESSION_OBJECT.SECTION_LIST );
 
 		if( sectionList == null ) {
@@ -3728,6 +4646,10 @@ function parseListResponse(objPageResult)
 			selectedCategoryId = getFilterSelectionIds( SESSION_OBJECT.CATEGORY_ID );
 		}
 
+// old code
+// 		var institutionScript = InstitutionScript.getInstance();
+// 		institutionScript.populateSelection( institutionList, '#filter_institution_id', selectedId );
+// updated logic
 		var sectionScript = SectionScript.getInstance();
 
 		if( selectedCategoryId != null && selectedCategoryId != "0" ) {
@@ -3749,6 +4671,17 @@ function parseListResponse(objPageResult)
 		sectionScript.populateSelection( sectionList, '#filter_section_id', selectedId );
 	}
 
+// not used anymore
+// 	function setOrganizationFilterSelection( organizationList ) {
+//
+// 		var selectedId = getFilterSelectionIds( SESSION_OBJECT.ORGANIZATION_ID );
+//
+// 		var organizationScript = OrganizationScript.getInstance();
+// 		organizationScript.populateSelection( organizationList, '#filter_organization_id', selectedId );
+// 	}
+//
+// 	function showFilterInfo( categoryName, institutionName, organizationName ) {
+// changed
 	function showFilterInfo( categoryName, sectionName ) {
 
 		$( '#show_all_div' ).show();
@@ -3761,16 +4694,40 @@ function parseListResponse(objPageResult)
 			$( '#category_name_div' ).show();
 		}
 
+// old logic
+// 		var institutionText = '';
+// 		$( '#institution_name_div' ).hide();
+// 		if( institutionName !== "Select All" && institutionName != null ){
+// updated
 		var sectionText = '';
 		$( '#section_name_div' ).hide();
 		if( sectionName !== "Select All" && sectionName != null ){
 
+// no longer used
+// 			institutionText = institutionName;
+// fixed
 			sectionText = sectionName;
 			$( '#show_all_div' ).hide();
+// kept for reference
+// 			$( '#institution_name_div' ).show();
+// 		}
+//
+// 		var organizationText = '';
+// 		$( '#organization_name_div' ).hide();
+// 		if( organizationName !== "Select All" && organizationName != null ){
+//
+// 			organizationText = organizationName;
+// 			$( '#show_all_div' ).hide();
+// 			$( '#organization_name_div' ).show();
+// updated logic
 			$( '#section_name_div' ).show();
 		}
 
 		$( "#category_name" ).text( categoryText );
+// old code
+// 		$( "#institution_name" ).text( institutionText );
+// 		$( "#organization_name" ).text( organizationText );
+// changed
 		$( "#section_name" ).text( sectionText );
 	}
 
@@ -3794,6 +4751,14 @@ function parseListResponse(objPageResult)
 		$( '#filter_category_id' ).val( 0 );
 
 
+// not used anymore
+// 		sessionStorage.removeItem( SESSION_OBJECT.INSTITUTION_ID );
+// 		$( '#filter_institution_id' ).val( 0 );
+//
+//
+// 		sessionStorage.removeItem( SESSION_OBJECT.ORGANIZATION_ID );
+// 		$( '#filter_organization_id' ).val( 0 );
+// updated
 		sessionStorage.removeItem( SESSION_OBJECT.SECTION_ID );
 		$( '#filter_section_id' ).val( 0 );
 
@@ -3842,6 +4807,9 @@ function parseListResponse(objPageResult)
 
 		var id = selectedData[ SUMMARY_INDEX.STUDENT_ID ];
 		sessionStorage.setItem( SESSION_OBJECT.STUDENT_ID, id );
+// old logic
+//
+// fixed
 
 		// Phase 2 (Recent Activity): log this as a "Student
 		// viewed" entry. typeof-guarded so this page still works
@@ -3986,6 +4954,9 @@ function parseListResponse(objPageResult)
 	function onClickShare(){
 
 		var messageTitle = "Confirm";
+// no longer used
+// 		var message = "Do you want to share Student(s)?";
+// updated logic
 
 		// MENTOR NOTE (fixed) - Singular/plural grammar: mMultiSelect
 		// tells us whether more than one Student is selected.
@@ -4017,6 +4988,9 @@ function parseListResponse(objPageResult)
 
 	function onClickShareByEmail( data ){
 
+// kept for reference
+// 		var subject = "Student(s)";
+// changed
 		// MENTOR NOTE (fixed) - Singular/plural grammar, same as
 		// onClickShare() above.
 		var subject = ( mMultiSelect === true ) ? "Students" : "Student";
@@ -4086,6 +5060,13 @@ function parseListResponse(objPageResult)
 		// exist on this entity at all.
 		var resultText = "";
 
+// old code
+// /*	Write your code in here
+// 		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
+//
+// 		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
+//
+// updated
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
 		var strRollNumber = selectedData[ SUMMARY_INDEX.ROLL_NUMBER ] || "";
 		var strMobile = selectedData[ SUMMARY_INDEX.MOBILE ] || "";
@@ -4093,6 +5074,10 @@ function parseListResponse(objPageResult)
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
+// not used anymore
+// 			resultText += seqNumber +") " + name + "<br>";
+// 			resultText += mobileNumber + "<br><br>";
+// fixed
 			resultText += seqNumber + ") " + strName + "<br>";
 			resultText += "Roll Number: " + strRollNumber + "<br>";
 			resultText += "Mobile: " + strMobile + "<br>";
@@ -4100,11 +5085,18 @@ function parseListResponse(objPageResult)
 		}
 		else { // Share by WhatsApp
 
+// old logic
+// 			resultText += "_*" + seqNumber +") " + name + "*_\n";
+// 			resultText += "*" + mobileNumber + "*\n\n";
+// updated logic
 			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
 			resultText += "Roll Number: " + strRollNumber + "\n";
 			resultText += "Mobile: *" + strMobile + "*\n";
 			resultText += "Email: " + strEmail + "\n\n";
 		}
+// no longer used
+// */		
+// changed
 
 		return resultText;
 	}
@@ -4121,6 +5113,8 @@ function parseListResponse(objPageResult)
 			onConfirmNetworkSaveData: onConfirmNetworkSaveData,
 			bindFormEventHandlers: bindFormEventHandlers,
 			enableSaveButton:enableSaveButton,
+// kept for reference
+// 			getListFromServer:getListFromServer,
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,

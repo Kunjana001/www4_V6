@@ -341,6 +341,9 @@ var SectionScript = (function () {
 
 	var INDEX = {
 		SECTION_ID : value++,		// 1
+// old code
+// 		NAME : value++,		// 2		// 2
+// updated
 		NAME : value++,		// 2
 		CATEGORY_ID : value++,		// 3
 	};
@@ -351,6 +354,9 @@ var SectionScript = (function () {
 
 	var SUMMARY_INDEX = {
 		SECTION_ID : value++,		// 1
+// not used anymore
+// 		NAME : value++,		// 2		// 2
+// fixed
 		NAME : value++,		// 2
 		CATEGORY_ID : value++,		// 3
 	};
@@ -360,6 +366,9 @@ var SectionScript = (function () {
 	var LABEL = {
 
 		SECTION_ID : "Section",
+// old logic
+// 		NAME : "Name"
+// updated logic
 		NAME : "Name",
 		CATEGORY_ID : "Category"
 	};
@@ -375,6 +384,9 @@ var SectionScript = (function () {
 	var DEFAULT = {
 
 		SECTION_ID : 0,
+// no longer used
+// 		NAME : ""
+// changed
 		NAME : "",
 		CATEGORY_ID : 0
 	};
@@ -395,6 +407,9 @@ var SectionScript = (function () {
 	var FORM_FIELD_INFO = { 		// For Show Info Screen
 
 		LBL_SECTION_ID : '#lbl_section_id',
+// kept for reference
+// 		LBL_NAME : '#lbl_name'
+// updated
 		LBL_NAME : '#lbl_name',
 		LBL_CATEGORY_ID : '#lbl_category_id'
 	};
@@ -403,6 +418,9 @@ var SectionScript = (function () {
 	var JSON_KEY = {
 
 		SECTION_ID : "section_id",
+// old code
+// 		NAME : "name"
+// fixed
 		NAME : "name",
 		CATEGORY_ID : "category_id"
 	};
@@ -411,6 +429,9 @@ var SectionScript = (function () {
 	var SUMMARY_JSON_KEY = {
 
 		SECTION_ID : "section_id",
+// not used anymore
+// 		NAME : "name"
+// updated logic
 		NAME : "name",
 		CATEGORY_ID : "category_id"
 	};
@@ -419,6 +440,9 @@ var SectionScript = (function () {
 	var DB_FIELD = {
 
 		SECTION_ID : "section_id",
+// old logic
+// 		NAME : "name"
+// changed
 		NAME : "name",
 		CATEGORY_ID : "category_id"
 	};
@@ -428,6 +452,9 @@ var SectionScript = (function () {
 		SECTION_ID: "SECTION_ID",
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		SECTION_DATA: "SECTION_DATA",
+// no longer used
+// 		SECTION_SUMMARY_DATA: "SECTION_SUMMARY_DATA"
+// updated
 		SECTION_SUMMARY_DATA: "SECTION_SUMMARY_DATA",
 		CATEGORY_LIST: "SECTION_CATEGORY_LIST"
 	}
@@ -474,7 +501,14 @@ var SectionScript = (function () {
 
 	function validateForm(){
 		var bValid = true;
+// kept for reference
+// 		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
+// 		var noOfDigits = getOrgNoOfDigits();
+// 		var fv = FormValidation;
 
+// old code
+// 		console.log('Enable the validation for this form');
+// updated logic
 		// --------------------------------------------------------
 		// PROJECT IMPROVEMENTS (added): Section.gs (the backend)
 		// requires categoryId to Add or Update a Section - see the
@@ -763,6 +797,17 @@ var SectionScript = (function () {
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
 
+// not used anymore
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			jsonData[ JSON_KEY.SECTION_ID ] = data[ INDEX.SECTION_ID ];
+// 			jsonData[ JSON_KEY.NAME ] = data[ INDEX.NAME ];
+//
+// 		}
+// changed
 		// --------------------------------------------------------
 		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
 		// --------------------------------------------------------
@@ -796,9 +841,64 @@ var SectionScript = (function () {
 		mFile = null;
 		mFileClosed = false;
 
+// old logic
+// 		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
+// no longer used
+// 	function getFormDataAsArray( mode ) {
+//
+// 		var arrayData = [];
+// 		arrayData[ INDEX.SECTION_ID ] = ( $( FORM_FIELD.SECTION_ID ).val() );
+// 		arrayData[ INDEX.NAME ] = ( $( FORM_FIELD.NAME ).val() );
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			arrayData[ INDEX.SECTION_ID ] = data[ INDEX.SECTION_ID ];
+// 			arrayData[ INDEX.NAME ] = data[ INDEX.NAME ];
+//
+// 		}
+//
+// 		if( mFileList.length > 0 ) {
+//
+// 			arrayData[ INDEX.PHOTO_PATH ] = mFileList[ 0 ];
+// 		}
+//
+// 		mFileList = [];
+//
+// 		mUploadedImage = [];
+// 		mImageClosed = false;
+//
+// 		if( mFile != null ) {
+//
+// 			window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
+//
+// 			function failNative( e ) {
+//
+// 				console.error( 'ResolveNativePath: Error for ' + mFile.uri );
+//
+// 			}
+//
+// 			function successNative( finalPath ) {
+//
+// 				var fileList = [];
+// 				fileList[ 0 ] = finalPath;
+// 				arrayData[ INDEX.DOCUMENT_PATH ] = JSON.stringify( fileList );
+// 			}
+// 		}
+//
+// 		mFile = null;
+//
+// 		mUploadedFiles = [];
+// 		mFileClosed = false;
+//
+//
+// 		console.log( "getFormDataArray: " + arrayData );
+// 		return arrayData;
+// 	}
 	function onConfirmNetworkSaveData() {
 
 		var mode = getAddEditMode();
@@ -823,6 +923,34 @@ var SectionScript = (function () {
 
 		serverInsertUpdate( url, TYPE, inData, mode, parseInsertUpdateResponse, onErrorInsertUpdate );
 	}
+// kept for reference
+// 	function onConfirmDbSaveData() {
+//
+// 		var mode = getAddEditMode();
+//
+// 		mJsonData = getFormDataAsArray( mode );
+//
+// 		switch( mode ) {
+// 			case INSERT_DATA:
+//
+// 				var query = getInsertQuery();
+// 				insert( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			case UPDATE_DATA:
+//
+// 				var query = getUpdateQuery();
+// 				update( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			default:
+//
+// 				console.log( "Invalid mode passed to saveFormDataInsertDb, mode = " + mode );
+// 				return false;
+// 		}
+// 	}
+//
+//
 	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 
 		var errorHandlerScript = ErrorHandlerScript.getInstance();
@@ -835,6 +963,9 @@ var SectionScript = (function () {
 		showAlertDialog( message, gotoLogin, title, buttonStr );
 	}
 
+// old code
+// 	function saveFormData( buttonIndex ) { //pass create table as additional param
+// changed
 	function saveFormData( buttonIndex ) {
 
 		if( buttonIndex == BUTTON_CANCEL ) { // Cancel alert dialog
@@ -848,6 +979,9 @@ var SectionScript = (function () {
 
 	function onConfirmSaveFormData() {
 
+// not used anymore
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 		// --------------------------------------------------
 		// WHY: the old SQLite path (getFormDataAsArray,
 		// onConfirmDbSaveData, insert/update) and this
@@ -862,6 +996,9 @@ var SectionScript = (function () {
 		// Add/Edit Section form.
 		// --------------------------------------------------
 
+// old logic
+// 			saveNetworkFormData();
+// fixed
 		var mode = getAddEditMode();
 
 		mJsonData = getFormDataAsJson( mode );
@@ -912,11 +1049,47 @@ var SectionScript = (function () {
 		}
 		else {
 
+// no longer used
+// 			saveDbFormData();
+// updated logic
 			CommonUtils.logError( "Section.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
+// kept for reference
+// 	function saveDbFormData() {
 
+// old code
+// 		showLoader( "Please wait...", "Fetching data.." );
+//
+// 		onConfirmDbSaveData();
+// 	}
+// 	function saveNetworkFormData() {
+//
+// 		if( mFileList.length == 0 && mFile == null ) {
+//
+// 			showLoader( "Please wait...", "Fetching data..." );
+// 			onConfirmNetworkSaveData();
+// 		}
+// 		else {
+//
+// 			if( mFileList.length > 0 ) { // File selected
+//
+// 				var fileName = "IMG_" + new Date().getTime() + ".jpg";
+// 				var mediaType = "image/jpeg";
+//
+// 				var imageUri = mFileList[0]; // First image data
+//
+// 				uploadFile( fileName, mediaType, imageUri, onFileUploadSuccess, TYPE_UPLOAD_IMAGE );		
+// 			}
+// 			else {
+//
+// 				uploadDocuments();
+// 			}
+//
+// 		}
+// 	}
+// updated
 	// NOTE: uploadDocuments() below still calls uploadFile(), which does
 	// not exist in this PWA. Left untouched (not migrated) because
 	// SectionHTML.script.js's onFileUploadSuccess() still calls it
@@ -932,11 +1105,16 @@ var SectionScript = (function () {
 	
 		function successNative( finalPath ) {
 	
+// not used anymore
+// 		  console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
 	function deleteRows( deleteDataArray ) {
 
+// old logic
+// 		if( getAppMode() == MODE_NETWORK_DB ){
+// updated logic
 		// --------------------------------------------------
 		// WHY: the old code branched between a network DELETE
 		// call and a raw SQLite DELETE query, neither of which
@@ -950,24 +1128,63 @@ var SectionScript = (function () {
 		// multi-select delete.
 		// --------------------------------------------------
 
+// no longer used
+// 			var deleteIds = deleteDataArray.join();
+// 			var jsonData = {
+// 				"section_id": deleteIds // ADD ANY OTHER CONDITION (IF ANY)
+// 			};
+// changed
 		deleteNextRow( 0 );
 
+// kept for reference
+// 			var inData = JSON.stringify( jsonData );
+//
+// 			console.log( "deleteRows: " + inData );
+// updated
 		function deleteNextRow( index ) {
 
+// old code
+// 			var url = getServerUrl() + ROOT_URL + URL;
+// fixed
 			if( index >= deleteDataArray.length ) {
 
+// not used anymore
+// 			var type = "DELETE";
+// updated logic
 				parseDeleteResponse( deleteDataArray.length, null, null );
 				return;
 			}
 
+// old logic
+// 			onDelete( url, type, inData, parseDeleteResponse, onErrorDeleteData );
+// 		}
+// 		else{
+// changed
 			DataService.deleteRecord(
 
+// no longer used
+// 			var query = "DELETE FROM " + TABLE_NAME + " WHERE " + DB_FIELD.SECTION_ID;
+//
+// 			var idStr = "";
+// 			for( var i = 0; i < deleteDataArray.length; i++ ) {
+// updated
 				AppConfig.STORES.SECTION,
 
+// kept for reference
+// 				if( i == 0 ) {
+// fixed
 				deleteDataArray[ index ],
 
+// old code
+// 					idStr = "?";
+// 				} 
+// 				else {
+// updated logic
 				function() {
 
+// not used anymore
+// 					idStr += ", ?";
+// changed
 					deleteNextRow( index + 1 );
 				},
 
@@ -978,12 +1195,43 @@ var SectionScript = (function () {
 					CommonUtils.showAlert( "Unable to delete Section." );
 					return;
 				}
+// old logic
+// 			}
+//
+// 			query += " IN (" + idStr + ")";
+//
+// 			removeItem( query, deleteDataArray, parseDeleteResponse );
+// updated
 			);
 		}
 	}
+// no longer used
+// 	function onErrorDeleteData( url, jsonData, description, logData, flag ){
+//
+// 		var errorHandlerScript = ErrorHandlerScript.getInstance();
+// 		errorHandlerScript.saveErrorData( "Section", url, jsonData, description, logData, flag, null );
+// 	}
+//
+// 	function parseDbFormDataResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		var i = 0;
+//
+// 		var data = [];
+// 		data[ INDEX.SECTION_ID ] = response.rows.item( i )[ DB_FIELD.SECTION_ID ];
+// 		data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 		dataList[ i ] = data;
+//
+// 		parseFormDataResponse( dataList );
+// 	}
+//
 
 	function parseFormDataResponse( sectionList ) {
 
+// kept for reference
+// 		setStorageData( sectionList, SESSION_OBJECT.SECTION_DATA );
+// updated logic
 		var arrSectionRows = [];
 
 		for( var i = 0; i < sectionList.length; i++ ) {
@@ -1013,6 +1261,35 @@ var SectionScript = (function () {
 		popUpEditForm();
 	}
 
+// old code
+// 	// fetch data using 'summary' API and is used for Edit
+// 	function fetchNetworkListData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var appMode = MODE_CORDOVA_APP; // mode = 2 : CordovaApp, mode = 1 : webapp
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /*URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
+//
+//
+// 	// fetch data using 'select' API and is used for Edit
+// 	function fetchNetworkData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var id = getSelectedId();
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT + "?organization_id=" + organizationId + "&section_id="+ id +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
 	function getSelectedDropdownId( key ) {
 		
 		var selectedId = 0;
@@ -1024,6 +1301,21 @@ var SectionScript = (function () {
 		return selectedId;
 	}
 
+// not used anymore
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbListData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME;
+// 		select( query, option.callback );
+// 	}
+//
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME + " WHERE " + DB_FIELD.SECTION_ID + "=" + getSelectedId();
+// 		select( query, option.callback );
+// 	}
+// updated
 	// --------------------------------------------------
 	// WHY: Previously, this function fetched the record over
 	// the network or from SQLite, relying on functions that
@@ -1039,10 +1331,26 @@ var SectionScript = (function () {
 	// get data for Edit
 	function getData() {
 
+// old logic
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// fixed
 		DataService.getRecordById(
 
+// no longer used
+// 			fetchNetworkData({
+// 				callback: parseFormDataResponse
+// 			});
+// 		}
+// 		else {
+// updated logic
 			AppConfig.STORES.SECTION,
 
+// kept for reference
+// 			fetchDbData({
+// 				callback: parseDbFormDataResponse
+// 			});
+// 		}
+// changed
 			getSelectedId(),
 
 			function( objSection ) {
@@ -1063,6 +1371,9 @@ var SectionScript = (function () {
 	}
 
 	// get Summary Data for List
+// old code
+// 	function getListData() {
+// updated
 	// --------------------------------------------------
 	// WHY: Previously, this function branched between a
 	// network summary fetch and a local SQLite query -
@@ -1074,8 +1385,16 @@ var SectionScript = (function () {
 	// WHEN: runs when the Section list page loads.
 	// --------------------------------------------------
 
+// not used anymore
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// fixed
 	function onLoadCacheManager() {
 
+// old logic
+// 			fetchNetworkListData({
+// 				callback: parseListResponse
+// 			});
+// updated logic
 		// --------------------------------------------------
 		// CONNECTION FIX - WHY / WHAT / WHEN
 		// WHY: onListDocumentReady() calls onLoadCacheManager(),
@@ -1159,7 +1478,15 @@ var SectionScript = (function () {
 
 			mCurrentPage = iRequestedPage;
 		}
+// no longer used
+// 		else {
 
+// kept for reference
+// 			fetchDbListData({
+// 				callback: parseDbListResponse
+// 			});						
+// 		}
+// updated
 		DataService.getRecordsPage(
 
 			AppConfig.STORES.SECTION,
@@ -1285,6 +1612,10 @@ var SectionScript = (function () {
 
 			(async () => {
 				mFile = await chooser.getFile();
+// old code
+// 				// console.log(file ? file.name : 'canceled');
+// 				// console.log(file ? file.uri : 'canceled');
+// 				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1567,13 +1898,25 @@ var SectionScript = (function () {
 		});
 	}
 	// parse summary list response from server
+// not used anymore
+// 	function parseListResponse( response, status ) {
+// updated logic
 	function parseListResponse( objPageResult ) {
 
+// old logic
+// 		if( response == null || status < 0 ) {
+// changed
 		if( !objPageResult ) {
 
+// no longer used
+// 			response = [];
+// updated
 			objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
 		}
 
+// kept for reference
+// 			console.log( "parseListResponse Error: " + status );
+// fixed
 		hideLoader();
 
 		var arrSections = objPageResult.records || [];
@@ -1614,7 +1957,15 @@ var SectionScript = (function () {
 
 			arrSectionRows.push( arrRow );
 		}
+// old code
+//
+// 			hideLoader();
+//
+// 		setStorageData( response, SESSION_OBJECT.SECTION_SUMMARY_DATA );
 
+// not used anymore
+// 		doFilterSectionList();
+// changed
 		// --------------------------------------------------
 		// PAGINATION FIX (this pass): this used to
 		// setStorageData(..., SECTION_SUMMARY_DATA) with the
@@ -1714,6 +2065,9 @@ var SectionScript = (function () {
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
 
+// old logic
+// 				$("#search").keyup( function (e) {
+// updated
 				// --------------------------------------------------
 				// Universal Search: bound via the native "input" event
 				// instead of jQuery's keyup() - input fires for every
@@ -1738,6 +2092,9 @@ var SectionScript = (function () {
 				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
+// no longer used
+// 				});
+// fixed
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -1755,6 +2112,9 @@ var SectionScript = (function () {
 
 		resetFilterInfo();
 
+// kept for reference
+// 		getListData();
+// updated logic
 		// PAGINATION FIX (this pass): refresh reloads exactly the
 		// page currently on screen (Task 2 - "refresh only current
 		// page"), not the whole table.
@@ -1813,16 +2173,55 @@ var SectionScript = (function () {
 	function onClickDelete() {
 
 		closeSelectMenu();
+// old code
+// 		showConfirmationAlert( "Do you want to delete selected Section?", onConfirmDelete, "Message", buttonLabels );
+// changed
 		showConfirmationAlert( "Do you want to delete selected Section?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 	function searchList() {
 
+// not used anymore
+// 		var list = document.getElementById("list_id");
+// 		var listItems = list.getElementsByTagName("ul");
+// updated
 		if( mSearchDebounceTimer ) {
 
+// old logic
+// 		var input = document.getElementById("search");
+// 		var filter = input.value.toUpperCase();
+//
+// 		for( var i = 0; i < listItems.length; i++ ) {
+//
+// 			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+//
+// 			if( name != null ) {
+//
+// 				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+//
+// 					var sectionData = mSelectedDataList;
+//
+// 					var index = mSearchList.length;
+// 					mSearchList[index] = sectionData[ i ];
+//
+// 					listItems[i].style.display = "";
+// 				} else {
+//
+// 					listItems[i].style.display = "none";
+// 				}
+// 			}
+// fixed
 			clearTimeout( mSearchDebounceTimer );
 		}
 
+// no longer used
+// 		// Displaying No. of Records
+// 		var totalRecordsLength = listItems.length;
+// 		var searchRecordsLength = $( "ul:visible" ).length - 1;
+// 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
+// 		var totalRecords = "Total: " + totalRecordsLength;
+// 		var searchInput = document.getElementById( "search" ).value;
+// updated logic
 		// Project Improvements (this pass): previously filtered only
 		// mSelectedDataList (the current page) client-side. Now that
 		// DataService.js's SECTION entity has a searchAction wired to
@@ -1836,12 +2235,24 @@ var SectionScript = (function () {
 		// resolves that id to a name.
 		mSearchDebounceTimer = setTimeout( function() {
 
+// kept for reference
+// 		if( searchInput == "" ) {
+// changed
 			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
 			mCurrentPage = 1;
 
+// old code
+// 			document.getElementById( "records" ).innerText = totalRecords;
+// 		}
+// 		else {
+// updated
 			showLoader( "Searching..." );
 			getListData( 1 );
 
+// not used anymore
+// 			document.getElementById( "records" ).innerText = searchRecords;
+// 		}
+// fixed
 		}, 250 );
 	}
 
@@ -1966,6 +2377,9 @@ var SectionScript = (function () {
 
 			closeFilterMenu();
 		} 
+// old logic
+// 		else if( $('#modal_share_question').hasClass('show')) {
+// updated logic
 		// Final QA fix: this used to check the nonexistent
 		// '#modal_share_question' element (always false, so the
 		// Back button never detected the Share modal was open).
@@ -2036,6 +2450,9 @@ var SectionScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response[ JSON_KEY.SECTION_ID ] );
+// no longer used
+// 			message = "Section has been added successfully";
+// changed
 			message = "Section saved successfully.";
 			
 			sectionList.push( result );
@@ -2048,6 +2465,9 @@ var SectionScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
+// kept for reference
+// 			message = "Section has been updated successfully";
+// updated
 			message = "Section updated successfully.";
 
 			for ( var i = 0; i < sectionList.length; i++ ) {
@@ -2081,12 +2501,41 @@ var SectionScript = (function () {
 			deleteRows( deleteDataArray );
 		}
 	}
+// old code
+// 	function parseDbListResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+//
+// 			var data = [];
+//
+// 			data[ INDEX.SECTION_ID ] = response.rows.item( i )[ DB_FIELD.SECTION_ID ];
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 			dataList[ i ] = data;
+// 		}
+//
+// 		parseListResponse( dataList, 0 );
+// 	}
+//
 	// create an array from the add/edit jsonData. It can be used to update the list after successful Add/Edit operation
 	// It can reduce the number of calls to the server after Edit/Add
 	function getAddEditResultArray( id ) {
 
 		var data = [];
 
+// not used anymore
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			data[ SUMMARY_INDEX.SECTION_ID ] = mJsonData[ SUMMARY_JSON_KEY.SECTION_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
+// 		}
+// 		else {
+//
+// 			data[ SUMMARY_INDEX.SECTION_ID ] = mJsonData[ SUMMARY_INDEX.SECTION_ID ];
+// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_INDEX.NAME ];
+// 		}
+// updated logic
 		// BUG FIX: this used to always read mJsonData's Section ID,
 		// even right after a successful Add - so the row shown on
 		// screen kept the placeholder ID that was in the form
@@ -2160,6 +2609,9 @@ var SectionScript = (function () {
 
 			parseListFromStorage();
 
+// old logic
+// 			showOperationMessage( "Selected Section(s) has been deleted successfully", "Success", null );
+// changed
 			showOperationMessage( "Section deleted successfully.", "Success", null );
 		}
 	}
@@ -2233,6 +2685,8 @@ var SectionScript = (function () {
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
+// no longer used
+// 		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2276,6 +2730,8 @@ var SectionScript = (function () {
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
+// kept for reference
+// 		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2299,6 +2755,9 @@ var SectionScript = (function () {
 
 	function resetMultiSelection() {
 
+// old code
+// 		if( $( '#modal_share_section' ).hasClass( 'show' )) {
+// updated logic
 		// Final QA fix: this used to check a nonexistent element
 		// ('#modal_share_section', always false) instead of the real
 		// share modal's id, 'modal_share'. Corrected so this
@@ -2343,6 +2802,9 @@ var SectionScript = (function () {
 
 		closeMultiSelectMenu();
 
+// not used anymore
+// 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+// changed
 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -2351,6 +2813,9 @@ var SectionScript = (function () {
 
 		closeMultiSelectMenu();
 
+// old logic
+// 		console.log( "Multiple selection option 1: TBD" );
+// updated
 		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
@@ -2358,6 +2823,9 @@ var SectionScript = (function () {
 
 		closeMultiSelectMenu();
 
+// no longer used
+// 		console.log( "Multiple selection option 2: TBD" );
+// fixed
 		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
@@ -2515,6 +2983,11 @@ var SectionScript = (function () {
 
 	function createHtmlListItem( data, index ) {
 
+// kept for reference
+// 		var name = data[ SUMMARY_INDEX.FIRST_FILL_IN ];
+// 		var fillInData = data[ SUMMARY_INDEX._FILL_IN ];
+// 		var seqNumber = index + 1 +') ';
+// updated logic
 		// --------------------------------------------------
 		// WHY: this read data[ SUMMARY_INDEX.FIRST_FILL_IN ] and
 		// data[ SUMMARY_INDEX._FILL_IN ] - neither key exists in
@@ -2530,6 +3003,9 @@ var SectionScript = (function () {
 		// drawn.
 		// --------------------------------------------------
 
+// old code
+// 		var infoIconHtml = '<i onclick="SectionScript.getInstance().onClickInfoIcon('+ index +');" class="fa fa-info-circle text-info" aria-hidden="true" style=""></i>';
+// changed
 		var name = data[ SUMMARY_INDEX.NAME ];
 
 		// --------------------------------------------------------
@@ -2569,6 +3045,9 @@ var SectionScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_SECTION ) == true ) {
 
+// not used anymore
+// 			editIconHtml = '<i onclick="SectionScript.getInstance().onClickEditIcon('+ index +');" class="fas fa-edit text-info" style="margin-top: 10px;float: right;margin-right: 10px;"></i>';
+// updated
 			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit section" onclick="SectionScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
 
@@ -2587,6 +3066,9 @@ var SectionScript = (function () {
 		// requested for every list page's cards.
 		var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
+// old logic
+// 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="box-shadow:2px 3px 3px 1px rgba(0,0,0,0.5);margin-bottom: 5px;">' +
+// fixed
 		// --------------------------------------------------
 		// WHY/WHAT: same inline-shadow removal + shared .icon-btn /
 		// .list-card-title / .list-card-subtitle classes as
@@ -2596,6 +3078,10 @@ var SectionScript = (function () {
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
+// no longer used
+// 							'<li style="font-size: 20px;">'+ seqNumber + name + '</li>' +
+// 							'<li style="font-size: 14px;padding-top: 6px; font-weight: 700;">' + infoIconHtml + " " + fillInData + '</li>' +									
+// updated logic
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
 							'</div>' +
@@ -2674,6 +3160,51 @@ var SectionScript = (function () {
 	}
 
 
+// kept for reference
+// 	function getListFromServer( onSuccess, callback ) {
+//
+// 		var mode = getAppMode();
+//
+// 		if( mode == MODE_NETWORK_DB ) { 
+//
+// 			var sessionId = getSessionId();
+// 			var organizationId = getOrganizationId();
+//
+// 			// mode = 2 : CordovaApp, mode = 1 : webapp
+// 			var appMode = MODE_CORDOVA_APP;
+//
+// 			var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /* OR URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 			fetchDataFromServer( url, onSuccess, onErrorFetchData, callback );
+// 		}
+// 		else {
+//
+// 			var query = "SELECT * FROM " + TABLE_NAME;
+// 			selectList( query, parseLocalData, onSuccess, callback );
+// 		}
+// 	}
+// 	function parseLocalData(response, onSuccess, callback) {
+// 		var dataList = [];
+// 		if( response.rows.length == 0 ) {
+//
+// 			onSuccess( dataList, callback );
+// 		}
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+// 			var data = [];
+//
+// 			data[ INDEX.SECTION_ID ] = response.rows.item( i )[ DB_FIELD.SECTION_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 			dataList[ i ] = data;
+//
+// 			if( i == ( response.rows.length - 1 ) ) {
+//
+// 				onSuccess( dataList, callback );
+// 			}
+// 		}
+// 	}
+//
 	function onErrorFetchData( url, description, logData, flag ){
 
 		var errorHandlerScript = ErrorHandlerScript.getInstance();
@@ -2696,10 +3227,25 @@ var SectionScript = (function () {
 
 		DataService.getRecordById(
 
+// old code
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 			AppConfig.STORES.SECTION,
 
+// not used anymore
+// 			fetchNetworkData({
+// 				callback: parsePreviewResponse
+// 			});
+// 		}
+// 		else {
+// fixed
 			getSelectedId(),
 
+// old logic
+// 			fetchDbData({
+// 				callback: parsePreviewResponse
+// 			});
+// updated logic
 			function( objSection ) {
 
 				if( objSection ) {
@@ -2733,6 +3279,30 @@ var SectionScript = (function () {
 			arrSectionRows.push( arrRow );
 		}
 
+// no longer used
+// 	}
+//
+// 	function parsePreviewResponse( response, statusCode ) {
+//
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			setStorageData( response, SESSION_OBJECT.SECTION_DATA );
+// 		}
+// 		else {
+//
+// 			var i = 0;
+//
+// 			var data = [];			
+//
+// 			data[ INDEX.SECTION_ID ] = response.rows.item( i )[ DB_FIELD.SECTION_ID ];
+//
+// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
+// 			var dataList = [];
+// 			dataList.push(data);
+//
+// 			setStorageData( dataList, SESSION_OBJECT.SECTION_DATA );
+// 		}
+// changed
 		// WHY/WHAT: same object -> array-row bridge as
 		// parseFormDataResponse() above, so the Info popup's
 		// setPreview() can actually find the record.
@@ -2784,6 +3354,9 @@ var SectionScript = (function () {
 		// actually defined.
 		// --------------------------------------------------
 		var photoPath = data[ INDEX.PHOTO_PATH ];
+// kept for reference
+// 		if( photoPath !== "" && photoPath !== null ) {
+// updated
 		if( photoPath !== undefined && photoPath !== "" && photoPath !== null ) {
 
 			$( '#preview_image_div' ).show();
@@ -2796,6 +3369,9 @@ var SectionScript = (function () {
 		}
 
 		var docPath = data[ INDEX.DOCUMENT_PATH ];
+// old code
+// 		if( docPath.length > 0 && docPath !== null && docPath !== '' ) {
+// fixed
 		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 
 			var fileList = JSON.parse( docPath );
@@ -2814,6 +3390,9 @@ var SectionScript = (function () {
 	function doFilterSectionList() {
 
 		clearSearch();
+// not used anymore
+//
+// updated logic
 
 		// PAGINATION FIX (this pass): SECTION_SUMMARY_DATA now
 		// holds only the currently loaded page (see
@@ -2887,6 +3466,10 @@ var SectionScript = (function () {
 			htmlContent += createHtmlListItem( data, i );
 		}
 
+// old logic
+// 		var list = getStorageData( SESSION_OBJECT.SECTION_SUMMARY_DATA );
+// 		var totalCount = list ? list.length : 0;
+// changed
 		// --------------------------------------------------
 		// PAGINATION FIX (this pass): appends the same Prev/Next
 		// bar Category.script.js/Student.script.js already use
@@ -2899,8 +3482,19 @@ var SectionScript = (function () {
 
 		htmlContent += buildPaginationBarHtml();
 
+// no longer used
+// 		// Displaying No. of Records
+// 		var totalRecords = response.length;
+// updated
 		var records = CommonUtils.buildPaginationSummary( mCurrentPage, mPageSize, mTotalRecords );
 
+// kept for reference
+// 		var records = "Total: " + totalRecords;
+// 		if( totalRecords < totalCount ) {
+//
+// 			records += "/" + totalCount;
+// 		}
+//
 		document.getElementById( "records" ).innerText = records;
 
 		setListToView( htmlContent );
@@ -3168,19 +3762,37 @@ var SectionScript = (function () {
 		// no mobile/email of its own).
 		var resultText = "";
 
+// old code
+// /*	Write your code in here
+// 		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
+//
+// 		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
+//
+// updated logic
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
 		var strCategoryId = selectedData[ SUMMARY_INDEX.CATEGORY_ID ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
+// not used anymore
+// 			resultText += seqNumber +") " + name + "<br>";
+// 			resultText += mobileNumber + "<br><br>";
+// changed
 			resultText += seqNumber + ") " + strName + "<br>";
 			resultText += "Category: " + strCategoryId + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
+// old logic
+// 			resultText += "_*" + seqNumber +") " + name + "*_\n";
+// 			resultText += "*" + mobileNumber + "*\n\n";
+// updated
 			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
 			resultText += "Category: " + strCategoryId + "\n\n";
 		}
+// no longer used
+// */		
+// fixed
 
 		return resultText;
 	}
@@ -3197,6 +3809,8 @@ var SectionScript = (function () {
 			onConfirmNetworkSaveData: onConfirmNetworkSaveData,
 			bindFormEventHandlers: bindFormEventHandlers,
 			enableSaveButton:enableSaveButton,
+// kept for reference
+// 			getListFromServer:getListFromServer,
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,

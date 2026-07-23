@@ -111,6 +111,22 @@
    removed or renamed; architecture unchanged.
    ---------------------------------------------------------- */
 
+/* ----------------------------------------------------------
+   MERGE NOTE (this pass)
+   ----------------------------------------------------------
+   This file was reconciled against an older reference copy of
+   Result.script.js that still carried its historical
+   commented-out code (blocks marked "old code" / "old logic" /
+   "kept for reference" / "not used anymore" / "updated" /
+   "changed" / "fixed" / "no longer used"). Those historical
+   comment blocks have been restored below, next to the current
+   working code they used to sit beside, purely for traceability
+   of how each piece of logic evolved. Nothing below was
+   reactivated - every block that starts with "//" stays fully
+   commented out. No active function, event binding, or public
+   API entry was changed, renamed, or duplicated by this pass.
+   ---------------------------------------------------------- */
+
 /*/* ==========================================================
    PWA MIGRATION NOTES
    Result.script.js
@@ -358,6 +374,12 @@ var ResultScript = (function () {
 
 	var INDEX = {
 		RESULT_ID : value++,		// 1
+// old code
+// 		EXAM_NAME : value++,		// 2
+// 		DATE_OF_EXAM : value++,		// 3
+// 		TOTAL_MARKS : value++,		// 4
+// 		MARKS_OBTAINED : value++,		// 5		// 5
+// updated
 		STUDENT_ID : value++,		// 2
 		EXAM_NAME : value++,		// 3
 		SUBJECT : value++,		// 4
@@ -372,6 +394,12 @@ var ResultScript = (function () {
 
 	var SUMMARY_INDEX = {
 		RESULT_ID : value++,		// 1
+// not used anymore
+// 		EXAM_NAME : value++,		// 2
+// 		DATE_OF_EXAM : value++,		// 3
+// 		TOTAL_MARKS : value++,		// 4
+// 		MARKS_OBTAINED : value++,		// 5		// 5
+// fixed
 		STUDENT_ID : value++,		// 2
 		EXAM_NAME : value++,		// 3
 		SUBJECT : value++,		// 4
@@ -385,6 +413,12 @@ var ResultScript = (function () {
 	var LABEL = {
 
 		RESULT_ID : "Result",
+// old logic
+// 		EXAM_NAME : "Exam Name",
+// 		DATE_OF_EXAM : "Date Of Exam",
+// 		TOTAL_MARKS : "Total Marks",
+// 		MARKS_OBTAINED : "Marks Obtained"
+// updated logic
 		STUDENT_ID : "Student",
 		EXAM_NAME : "Exam",
 		SUBJECT : "Subject",
@@ -394,11 +428,18 @@ var ResultScript = (function () {
 	};
 
 	//-----------------------------Default values------------------------------------
+// no longer used
+// 	//// TODO: Assign group_lookup_id of Lookup forign keys
 	var DEFAULT = {
 
 		RESULT_ID : 0,
 		STUDENT_ID : 0,
 		EXAM_NAME : "",
+// kept for reference
+// 		DATE_OF_EXAM : "",
+// 		TOTAL_MARKS : 0,
+// 		MARKS_OBTAINED : 0
+// updated
 		SUBJECT : "",
 		MARKS_OBTAINED : 0,
 		GRADE : "",
@@ -411,6 +452,10 @@ var ResultScript = (function () {
 		RESULT_ID : '#result_id',
 		STUDENT_ID : '#student_id',
 		EXAM_NAME : '#exam_name',
+// old code
+// 		DATE_OF_EXAM : '#date_of_exam',
+// 		TOTAL_MARKS : '#total_marks',
+// fixed
 		SUBJECT : '#subject',
 		MARKS_OBTAINED : '#marks_obtained',
 		GRADE : '#grade',
@@ -427,6 +472,11 @@ var ResultScript = (function () {
 		LBL_RESULT_ID : '#lbl_result_id',
 		LBL_STUDENT_NAME : '#lbl_student_name',
 		LBL_EXAM_NAME : '#lbl_exam_name',
+// not used anymore
+// 		LBL_DATE_OF_EXAM : '#lbl_date_of_exam',
+// 		LBL_TOTAL_MARKS : '#lbl_total_marks',
+// 		LBL_MARKS_OBTAINED : '#lbl_marks_obtained'
+// updated logic
 		LBL_SUBJECT : '#lbl_subject',
 		LBL_MARKS_OBTAINED : '#lbl_marks_obtained',
 		LBL_GRADE : '#lbl_grade',
@@ -439,6 +489,11 @@ var ResultScript = (function () {
 		RESULT_ID : "result_id",
 		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
+// old logic
+// 		DATE_OF_EXAM : "date_of_exam",
+// 		TOTAL_MARKS : "total_marks",
+// 		MARKS_OBTAINED : "marks_obtained"
+// changed
 		SUBJECT : "subject",
 		MARKS_OBTAINED : "marks_obtained",
 		GRADE : "grade",
@@ -451,6 +506,11 @@ var ResultScript = (function () {
 		RESULT_ID : "result_id",
 		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
+// no longer used
+// 		DATE_OF_EXAM : "date_of_exam",
+// 		TOTAL_MARKS : "total_marks",
+// 		MARKS_OBTAINED : "marks_obtained"
+// updated
 		SUBJECT : "subject",
 		MARKS_OBTAINED : "marks_obtained",
 		GRADE : "grade",
@@ -463,6 +523,11 @@ var ResultScript = (function () {
 		RESULT_ID : "result_id",
 		STUDENT_ID : "student_id",
 		EXAM_NAME : "exam_name",
+// kept for reference
+// 		DATE_OF_EXAM : "date_of_exam",
+// 		TOTAL_MARKS : "total_marks",
+// 		MARKS_OBTAINED : "marks_obtained"
+// fixed
 		SUBJECT : "subject",
 		MARKS_OBTAINED : "marks_obtained",
 		GRADE : "grade",
@@ -474,6 +539,9 @@ var ResultScript = (function () {
 		RESULT_ID: "RESULT_ID",
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		RESULT_DATA: "RESULT_DATA",
+// old code
+// 		RESULT_SUMMARY_DATA: "RESULT_SUMMARY_DATA"
+// updated logic
 		RESULT_SUMMARY_DATA: "RESULT_SUMMARY_DATA",
 		STUDENT_LIST: "RESULT_STUDENT_LIST"
 	}
@@ -519,6 +587,22 @@ var ResultScript = (function () {
 	}
 
 	function validateForm(){
+// not used anymore
+// 		var bValid = true;
+// 		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
+// 		var noOfDigits = getOrgNoOfDigits();
+// 		var fv = FormValidation;
+
+// old logic
+// 		console.log('Enable the validation for this form');
+// /* Enable as per requirement */
+// 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.RESULT_ID), G_ERROR.MSG.empty_error+LABEL.RESULT_ID);
+// 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.EXAM_NAME), G_ERROR.MSG.empty_error+LABEL.EXAM_NAME);
+// 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.DATE_OF_EXAM), G_ERROR.MSG.empty_error+LABEL.DATE_OF_EXAM);
+// 		// bValid = bValid && fv.checkDate($(FORM_FIELD.DATE_OF_EXAM), G_ERROR.MSG.invalid_date_error+LABEL.DATE_OF_EXAM);
+// 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.TOTAL_MARKS), G_ERROR.MSG.empty_error+LABEL.TOTAL_MARKS);
+// 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.MARKS_OBTAINED), G_ERROR.MSG.empty_error+LABEL.MARKS_OBTAINED);
+// updated
 
 		// --------------------------------------------------------
 		// PROJECT IMPROVEMENTS (added): Result.gs (the backend)
@@ -539,6 +623,9 @@ var ResultScript = (function () {
 		// app.
 		// --------------------------------------------------------
 
+// no longer used
+// 		return bValid;
+// fixed
 		if( $(FORM_FIELD.STUDENT_ID).val() == "0" || $(FORM_FIELD.STUDENT_ID).val() == "" ) {
 
 			CommonUtils.showAlert( "Please select a " + LABEL.STUDENT_ID + "." );
@@ -562,6 +649,10 @@ var ResultScript = (function () {
 	function setFormDefaults( resultId ) {
 		$(FORM_FIELD.RESULT_ID).val(resultId);
 		$(FORM_FIELD.EXAM_NAME).val(DEFAULT.EXAM_NAME);
+// kept for reference
+// 		$(FORM_FIELD.DATE_OF_EXAM).val(getDefaultDateTimePattern(DEFAULT.DATE_OF_EXAM));
+// 		$(FORM_FIELD.TOTAL_MARKS).val(DEFAULT.TOTAL_MARKS);
+// updated logic
 		$(FORM_FIELD.SUBJECT).val(DEFAULT.SUBJECT);
 		$(FORM_FIELD.MARKS_OBTAINED).val(DEFAULT.MARKS_OBTAINED);
 		$(FORM_FIELD.GRADE).val(DEFAULT.GRADE);
@@ -660,6 +751,10 @@ var ResultScript = (function () {
 	function populateFromLocalStorage( data ){
 		$( FORM_FIELD.RESULT_ID ).val( data[ INDEX.RESULT_ID ] );
 		$( FORM_FIELD.EXAM_NAME ).val( data[ INDEX.EXAM_NAME ] );
+// old code
+// 		$( FORM_FIELD.DATE_OF_EXAM ).val( getDefaultDateTimePattern( new Date( parseInt( data[ INDEX.DATE_OF_EXAM ] ) ) ) );
+// 		$( FORM_FIELD.TOTAL_MARKS ).val( data[ INDEX.TOTAL_MARKS ] );
+// changed
 		$( FORM_FIELD.SUBJECT ).val( data[ INDEX.SUBJECT ] );
 		$( FORM_FIELD.MARKS_OBTAINED ).val( data[ INDEX.MARKS_OBTAINED ] );
 		$( FORM_FIELD.GRADE ).val( data[ INDEX.GRADE ] );
@@ -791,6 +886,10 @@ var ResultScript = (function () {
 
 		$(FORM_FIELD.RESULT_ID).val(data[INDEX.RESULT_ID]);
 		$(FORM_FIELD.EXAM_NAME).val(data[INDEX.EXAM_NAME]);
+// not used anymore
+// 		$(FORM_FIELD.DATE_OF_EXAM).val(getDefaultDateTimePattern( parseInt(data[INDEX.DATE_OF_EXAM])));
+// 		$(FORM_FIELD.TOTAL_MARKS).val(data[INDEX.TOTAL_MARKS]);
+// updated
 		$(FORM_FIELD.SUBJECT).val(data[INDEX.SUBJECT]);
 		$(FORM_FIELD.MARKS_OBTAINED).val(data[INDEX.MARKS_OBTAINED]);
 		$(FORM_FIELD.GRADE).val(data[INDEX.GRADE]);
@@ -840,6 +939,10 @@ var ResultScript = (function () {
 		jsonData[ JSON_KEY.RESULT_ID ] = ( $(FORM_FIELD.RESULT_ID).val() );
 		jsonData[ JSON_KEY.STUDENT_ID ] = ( $(FORM_FIELD.STUDENT_ID).val() );
 		jsonData[ JSON_KEY.EXAM_NAME ] = ( $(FORM_FIELD.EXAM_NAME).val() );
+// old logic
+// 		jsonData[ JSON_KEY.DATE_OF_EXAM ] = DateTimeToSaveTime( $(FORM_FIELD.DATE_OF_EXAM).val() );
+// 		jsonData[ JSON_KEY.TOTAL_MARKS ] = ( $(FORM_FIELD.TOTAL_MARKS).val() );
+// fixed
 		jsonData[ JSON_KEY.SUBJECT ] = ( $(FORM_FIELD.SUBJECT).val() );
 		jsonData[ JSON_KEY.MARKS_OBTAINED ] = ( $(FORM_FIELD.MARKS_OBTAINED).val() );
 		jsonData[ JSON_KEY.GRADE ] = ( $(FORM_FIELD.GRADE).val() );
@@ -849,6 +952,21 @@ var ResultScript = (function () {
 		// used for file upload
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
+
+// no longer used
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			jsonData[ JSON_KEY.RESULT_ID ] = data[ INDEX.RESULT_ID ];
+// 			jsonData[ JSON_KEY.EXAM_NAME ] = data[ INDEX.EXAM_NAME ];
+// 			jsonData[ JSON_KEY.DATE_OF_EXAM ] = data[ INDEX.DATE_OF_EXAM ];
+// 			jsonData[ JSON_KEY.TOTAL_MARKS ] = data[ INDEX.TOTAL_MARKS ];
+// 			jsonData[ JSON_KEY.MARKS_OBTAINED ] = data[ INDEX.MARKS_OBTAINED ];
+//
+// 		}
+// updated logic
 
 		// --------------------------------------------------------
 		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
@@ -883,9 +1001,70 @@ var ResultScript = (function () {
 		mFile = null;
 		mFileClosed = false;
 
+// kept for reference
+// 		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
+// old code
+// 	function getFormDataAsArray( mode ) {
+//
+// 		var arrayData = [];
+// 		arrayData[ INDEX.RESULT_ID ] = ( $( FORM_FIELD.RESULT_ID ).val() );
+// 		arrayData[ INDEX.EXAM_NAME ] = ( $( FORM_FIELD.EXAM_NAME ).val() );
+// 		arrayData[ INDEX.DATE_OF_EXAM ] = DateTimeToSaveTime( $( FORM_FIELD.DATE_OF_EXAM ).val() );
+// 		arrayData[ INDEX.TOTAL_MARKS ] = ( $( FORM_FIELD.TOTAL_MARKS ).val() );
+// 		arrayData[ INDEX.MARKS_OBTAINED ] = ( $( FORM_FIELD.MARKS_OBTAINED ).val() );
+//
+// 		if( mode == UPDATE_DATA ) { // Edit/Update
+//
+// 			var data = getSelectedData();
+//
+// 			arrayData[ INDEX.RESULT_ID ] = data[ INDEX.RESULT_ID ];
+// 			arrayData[ INDEX.EXAM_NAME ] = data[ INDEX.EXAM_NAME ];
+// 			arrayData[ INDEX.DATE_OF_EXAM ] = data[ INDEX.DATE_OF_EXAM ];
+// 			arrayData[ INDEX.TOTAL_MARKS ] = data[ INDEX.TOTAL_MARKS ];
+// 			arrayData[ INDEX.MARKS_OBTAINED ] = data[ INDEX.MARKS_OBTAINED ];
+//
+// 		}
+//
+// 		if( mFileList.length > 0 ) {
+//
+// 			arrayData[ INDEX.PHOTO_PATH ] = mFileList[ 0 ];
+// 		}
+//
+// 		mFileList = [];
+//
+// 		mUploadedImage = [];
+// 		mImageClosed = false;
+//
+// 		if( mFile != null ) {
+//
+// 			window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
+//
+// 			function failNative( e ) {
+//
+// 				console.error( 'ResolveNativePath: Error for ' + mFile.uri );
+//
+// 			}
+//
+// 			function successNative( finalPath ) {
+//
+// 				var fileList = [];
+// 				fileList[ 0 ] = finalPath;
+// 				arrayData[ INDEX.DOCUMENT_PATH ] = JSON.stringify( fileList );
+// 			}
+// 		}
+//
+// 		mFile = null;
+//
+// 		mUploadedFiles = [];
+// 		mFileClosed = false;
+//
+//
+// 		console.log( "getFormDataArray: " + arrayData );
+// 		return arrayData;
+// 	}
 	function onConfirmNetworkSaveData() {
 
 		var mode = getAddEditMode();
@@ -910,6 +1089,34 @@ var ResultScript = (function () {
 
 		serverInsertUpdate( url, TYPE, inData, mode, parseInsertUpdateResponse, onErrorInsertUpdate );
 	}
+// not used anymore
+// 	function onConfirmDbSaveData() {
+//
+// 		var mode = getAddEditMode();
+//
+// 		mJsonData = getFormDataAsArray( mode );
+//
+// 		switch( mode ) {
+// 			case INSERT_DATA:
+//
+// 				var query = getInsertQuery();
+// 				insert( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			case UPDATE_DATA:
+//
+// 				var query = getUpdateQuery();
+// 				update( query, mJsonData, mode, parseInsertUpdateResponse );
+// 				break;
+//
+// 			default:
+//
+// 				console.log( "Invalid mode passed to saveFormDataInsertDb, mode = " + mode );
+// 				return false;
+// 		}
+// 	}
+//
+//
 	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 
 		var errorHandlerScript = ErrorHandlerScript.getInstance();
@@ -922,6 +1129,9 @@ var ResultScript = (function () {
 		showAlertDialog( message, gotoLogin, title, buttonStr );
 	}
 
+// old logic
+// 	function saveFormData( buttonIndex ) { //pass create table as additional param
+// updated logic
 	function saveFormData( buttonIndex ) {
 
 		if( buttonIndex == BUTTON_CANCEL ) { // Cancel alert dialog
@@ -935,6 +1145,9 @@ var ResultScript = (function () {
 
 	function onConfirmSaveFormData() {
 
+// no longer used
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// changed
 		// --------------------------------------------------
 		// WHY: the old SQLite path (getFormDataAsArray,
 		// onConfirmDbSaveData, insert/update) and this
@@ -949,6 +1162,9 @@ var ResultScript = (function () {
 		// Add/Edit Result form.
 		// --------------------------------------------------
 
+// kept for reference
+// 			saveNetworkFormData();
+// updated
 		var mode = getAddEditMode();
 
 		mJsonData = getFormDataAsJson( mode );
@@ -999,11 +1215,47 @@ var ResultScript = (function () {
 		}
 		else {
 
+// old code
+// 			saveDbFormData();
+// fixed
 			CommonUtils.logError( "Result.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
+// not used anymore
+// 	function saveDbFormData() {
 
+// old logic
+// 		showLoader( "Please wait...", "Fetching data.." );
+//
+// 		onConfirmDbSaveData();
+// 	}
+// 	function saveNetworkFormData() {
+//
+// 		if( mFileList.length == 0 && mFile == null ) {
+//
+// 			showLoader( "Please wait...", "Fetching data..." );
+// 			onConfirmNetworkSaveData();
+// 		}
+// 		else {
+//
+// 			if( mFileList.length > 0 ) { // File selected
+//
+// 				var fileName = "IMG_" + new Date().getTime() + ".jpg";
+// 				var mediaType = "image/jpeg";
+//
+// 				var imageUri = mFileList[0]; // First image data
+//
+// 				uploadFile( fileName, mediaType, imageUri, onFileUploadSuccess, TYPE_UPLOAD_IMAGE );		
+// 			}
+// 			else {
+//
+// 				uploadDocuments();
+// 			}
+//
+// 		}
+// 	}
+// changed
 	// NOTE: uploadDocuments() below still calls uploadFile(), which does
 	// not exist in this PWA. Left untouched (not migrated) because
 	// ResultHTML.script.js's onFileUploadSuccess() still calls it
@@ -1019,11 +1271,16 @@ var ResultScript = (function () {
 	
 		function successNative( finalPath ) {
 	
+// no longer used
+// 		  console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
 	function deleteRows( deleteDataArray ) {
 
+// kept for reference
+// 		if( getAppMode() == MODE_NETWORK_DB ){
+// fixed
 		// --------------------------------------------------
 		// WHY: Previously, this function branched between a
 		// network DELETE call and a raw SQLite DELETE query,
@@ -1038,24 +1295,63 @@ var ResultScript = (function () {
 		// multi-select delete.
 		// --------------------------------------------------
 
+// old code
+// 			var deleteIds = deleteDataArray.join();
+// 			var jsonData = {
+// 				"result_id": deleteIds // ADD ANY OTHER CONDITION (IF ANY)
+// 			};
+// updated logic
 		deleteNextRow( 0 );
 
+// not used anymore
+// 			var inData = JSON.stringify( jsonData );
+//
+// 			console.log( "deleteRows: " + inData );
+// changed
 		function deleteNextRow( numIndex ) {
 
+// old logic
+// 			var url = getServerUrl() + ROOT_URL + URL;
+// updated
 			if( numIndex >= deleteDataArray.length ) {
 
+// no longer used
+// 			var type = "DELETE";
+// fixed
 				parseDeleteResponse( deleteDataArray.length, null, null );
 				return;
 			}
 
+// kept for reference
+// 			onDelete( url, type, inData, parseDeleteResponse, onErrorDeleteData );
+// 		}
+// 		else{
+// updated logic
 			DataService.deleteRecord(
 
+// old code
+// 			var query = "DELETE FROM " + TABLE_NAME + " WHERE " + DB_FIELD.RESULT_ID;
+//
+// 			var idStr = "";
+// 			for( var i = 0; i < deleteDataArray.length; i++ ) {
+// changed
 				AppConfig.STORES.RESULT,
 
+// not used anymore
+// 				if( i == 0 ) {
+// updated
 				deleteDataArray[ numIndex ],
 
+// old logic
+// 					idStr = "?";
+// 				} 
+// 				else {
+// fixed
 				function() {
 
+// no longer used
+// 					idStr += ", ?";
+// updated logic
 					deleteNextRow( numIndex + 1 );
 				},
 
@@ -1066,12 +1362,46 @@ var ResultScript = (function () {
 					CommonUtils.showAlert( "Unable to delete Result." );
 					return;
 				}
+// kept for reference
+// 			}
+//
+// 			query += " IN (" + idStr + ")";
+//
+// 			removeItem( query, deleteDataArray, parseDeleteResponse );
+// changed
 			);
 		}
 	}
+// old code
+// 	function onErrorDeleteData( url, jsonData, description, logData, flag ){
+//
+// 		var errorHandlerScript = ErrorHandlerScript.getInstance();
+// 		errorHandlerScript.saveErrorData( "Result", url, jsonData, description, logData, flag, null );
+// 	}
+//
+// 	function parseDbFormDataResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		var i = 0;
+//
+// 		var data = [];
+// 		data[ INDEX.RESULT_ID ] = response.rows.item( i )[ DB_FIELD.RESULT_ID ];
+// 		data[ INDEX.EXAM_NAME ] = response.rows.item( i )[ DB_FIELD.EXAM_NAME ];
+// 		data[ INDEX.DATE_OF_EXAM ] = response.rows.item( i )[ DB_FIELD.DATE_OF_EXAM ];
+// 		data[ INDEX.TOTAL_MARKS ] = response.rows.item( i )[ DB_FIELD.TOTAL_MARKS ];
+// 		data[ INDEX.MARKS_OBTAINED ] = response.rows.item( i )[ DB_FIELD.MARKS_OBTAINED ];
+// 		dataList[ i ] = data;
+//
+// 		parseFormDataResponse( dataList );
+// 	}
+//
 
 	function parseFormDataResponse( resultList ) {
 
+// not used anymore
+// 		setStorageData( resultList, SESSION_OBJECT.RESULT_DATA );
+// fixed
 		var arrResultRows = [];
 
 		for( var i = 0; i < resultList.length; i++ ) {
@@ -1104,6 +1434,35 @@ var ResultScript = (function () {
 		popUpEditForm();
 	}
 
+// old logic
+// 	// fetch data using 'summary' API and is used for Edit
+// 	function fetchNetworkListData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var appMode = MODE_CORDOVA_APP; // mode = 2 : CordovaApp, mode = 1 : webapp
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /*URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
+//
+//
+// 	// fetch data using 'select' API and is used for Edit
+// 	function fetchNetworkData( option ) {
+//
+// 		var sessionId = getSessionId();
+//
+// 		var organizationId = getOrganizationId();
+//
+// 		var id = getSelectedId();
+//
+// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT + "?organization_id=" + organizationId + "&result_id="+ id +"&s_id=" + sessionId;
+//
+// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
+// 	}
 	function getSelectedDropdownId( key ) {
 		
 		var selectedId = 0;
@@ -1115,6 +1474,21 @@ var ResultScript = (function () {
 		return selectedId;
 	}
 
+// no longer used
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbListData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME;
+// 		select( query, option.callback );
+// 	}
+//
+// 	// fetch data from local db and is used for Edit
+// 	function fetchDbData( option ) {
+//
+// 		var query = "SELECT * FROM " + TABLE_NAME + " WHERE " + DB_FIELD.RESULT_ID + "=" + getSelectedId();
+// 		select( query, option.callback );
+// 	}
+// changed
 	// --------------------------------------------------
 	// WHY: Previously, this function fetched the record over
 	// the network or from SQLite, relying on functions that
@@ -1130,10 +1504,26 @@ var ResultScript = (function () {
 	// get data for Edit
 	function getData() {
 
+// kept for reference
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 		DataService.getRecordById(
 
+// old code
+// 			fetchNetworkData({
+// 				callback: parseFormDataResponse
+// 			});
+// 		}
+// 		else {
+// fixed
 			AppConfig.STORES.RESULT,
 
+// not used anymore
+// 			fetchDbData({
+// 				callback: parseDbFormDataResponse
+// 			});
+// 		}
+// updated logic
 			getSelectedId(),
 
 			function( objResult ) {
@@ -1154,6 +1544,9 @@ var ResultScript = (function () {
 	}
 
 	// get Summary Data for List
+// old logic
+// 	function getListData() {
+// changed
 	// --------------------------------------------------
 	// WHY: Previously, this function branched between a
 	// network summary fetch and a local SQLite query -
@@ -1165,8 +1558,16 @@ var ResultScript = (function () {
 	// WHEN: runs when the Result list page loads.
 	// --------------------------------------------------
 
+// no longer used
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated
 	function onLoadCacheManager() {
 
+// kept for reference
+// 			fetchNetworkListData({
+// 				callback: parseListResponse
+// 			});
+// fixed
 		// --------------------------------------------------
 		// CONNECTION FIX - WHY / WHAT / WHEN
 		// WHY: onListDocumentReady() calls onLoadCacheManager(),
@@ -1257,7 +1658,15 @@ var ResultScript = (function () {
 
 			mCurrentPage = iRequestedPage;
 		}
+// old code
+// 		else {
 
+// not used anymore
+// 			fetchDbListData({
+// 				callback: parseDbListResponse
+// 			});						
+// 		}
+// changed
 		DataService.getRecordsPage(
 
 			AppConfig.STORES.RESULT,
@@ -1383,6 +1792,10 @@ var ResultScript = (function () {
 
 			(async () => {
 				mFile = await chooser.getFile();
+// old logic
+// 				// console.log(file ? file.name : 'canceled');
+// 				// console.log(file ? file.uri : 'canceled');
+// 				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1664,13 +2077,25 @@ var ResultScript = (function () {
 		});
 	}
 	// parse summary list response from server
+// no longer used
+// 	function parseListResponse( response, status ) {
+// fixed
 	function parseListResponse( objPageResult ) {
 
+// kept for reference
+// 		if( response == null || status < 0 ) {
+// updated logic
 		if( !objPageResult ) {
 
+// old code
+// 			response = [];
+// changed
 			objPageResult = { records: [], totalRecords: 0, totalPages: 1, page: 1, pageSize: mPageSize };
 		}
 
+// not used anymore
+// 			console.log( "parseListResponse Error: " + status );
+// updated
 		hideLoader();
 
 		var arrResults = objPageResult.records || [];
@@ -1717,7 +2142,15 @@ var ResultScript = (function () {
 
 			arrResultRows.push( arrRow );
 		}
+// old logic
+//
+// 			hideLoader();
+//
+// 		setStorageData( response, SESSION_OBJECT.RESULT_SUMMARY_DATA );
 
+// no longer used
+// 		doFilterResultList();
+// updated logic
 		// --------------------------------------------------
 		// PAGINATION FIX (this pass): this used to
 		// setStorageData(..., RESULT_SUMMARY_DATA) with the FULL
@@ -1816,6 +2249,9 @@ var ResultScript = (function () {
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
 
+// kept for reference
+// 				$("#search").keyup( function (e) {
+// changed
 				// --------------------------------------------------
 				// Universal Search: bound via the native "input" event
 				// instead of jQuery's keyup() - input fires for every
@@ -1840,6 +2276,9 @@ var ResultScript = (function () {
 				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
+// old code
+// 				});
+// updated
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -1857,6 +2296,9 @@ var ResultScript = (function () {
 
 		resetFilterInfo();
 
+// not used anymore
+// 		getListData();
+// fixed
 		// PAGINATION FIX (this pass): refresh reloads exactly the
 		// page currently on screen (Task 2 - "refresh only current
 		// page"), not the whole table.
@@ -1915,16 +2357,55 @@ var ResultScript = (function () {
 	function onClickDelete() {
 
 		closeSelectMenu();
+// old logic
+// 		showConfirmationAlert( "Do you want to delete selected Result?", onConfirmDelete, "Message", buttonLabels );
+// updated logic
 		showConfirmationAlert( "Do you want to delete selected Result?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
 	function searchList() {
 
+// no longer used
+// 		var list = document.getElementById("list_id");
+// 		var listItems = list.getElementsByTagName("ul");
+// changed
 		if( mSearchDebounceTimer ) {
 
+// kept for reference
+// 		var input = document.getElementById("search");
+// 		var filter = input.value.toUpperCase();
+//
+// 		for( var i = 0; i < listItems.length; i++ ) {
+//
+// 			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
+//
+// 			if( name != null ) {
+//
+// 				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
+//
+// 					var resultData = mSelectedDataList;
+//
+// 					var index = mSearchList.length;
+// 					mSearchList[index] = resultData[ i ];
+//
+// 					listItems[i].style.display = "";
+// 				} else {
+//
+// 					listItems[i].style.display = "none";
+// 				}
+// 			}
+// updated
 			clearTimeout( mSearchDebounceTimer );
 		}
 
+// old code
+// 		// Displaying No. of Records
+// 		var totalRecordsLength = listItems.length;
+// 		var searchRecordsLength = $( "ul:visible" ).length - 1;
+// 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
+// 		var totalRecords = "Total: " + totalRecordsLength;
+// 		var searchInput = document.getElementById( "search" ).value;
+// fixed
 		// Project Improvements (this pass): previously filtered only
 		// mSelectedDataList (the current page) client-side, resolving
 		// Student name/roll number locally. Now that DataService.js's
@@ -1939,15 +2420,26 @@ var ResultScript = (function () {
 		// a name.
 		mSearchDebounceTimer = setTimeout( function() {
 
+// not used anymore
+// 		if( searchInput == "" ) {
+// updated logic
 			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
 			mCurrentPage = 1;
 
+// old logic
+// 			document.getElementById( "records" ).innerText = totalRecords;
+// 		}
+// 		else {
+// changed
 			showLoader( "Searching..." );
 			getListData( 1 );
 
+// no longer used
+// 			document.getElementById( "records" ).innerText = searchRecords;
+// 		}
+// updated
 		}, 250 );
 	}
-
 	// --------------------------------------------------
 	// WHY: the floating download button (#btn_float_next_page,
 	// resultList.html) needs a real export to call - no export
@@ -2077,6 +2569,9 @@ var ResultScript = (function () {
 
 			closeFilterMenu();
 		} 
+// kept for reference
+// 		else if( $('#modal_share_question').hasClass('show')) {
+// fixed
 		// Final QA fix: this used to check the nonexistent
 		// '#modal_share_question' element (always false, so the
 		// Back button never detected the Share modal was open).
@@ -2192,12 +2687,50 @@ var ResultScript = (function () {
 			deleteRows( deleteDataArray );
 		}
 	}
+// old logic
+// 	function parseDbListResponse( response ) {
+//
+// 		var dataList = [];
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+//
+// 			var data = [];
+//
+// 			data[ INDEX.RESULT_ID ] = response.rows.item( i )[ DB_FIELD.RESULT_ID ];
+// 			data[ INDEX.EXAM_NAME ] = response.rows.item( i )[ DB_FIELD.EXAM_NAME ];
+// 			data[ INDEX.DATE_OF_EXAM ] = response.rows.item( i )[ DB_FIELD.DATE_OF_EXAM ];
+// 			data[ INDEX.TOTAL_MARKS ] = response.rows.item( i )[ DB_FIELD.TOTAL_MARKS ];
+// 			data[ INDEX.MARKS_OBTAINED ] = response.rows.item( i )[ DB_FIELD.MARKS_OBTAINED ];
+// 			dataList[ i ] = data;
+// 		}
+//
+// 		parseListResponse( dataList, 0 );
+// 	}
+//
 	// create an array from the add/edit jsonData. It can be used to update the list after successful Add/Edit operation
 	// It can reduce the number of calls to the server after Edit/Add
 	function getAddEditResultArray( id ) {
 
 		var data = [];
 
+// no longer used    because backend is now in a single file dataservice.js - for witchable backend so no need to set this if else in every file 
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			data[ SUMMARY_INDEX.RESULT_ID ] = mJsonData[ SUMMARY_JSON_KEY.RESULT_ID ];
+// 			data[ SUMMARY_INDEX.EXAM_NAME ] = mJsonData[ SUMMARY_JSON_KEY.EXAM_NAME ];
+// 			data[ SUMMARY_INDEX.DATE_OF_EXAM ] = mJsonData[ SUMMARY_JSON_KEY.DATE_OF_EXAM ];
+// 			data[ SUMMARY_INDEX.TOTAL_MARKS ] = mJsonData[ SUMMARY_JSON_KEY.TOTAL_MARKS ];
+// 			data[ SUMMARY_INDEX.MARKS_OBTAINED ] = mJsonData[ SUMMARY_JSON_KEY.MARKS_OBTAINED ];
+// 		}
+// 		else {
+//
+// 			data[ SUMMARY_INDEX.RESULT_ID ] = mJsonData[ SUMMARY_INDEX.RESULT_ID ];
+// 			data[ SUMMARY_INDEX.EXAM_NAME ] = mJsonData[ SUMMARY_INDEX.EXAM_NAME ];
+// 			data[ SUMMARY_INDEX.DATE_OF_EXAM ] = mJsonData[ SUMMARY_INDEX.DATE_OF_EXAM ];
+// 			data[ SUMMARY_INDEX.TOTAL_MARKS ] = mJsonData[ SUMMARY_INDEX.TOTAL_MARKS ];
+// 			data[ SUMMARY_INDEX.MARKS_OBTAINED ] = mJsonData[ SUMMARY_INDEX.MARKS_OBTAINED ];
+// 		}
+// fixed
 		// BUG FIX: this used to always read mJsonData's Result ID,
 		// even right after a successful Add - so the row shown on
 		// screen kept the placeholder ID that was in the form
@@ -2276,6 +2809,9 @@ var ResultScript = (function () {
 
 			parseListFromStorage();
 
+// kept for reference
+// 			showOperationMessage( "Selected Result(s) has been deleted successfully", "Success", null );
+// updated logic
 			showOperationMessage( "Result deleted successfully.", "Success", null );
 		}
 	}
@@ -2349,6 +2885,8 @@ var ResultScript = (function () {
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
+// old code
+// 		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2392,6 +2930,8 @@ var ResultScript = (function () {
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
+// not used anymore
+// 		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2415,6 +2955,9 @@ var ResultScript = (function () {
 
 	function resetMultiSelection() {
 
+// old logic
+// 		if( $( '#modal_share_result' ).hasClass( 'show' )) {
+// fixed
 		// Final QA fix: this used to check a nonexistent element
 		// ('#modal_share_result', always false) instead of the real
 		// share modal's id, 'modal_share'. Corrected so this
@@ -2459,6 +3002,9 @@ var ResultScript = (function () {
 
 		closeMultiSelectMenu();
 
+// no longer used
+// 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
+// updated logic
 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -2467,6 +3013,9 @@ var ResultScript = (function () {
 
 		closeMultiSelectMenu();
 
+// kept for reference
+// 		console.log( "Multiple selection option 1: TBD" );
+// changed
 		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
@@ -2474,6 +3023,9 @@ var ResultScript = (function () {
 
 		closeMultiSelectMenu();
 
+// old code
+// 		console.log( "Multiple selection option 2: TBD" );
+// updated
 		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
@@ -2552,7 +3104,7 @@ var ResultScript = (function () {
 		$( '#edit_details' ).modal( 'hide' );
 		mEditIconClicked = false;
 		mInfoIconClicked = false;
-		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
+                mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 	}
 
 	function scrollEditDetailsPopup() {
@@ -2582,6 +3134,20 @@ var ResultScript = (function () {
 		enableSaveButton( true );
 	}
 	function showFilter() {
+
+		// --------------------------------------------------
+		// CONNECTION FIX - WHY / WHAT / WHEN
+		// WHY: the Filter icon and the filter-summary text both
+		// call showFilter(), but it was never defined anywhere in
+		// this file - clicking either one threw "Uncaught
+		// ReferenceError: showFilter is not defined" and the
+		// Filter modal never opened.
+		// WHAT: resultList.html's filter modal has no dropdown of
+		// its own to populate - this just opens it, the same
+		// simplified fix already applied to Category.script.js.
+		// WHEN: runs every time the user clicks the Filter icon
+		// or the filter-summary text.
+		// --------------------------------------------------
 
 		// UI FIX (this pass): resultList.html's filter modal now has
 		// Exam and Result dropdowns. Both are built from the
@@ -2674,6 +3240,11 @@ var ResultScript = (function () {
 
 	function createHtmlListItem( data, index ) {
 
+// not used anymore
+// 		var name = data[ SUMMARY_INDEX.FIRST_FILL_IN ];
+// 		var fillInData = data[ SUMMARY_INDEX._FILL_IN ];
+// 		var seqNumber = index + 1 +') ';
+// fixed
 		// --------------------------------------------------
 		// PROJECT IMPROVEMENTS (Final UX Polish pass - redesigned)
 		// --------------------------------------------------
@@ -2690,6 +3261,9 @@ var ResultScript = (function () {
 		// drawn.
 		// --------------------------------------------------
 
+// old logic
+// 		var infoIconHtml = '<i onclick="ResultScript.getInstance().onClickInfoIcon('+ index +');" class="fa fa-info-circle text-info" aria-hidden="true" style=""></i>';
+// updated logic
 		var subject = data[ SUMMARY_INDEX.SUBJECT ];
 		var examName = data[ SUMMARY_INDEX.EXAM_NAME ];
 		var marks = data[ SUMMARY_INDEX.MARKS_OBTAINED ];
@@ -2731,8 +3305,14 @@ var ResultScript = (function () {
 		var editIconHtml = '';
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_RESULT ) == true ) {
 
+// no longer used
+// 			editIconHtml = '<i onclick="ResultScript.getInstance().onClickEditIcon('+ index +');" class="fas fa-edit text-info" style="margin-top: 10px;float: right;margin-right: 10px;"></i>';
+// changed
 			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit result" onclick="ResultScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
+// kept for reference
+// 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="box-shadow:2px 3px 3px 1px rgba(0,0,0,0.5);margin-bottom: 5px;">' +
+// updated
 
 		// UI/UX POLISH PASS (this pass) - per-card Share button, same
 		// pattern as Student.script.js's shareIconHtml/onClickShareIcon().
@@ -2750,6 +3330,10 @@ var ResultScript = (function () {
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
+// old code
+// 							'<li style="font-size: 20px;">'+ seqNumber + name + '</li>' +
+// 							'<li style="font-size: 14px;padding-top: 6px; font-weight: 700;">' + infoIconHtml + " " + fillInData + '</li>' +									
+// fixed
 							'<li class="list-card-title">'+ seqNumber + subject + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + examName + ( studentName ? ' &middot; ' + studentName : '' ) + '</span></li>' +
 							'<li class="list-card-subtitle"><span>' + marksAndGradeHtml + '<span class="badge ' + badgeClass + '">' + badgeText + '</span></span></li>' +
@@ -2803,6 +3387,11 @@ var ResultScript = (function () {
 			DB_FIELD.RESULT_ID + ' INTEGER ,' +
 			DB_FIELD.STUDENT_ID + ' INTEGER ,' +
 			DB_FIELD.EXAM_NAME + ' TEXT ,' +
+// not used anymore
+// 			DB_FIELD.DATE_OF_EXAM + ' INTEGER ,' +
+// 			DB_FIELD.TOTAL_MARKS + ' INTEGER ,' +
+// 			DB_FIELD.MARKS_OBTAINED + ' INTEGER' +
+// updated logic
 			DB_FIELD.SUBJECT + ' TEXT ,' +
 			DB_FIELD.MARKS_OBTAINED + ' INTEGER ,' +
 			DB_FIELD.GRADE + ' TEXT ,' +
@@ -2820,6 +3409,12 @@ var ResultScript = (function () {
 			DB_FIELD.RESULT_ID + ',' +
 			DB_FIELD.STUDENT_ID + ',' +
 			DB_FIELD.EXAM_NAME + ',' +
+// old logic
+// 			DB_FIELD.DATE_OF_EXAM + ',' +
+// 			DB_FIELD.TOTAL_MARKS + ',' +
+// 			DB_FIELD.MARKS_OBTAINED +
+// 			') VALUES (?, ?, ?, ?, ?)';
+// changed
 			DB_FIELD.SUBJECT + ',' +
 			DB_FIELD.MARKS_OBTAINED + ',' +
 			DB_FIELD.GRADE + ',' +
@@ -2834,6 +3429,11 @@ var ResultScript = (function () {
 			DB_FIELD.RESULT_ID + '=?, ' +
 			DB_FIELD.STUDENT_ID + '=?, ' +
 			DB_FIELD.EXAM_NAME + '=?, ' +
+// no longer used
+// 			DB_FIELD.DATE_OF_EXAM + '=?, ' +
+// 			DB_FIELD.TOTAL_MARKS + '=?, ' +
+// 			DB_FIELD.MARKS_OBTAINED +' =? WHERE ' +
+// updated
 			DB_FIELD.SUBJECT + '=?, ' +
 			DB_FIELD.MARKS_OBTAINED + '=?, ' +
 			DB_FIELD.GRADE + '=?, ' +
@@ -2843,6 +3443,57 @@ var ResultScript = (function () {
 		return query;
 	}
 
+// kept for reference
+//
+// 	function getListFromServer( onSuccess, callback ) {
+//
+// 		var mode = getAppMode();
+//
+// 		if( mode == MODE_NETWORK_DB ) { 
+//
+// 			var sessionId = getSessionId();
+// 			var organizationId = getOrganizationId();
+//
+// 			// mode = 2 : CordovaApp, mode = 1 : webapp
+// 			var appMode = MODE_CORDOVA_APP;
+//
+// 			var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /* OR URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
+//
+// 			fetchDataFromServer( url, onSuccess, onErrorFetchData, callback );
+// 		}
+// 		else {
+//
+// 			var query = "SELECT * FROM " + TABLE_NAME;
+// 			selectList( query, parseLocalData, onSuccess, callback );
+// 		}
+// 	}
+// 	function parseLocalData(response, onSuccess, callback) {
+// 		var dataList = [];
+// 		if( response.rows.length == 0 ) {
+//
+// 			onSuccess( dataList, callback );
+// 		}
+//
+// 		for( var i = 0; i < response.rows.length; i++ ) {
+// 			var data = [];
+//
+// 			data[ INDEX.RESULT_ID ] = response.rows.item( i )[ DB_FIELD.RESULT_ID ];
+//
+// 			data[ INDEX.EXAM_NAME ] = response.rows.item( i )[ DB_FIELD.EXAM_NAME ];
+//
+// 			data[ INDEX.DATE_OF_EXAM ] = response.rows.item( i )[ DB_FIELD.DATE_OF_EXAM ];
+//
+// 			data[ INDEX.TOTAL_MARKS ] = response.rows.item( i )[ DB_FIELD.TOTAL_MARKS ];
+//
+// 			data[ INDEX.MARKS_OBTAINED ] = response.rows.item( i )[ DB_FIELD.MARKS_OBTAINED ];
+// 			dataList[ i ] = data;
+//
+// 			if( i == ( response.rows.length - 1 ) ) {
+//
+// 				onSuccess( dataList, callback );
+// 			}
+// 		}
+// 	}
 
 	function onErrorFetchData( url, description, logData, flag ){
 
@@ -2868,11 +3519,26 @@ var ResultScript = (function () {
 		// Student.script.js already uses for its info popup's buttons.
 		$( '#share_result_details' ).off().on( 'click', function() {
 
+// old code
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+// updated logic
 			shareResultDetails();
 		});
 
+// not used anymore
+// 			fetchNetworkData({
+// 				callback: parsePreviewResponse
+// 			});
+// 		}
+// 		else {
+// changed
 		DataService.getRecordById(
 
+// old logic
+// 			fetchDbData({
+// 				callback: parsePreviewResponse
+// 			});
+// updated
 			AppConfig.STORES.RESULT,
 
 			getSelectedId(),
@@ -2914,6 +3580,36 @@ var ResultScript = (function () {
 			arrResultRows.push( arrRow );
 		}
 
+// no longer used
+// 	}
+//
+// 	function parsePreviewResponse( response, statusCode ) {
+//
+// 		if( getAppMode() == MODE_NETWORK_DB ) {
+//
+// 			setStorageData( response, SESSION_OBJECT.RESULT_DATA );
+// 		}
+// 		else {
+//
+// 			var i = 0;
+//
+// 			var data = [];			
+//
+// 			data[ INDEX.RESULT_ID ] = response.rows.item( i )[ DB_FIELD.RESULT_ID ];
+//
+// 			data[ INDEX.EXAM_NAME ] = response.rows.item( i )[ DB_FIELD.EXAM_NAME ];
+//
+// 			data[ INDEX.DATE_OF_EXAM ] = response.rows.item( i )[ DB_FIELD.DATE_OF_EXAM ];
+//
+// 			data[ INDEX.TOTAL_MARKS ] = response.rows.item( i )[ DB_FIELD.TOTAL_MARKS ];
+//
+// 			data[ INDEX.MARKS_OBTAINED ] = response.rows.item( i )[ DB_FIELD.MARKS_OBTAINED ];
+// 			var dataList = [];
+// 			dataList.push(data);
+//
+// 			setStorageData( dataList, SESSION_OBJECT.RESULT_DATA );
+// 		}
+// fixed
 		// WHY/WHAT: same object -> array-row bridge as
 		// parseFormDataResponse() above, so the Info popup's
 		// setPreview() can actually find the record.
@@ -2932,6 +3628,10 @@ var ResultScript = (function () {
 		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
 		$(FORM_FIELD_INFO.LBL_RESULT_ID).text( data[INDEX.RESULT_ID] );
 		$(FORM_FIELD_INFO.LBL_EXAM_NAME).text( data[INDEX.EXAM_NAME] );
+// kept for reference
+// 		$(FORM_FIELD_INFO.LBL_DATE_OF_EXAM).text( getShowDateTimePattern( parseInt( data[INDEX.DATE_OF_EXAM] ) ) );
+// 		$(FORM_FIELD_INFO.LBL_TOTAL_MARKS).text( data[INDEX.TOTAL_MARKS] );
+// updated logic
 		$(FORM_FIELD_INFO.LBL_SUBJECT).text( data[INDEX.SUBJECT] );
 		$(FORM_FIELD_INFO.LBL_MARKS_OBTAINED).text( data[INDEX.MARKS_OBTAINED] );
 		$(FORM_FIELD_INFO.LBL_GRADE).text( data[INDEX.GRADE] );
@@ -2969,6 +3669,9 @@ var ResultScript = (function () {
 		// actually defined.
 		// --------------------------------------------------
 		var photoPath = data[ INDEX.PHOTO_PATH ];
+// old code
+// 		if( photoPath !== "" && photoPath !== null ) {
+// changed
 		if( photoPath !== undefined && photoPath !== "" && photoPath !== null ) {
 
 			$( '#preview_image_div' ).show();
@@ -2981,6 +3684,9 @@ var ResultScript = (function () {
 		}
 
 		var docPath = data[ INDEX.DOCUMENT_PATH ];
+// not used anymore
+// 		if( docPath.length > 0 && docPath !== null && docPath !== '' ) {
+// updated
 		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 
 			var fileList = JSON.parse( docPath );
@@ -3020,6 +3726,9 @@ var ResultScript = (function () {
 	function doFilterResultList() {
 
 		clearSearch();
+// old logic
+//
+// fixed
 
 		// PAGINATION FIX (this pass): RESULT_SUMMARY_DATA now
 		// holds only the currently loaded page (see
@@ -3095,6 +3804,10 @@ var ResultScript = (function () {
 			htmlContent += createHtmlListItem( data, i );
 		}
 
+// no longer used
+// 		var list = getStorageData( SESSION_OBJECT.RESULT_SUMMARY_DATA );
+// 		var totalCount = list ? list.length : 0;
+// updated logic
 		// --------------------------------------------------
 		// PAGINATION FIX (this pass): appends the same Prev/Next
 		// bar Category.script.js/Student.script.js already use
@@ -3107,6 +3820,16 @@ var ResultScript = (function () {
 
 		htmlContent += buildPaginationBarHtml();
 
+// kept for reference
+// 		// Displaying No. of Records
+// 		var totalRecords = response.length;
+//
+// 		var records = "Total: " + totalRecords;
+// 		if( totalRecords < totalCount ) {
+//
+// 			records += "/" + totalCount;
+// 		}
+// changed
 		var records = CommonUtils.buildPaginationSummary( mCurrentPage, mPageSize, mTotalRecords );
 		
 		document.getElementById( "records" ).innerText = records;
@@ -3379,6 +4102,13 @@ var ResultScript = (function () {
 		// this entity's own real SUMMARY_INDEX fields.
 		var resultText = "";
 
+// old code
+// /*	Write your code in here
+// 		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
+//
+// 		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
+//
+// updated
 		var strExamName = selectedData[ SUMMARY_INDEX.EXAM_NAME ] || "";
 		var strSubject = selectedData[ SUMMARY_INDEX.SUBJECT ] || "";
 		var strMarks = selectedData[ SUMMARY_INDEX.MARKS_OBTAINED ] || "";
@@ -3387,14 +4117,25 @@ var ResultScript = (function () {
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
 
+// not used anymore
+// 			resultText += seqNumber +") " + name + "<br>";
+// 			resultText += mobileNumber + "<br><br>";
+// fixed
 			resultText += seqNumber + ") " + strExamName + " - " + strSubject + "<br>";
 			resultText += "Marks: " + strMarks + " | Grade: " + strGrade + " | Result: " + strResult + "<br><br>";
 		}
 		else { // Share by WhatsApp
 
+// old logic
+// 			resultText += "_*" + seqNumber +") " + name + "*_\n";
+// 			resultText += "*" + mobileNumber + "*\n\n";
+// updated logic
 			resultText += "_*" + seqNumber + ") " + strExamName + " - " + strSubject + "*_\n";
 			resultText += "Marks: *" + strMarks + "* | Grade: *" + strGrade + "* | Result: *" + strResult + "*\n\n";
 		}
+// no longer used
+// */		
+// changed
 
 		return resultText;
 	}
@@ -3411,6 +4152,8 @@ var ResultScript = (function () {
 			onConfirmNetworkSaveData: onConfirmNetworkSaveData,
 			bindFormEventHandlers: bindFormEventHandlers,
 			enableSaveButton:enableSaveButton,
+// kept for reference
+// 			getListFromServer:getListFromServer,
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,
