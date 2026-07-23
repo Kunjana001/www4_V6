@@ -96,8 +96,8 @@
      changed. -->
 
 <button id="btnDashboard" class="btn btn-primary"
-    style="position:fixed; left:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:950; font-size: 0.85rem; padding: 6px 10px;">
-    Return to Dashboard
+    style="position:fixed; left:16px; bottom:16px; z-index:950;">
+    Dashboard
 </button>
 
 
@@ -148,9 +148,8 @@
 	     and this control can never fall back to opening Dashboard
 	     or any other page.
 	     ========================================================== -->
-	<button type="button" id="btn_float_next_page" class="btn btn-primary" title="Next Page" aria-label="Next Page" 
-		style="position:fixed; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:950; border-radius:4px; font-size: 0.85rem; padding: 6px 10px;">
-		Export <i class="fa fa-arrow-down"></i>
+	<button type="button" id="btn_float_next_page" class="col-xl-auto float-button" title="Next Page" aria-label="Next Page">
+		<i class="fa fa-arrow-down" style="padding-top: 22px;"></i>
 	</button>
 
 	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
@@ -342,18 +341,6 @@
 							<span class="info-card-value" id="lbl_description"></span>
 						</span>
 					</div>
-//<p id="category_institution_id" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Institution: </span> <span id="lbl_institution_id"></span> </span> </p>
-
-									//		</div>
-								//		</div>
-								//	</div>
-									<!-- /Body -->
-							//	</div>
-						//	</div>
-						//	<!-- /Data -->
-					//	</div>
-					//</div>  
 
 				</div>
 			</div>
@@ -424,7 +411,6 @@ document.getElementById("btnDashboard").onclick = function () {
 
 <script src="../addedFiles/common/register-sw.js"></script>
 
-<script src="../js/application/min/Category.script.min.js"></script>
 <script src="../js/application/Category.script.js"></script>
 
 <script src="../addedFiles/js/LegacyCompatShim.js"></script>
