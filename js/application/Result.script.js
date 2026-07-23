@@ -2146,7 +2146,7 @@ var ResultScript = (function () {
 				}
 			}
 			
-			var result = getAddEditResultArray( response.id );
+			var result = getAddEditResultArray( response[ JSON_KEY.RESULT_ID ] );
 			message = "Result saved successfully.";
 			
 			resultList.push( result );
@@ -2198,7 +2198,14 @@ var ResultScript = (function () {
 
 		var data = [];
 
-		data[ SUMMARY_INDEX.RESULT_ID ] = mJsonData[ SUMMARY_JSON_KEY.RESULT_ID ];
+		// BUG FIX: this used to always read mJsonData's Result ID,
+		// even right after a successful Add - so the row shown on
+		// screen kept the placeholder ID that was in the form
+		// before saving, instead of the real ID the backend (or
+		// IndexedDB) just assigned. On Update, id is passed as 0
+		// (the existing ID already sits correctly in mJsonData), so
+		// the fallback keeps that path unchanged.
+		data[ SUMMARY_INDEX.RESULT_ID ] = id || mJsonData[ SUMMARY_JSON_KEY.RESULT_ID ];
 		data[ SUMMARY_INDEX.STUDENT_ID ] = mJsonData[ SUMMARY_JSON_KEY.STUDENT_ID ];
 		data[ SUMMARY_INDEX.EXAM_NAME ] = mJsonData[ SUMMARY_JSON_KEY.EXAM_NAME ];
 		data[ SUMMARY_INDEX.SUBJECT ] = mJsonData[ SUMMARY_JSON_KEY.SUBJECT ];

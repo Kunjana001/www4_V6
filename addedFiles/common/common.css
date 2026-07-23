@@ -2714,6 +2714,29 @@ body.modal-open {
     height: 100vh !important;
 }
 
+/* BUG FIX (Result List "page behind is still scrollable" glitch):
+   .list-container (the Student/Category/Section/Result list) has
+   its own independent overflow-y:auto further down in this file,
+   so it keeps scrolling underneath any open modal even though
+   Bootstrap already locks <body> scroll via the "modal-open" class
+   it adds/removes automatically. No JS change needed - just stop
+   this inner scroll container from scrolling while that class is
+   present. */
+body.modal-open .list-container {
+    overflow: hidden !important;
+}
+
+/* BUG FIX (Result List "Select an Option" menu not fitting on
+   screen): these two menus had no height limit of their own, so on
+   a short viewport they could render taller than the visible area
+   with no way to reach the rest of the list. Capping the body and
+   letting it scroll internally keeps every option reachable no
+   matter the screen height. */
+#modal_single_select .modal-body,
+#modal_multiselect .modal-body {
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
 
 /* ==========================================================
    HIGH-CONTRAST & VISIBILITY OVERRIDES

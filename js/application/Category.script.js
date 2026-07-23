@@ -1359,22 +1359,6 @@ var CategoryScript = (function () {
 		
 		enableSearch( mode );
 
-		// --------------------------------------------------
-		// WHY: new #search_icon button added to categorySearchBar
-		// in CategoryHTML.script.js needs its own click binding -
-		// enableSearch() above only binds #search's oninput event
-		// (MODE_SEARCH_ON_KEYUP), so the Search button next to the
-		// input did nothing.
-		// WHAT: reuses the existing searchList() function - no new
-		// search logic was written. Same pattern as Student List's
-		// #search_icon binding.
-		// WHEN: runs whenever the user clicks the Search button.
-		// --------------------------------------------------
-		$( "#search_icon" ).off().on( "click", function() {
-
-			searchList();
-		});
-
 		$( "#list_id" ).on( "click", "ul", function( event ) {
 
 			addSingleSelectModal( this );
@@ -2080,7 +2064,7 @@ var CategoryScript = (function () {
 				}
 			}
 			
-			var result = getAddEditResultArray( response.id );
+			var result = getAddEditResultArray( response[ JSON_KEY.CATEGORY_ID ] );
 			message = "Category saved successfully.";
 			
 			categoryList.push( result );
@@ -2132,7 +2116,14 @@ var CategoryScript = (function () {
 
 		var data = [];
 
-		data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
+		// BUG FIX: this used to always read mJsonData's Category ID,
+		// even right after a successful Add - so the row shown on
+		// screen kept the placeholder ID that was in the form
+		// before saving, instead of the real ID the backend (or
+		// IndexedDB) just assigned. On Update, id is passed as 0
+		// (the existing ID already sits correctly in mJsonData), so
+		// the fallback keeps that path unchanged.
+		data[ SUMMARY_INDEX.CATEGORY_ID ] = id || mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
 		data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
 		data[ SUMMARY_INDEX.ORGANIZATION_ID ] = mJsonData[ SUMMARY_JSON_KEY.ORGANIZATION_ID ];
 

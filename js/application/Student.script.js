@@ -2512,7 +2512,7 @@ function parseListResponse(objPageResult)
 				}
 			}
 			
-			var result = getAddEditResultArray( response.id );
+			var result = getAddEditResultArray( response[ JSON_KEY.STUDENT_ID ] );
 			message = "Student saved successfully.";
 			
 			studentList.push( result );
@@ -2574,7 +2574,14 @@ function parseListResponse(objPageResult)
 
 		var data = [];
 
-		data[ SUMMARY_INDEX.STUDENT_ID ] = mJsonData[ SUMMARY_JSON_KEY.STUDENT_ID ];
+		// BUG FIX: this used to always read mJsonData's Student ID,
+		// even right after a successful Add - so the row shown on
+		// screen kept the placeholder ID that was in the form
+		// before saving, instead of the real ID the backend (or
+		// IndexedDB) just assigned. On Update, id is passed as 0
+		// (the existing ID already sits correctly in mJsonData), so
+		// the fallback keeps that path unchanged.
+		data[ SUMMARY_INDEX.STUDENT_ID ] = id || mJsonData[ SUMMARY_JSON_KEY.STUDENT_ID ];
 		data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
 		data[ SUMMARY_INDEX.SECTION_ID ] = mJsonData[ SUMMARY_JSON_KEY.SECTION_ID ];
 		data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];

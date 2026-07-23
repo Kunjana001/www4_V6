@@ -27,6 +27,15 @@
    Application Configuration
    ========================================================== */
 
+/* --------------------------------------------------
+   App Name now comes from JSON instead of being a hardcoded
+   string literal - edit the JSON string below (or swap this
+   for a fetched .json file later) to rename the app in one
+   place. Everything that already reads AppConfig.APP_NAME /
+   SettingsManager.getApplicationName() is unchanged.
+   -------------------------------------------------- */
+const APP_JSON_CONFIG = JSON.parse( '{ "APP_NAME": "Student Details App" }' );
+
 const AppConfig = {
 
     /* ======================================================
@@ -41,7 +50,7 @@ const AppConfig = {
        Settings page still overrides this, same as before.
        -------------------------------------------------- */
 
-    APP_NAME: "Student Details",
+    APP_NAME: APP_JSON_CONFIG.APP_NAME,
 
     APP_VERSION: "1.0.0",
 
