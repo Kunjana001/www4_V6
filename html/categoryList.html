@@ -123,8 +123,24 @@
 	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
 
 
+	<!-- ==========================================================
+	     ROUND 3 FIX - stray "Dashboard | Close" bar at bottom
+	     ----------------------------------------------------------
+	     aria-hidden="true" only hides this button from screen
+	     readers - it does NOT hide it visually, and this button
+	     sits directly in the page's normal document flow (it is
+	     not inside any modal-content). With no display:none/hidden
+	     attribute, it rendered as a small clickable "x" right after
+	     the list, next to the fixed Dashboard button, which is what
+	     showed up as an unexplained bar at the bottom of the page.
+	     Added an explicit style="display:none;" so it is actually
+	     hidden, exactly as its own comment always said it should
+	     be. Nothing in Category.script.js/CategoryHTML.script.js
+	     calls .click() on this element, so hiding it removes no
+	     functionality.
+	     ========================================================== -->
 	<!-- Hidden Close Button to programmitically close the modals -->
-	<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true"></button>
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true" style="display:none;"></button>
 	<!-- Hidden Close Button to programmitically close the modals -->
 
 	<!-- -------------------------------------------------------------------------------------------------------------------------- -->
@@ -319,21 +335,11 @@
 						</span>
 					</div>
 
-					<!-- --------------------------------------------------
-					     WHY: Category.gs's getCategoryById response only
-					     ever included categoryId/categoryName/organization/
-					     description - no createdDate/lastUpdated field
-					     exists on the Sheet, so a "Created Date" / "Last
-					     Updated" row here would have nothing real to show
-					     and would have to be hardcoded/fabricated, which
-					     the brief explicitly says not to do.
-					     WHAT: Description IS part of the real backend
-					     response but was never wired up on this page at
-					     all (Category.script.js's INDEX/FORM_FIELD_INFO
-					     had no entry for it) - added it here instead,
-					     since it's actual backend data rather than a
-					     fabricated field.
-					     -------------------------------------------------- -->
+					<!-- WHY: Category.gs's getCategoryById response only ever included
+					     categoryId/categoryName/organization/description - no
+					     createdDate/lastUpdated field exists on the Sheet, so those
+					     rows would have nothing real to show. Description IS part of
+					     the real backend response, so it is wired up here instead. -->
 					<div class="info-card-row" id="category_description">
 						<span class="info-card-icon"><i class="fa-solid fa-align-left"></i></span>
 						<span class="info-card-text">
@@ -341,18 +347,6 @@
 							<span class="info-card-value" id="lbl_description"></span>
 						</span>
 					</div>
-//<p id="category_institution_id" style="font-weight: 500;"> <span>
-													<span style="font-weight: 800;">Institution: </span> <span id="lbl_institution_id"></span> </span> </p>
-
-									//		</div>
-								//		</div>
-								//	</div>
-									<!-- /Body -->
-							//	</div>
-						//	</div>
-						//	<!-- /Data -->
-					//	</div>
-					//</div>  
 
 				</div>
 			</div>
