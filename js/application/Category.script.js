@@ -5,189 +5,16 @@
 // Author : JRC
 // Description : codegen
 
-
-////////////////////////////////////////////////////////////////////////////
-
-/* ----------------------------------------------------------
-   Final QA Pass - Back Button / Share Modal Fix (added)
-   ----------------------------------------------------------
-   Fixed a broken Back-button/reset check in Category.script.js:
-   the Back-button handler and resetMultiSelection() both
-   tested for the Share modal being open using ids that don't
-   exist anywhere in the DOM, so those checks were always
-   false. The real share modal's id is "modal_share" - both
-   checks now use that instead, so pressing Back while the
-   Share modal is open correctly closes it instead of falling
-   through to the double-back-press "press again to exit"
-   logic. No architecture, file, or folder changes.
-   ---------------------------------------------------------- */
-
-/* ----------------------------------------------------------
-   Final QA Pass - Console Cleanup (added)
-   ----------------------------------------------------------
-   Removed leftover debug console.log() calls in Category.script.js
-   (form-data dumps, TBD stub messages, commented-out
-   file-picker logs, etc.) and replaced every
-   console.log(objError)/console.log(error) inside a catch
-   block with CommonUtils.logError("Category.script.js
-   (<function>)", objError), matching the pattern already
-   used in common.js/DataService.js. No behavior changed -
-   errors are still logged, just through the shared utility
-   instead of a bare console.log. The two "Multiple selection
-   option 1/2: TBD" stubs were left as // TODO comments
-   instead of being silently removed, since those two menu
-   options are genuinely unimplemented, not just noisy
-   logging. No architecture, file, or folder changes.
-   ---------------------------------------------------------- */
-
-/* ----------------------------------------------------------
-   UI Modernization Pass 2 (added)
-   ----------------------------------------------------------
-   showFilteredList() now shows a shared empty-state message when a search/filter returns zero categories
-   instead of leaving the list area blank, via
-   CommonUtils.getEmptyStateHtml(). No existing function
-   removed or renamed; architecture unchanged.
-   ---------------------------------------------------------- */
-
-/* ----------------------------------------------------------
-   Project Improvements (Pagination / Loading Performance pass)
-   ----------------------------------------------------------
-   ✓ mPageSize changed from 20 to 100 - this page already used
-     real server-side pagination via DataService.getRecordsPage()
-     (Prev/Next, debounced search, "refresh only this page"),
-     it was just requesting 20 rows per page instead of the
-     required 100 (Page 1 = records 1-100, Page 2 = 101-200,
-     etc, matching Student.script.js). No other logic here
-     changed - getListData()/parseListResponse()/
-     buildPaginationBarHtml() already did the right thing.
-   ✓ The "Category List stuck on Please Wait" symptom itself is
-     fixed in DataService.js, not here: getAllRecords() (used
-     by OTHER pages as a Category lookup for their own
-     dropdowns) now caches the full table in memory instead of
-     re-downloading it from Google on every page open - see
-     DataService.js's "Pagination / Loading Performance pass"
-     note for the full explanation. This page's own list load
-     was already a single getRecordsPage() call and did not
-     need that change.
-   ---------------------------------------------------------- */
-
-/*/* ==========================================================
-   PWA MIGRATION NOTES
-   Category.script.js
-
-   Purpose
-
-   Migrated Category.script.js from the legacy
-   Cordova/SQLite architecture to the PWA
-   DataService/StorageService architecture while
-   preserving the original file structure and public API.
-
-   ----------------------------------------------------------
-   Functions migrated
-   ----------------------------------------------------------
-
-   • getData()
-       -> DataService.getRecordById()
-
-   • getListData()
-       -> DataService.getAllRecords()
-
-   • onConfirmSaveFormData()
-       -> DataService.addRecord()
-       -> DataService.updateRecord()
-
-   • deleteRows()
-       -> DataService.deleteRecord()
-
-   • onInfoViewDocumentReady()
-       -> DataService.getRecordById()
-
-   • parsePreviewResponse()
-       -> simplified for DataService response
-
-   • parseListResponse()
-       -> simplified for DataService response
-
-   • getAddEditResultArray()
-       -> removed obsolete SQLite branch
-
-   ----------------------------------------------------------
-   Legacy functions removed
-   ----------------------------------------------------------
-
-   Removed obsolete data access functions
-
-       fetchNetworkListData()
-       fetchNetworkData()
-       fetchDbListData()
-       fetchDbData()
-
-   Removed obsolete response handlers
-
-       parseDbListResponse()
-       parseDbFormDataResponse()
-
-   Removed obsolete save functions
-
-       onConfirmDbSaveData()
-       saveDbFormData()
-       saveNetworkFormData()
-
-   Removed obsolete SQLite helpers
-
-       getFormDataAsArray()
-       onErrorDeleteData()
-
-   Removed unused legacy code
-
-       getListFromServer()
-       parseLocalData()
-
-   ----------------------------------------------------------
-   Not migrated in this phase
-   ----------------------------------------------------------
-
-   The following functions remain because they are still
-   referenced by the existing file upload feature and will
-   be migrated separately.
-
-       onConfirmNetworkSaveData()
-       uploadDocuments()
-       onErrorInsertUpdate()
-       parseSaveErrorDataResponse()
-
-   The following functions remain because they are still
-   referenced by the application bootstrap or public API.
-
-       getInsertQuery()
-       getUpdateQuery()
-       createTableCategory()
-
-   The MODE_NETWORK_DB check inside popUpAddForm() has been
-   intentionally retained because it generates the default
-   identifier for a new Category record and does not perform
-   any database read or write operation.
-
-   ----------------------------------------------------------
-   Architecture preserved
-   ----------------------------------------------------------
-
-   • Original function names preserved.
-   • Original function order preserved.
-   • Original file structure preserved.
-   • Existing event bindings preserved.
-   • Only internal implementations replaced.
-   • No unnecessary helper functions introduced.
-
-   ----------------------------------------------------------
-   Coding standards
-   ----------------------------------------------------------
-
-   • Hungarian notation retained.
-   • Scoped changes only.
-   • WHY / WHAT / WHEN comments added where logic changed.
-
-   ========================================================== */
+// PWA MIGRATION NOTE: Migrated from the legacy Cordova/SQLite architecture to
+// the PWA DataService/StorageService architecture, while preserving the
+// original file structure, function order, and public API wherever possible.
+// Legacy SQLite/network-fetch functions (fetchNetworkData, fetchDbData,
+// onConfirmDbSaveData, getFormDataAsArray, getListFromServer, etc.) were
+// removed since DataService now owns all data access. The template's
+// "institution" field was replaced with "organization" throughout, matching
+// this app's actual schema. List pagination (DataService.getRecordsPage) was
+// added since Categories are fetched from Google Apps Script instead of a
+// local table.
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -219,24 +46,8 @@ var CategoryScript = (function () {
 	// Save the Filtered main list
 	var mSelectedDataList = [];
 
-	// --------------------------------------------------
-	// Performance Optimization Phase - real pagination state.
-	// WHY: this page used to fetch and hold the ENTIRE Category
-	// table in sessionStorage/memory, then filter/page it purely
-	// client-side (see the old doFilterCategoryList()/
-	// showFilteredList() below). That doesn't scale past a few
-	// hundred rows and defeats the point of pagination entirely.
-	// WHAT: getListData()/parseListResponse() below now ask the
-	// backend for exactly one page at a time via
-	// DataService.getRecordsPage(), and these variables track
-	// which page/search is currently showing so Prev/Next and a
-	// debounced search can ask for the right one next.
-	//
-	// PAGINATION FIX (this pass): mPageSize was 20, not the
-	// required 100 records/page (see Student.script.js, which
-	// already used 100) - changed so Student/Category/Section/
-	// Result all page 1-100, 101-200, 201-300... consistently.
-	// -------------------------------------------------- 
+	// Server-side pagination state (PWA: Categories are paged via
+	// DataService.getRecordsPage() instead of loading a full local table).
 	var mCurrentPage = 1;
 	var mPageSize = 100;
 	var mTotalPages = 1;
@@ -244,18 +55,6 @@ var CategoryScript = (function () {
 	var mCurrentSearchKeyword = "";
 	var mSearchDebounceTimer = null;
 
-	// --------------------------------------------------
-	// Confirmation Dialogs: this was referenced by every
-	// showConfirmationAlert(...) call below but never declared
-	// anywhere in the project - reading an undeclared bare
-	// variable throws a ReferenceError in JavaScript, so every
-	// Save/Update/Share confirmation on this page was crashing
-	// silently before the confirmation dialog could even open.
-	// Declaring it here with the general-purpose Yes/No labels
-	// fixes that; the two Delete confirmations below pass their
-	// own ["Delete", "Cancel"] labels instead, since "delete"
-	// is a more specific and honest label than a generic "Yes".
-	// --------------------------------------------------
 	var buttonLabels = [ "Yes", "No" ];
 
 	var mDoubleBackToExitPressedOnce = false;
@@ -268,7 +67,7 @@ var CategoryScript = (function () {
 
 	var mInfoIconClicked = false; // using that we can control single click and info button click
 	var mEditIconClicked = false; // using that we can control single click and edit icon click
-	var mShareIconClicked = false; // ADDED: same guard pattern as Student.script.js/Result.script.js, keeps the per-card Share tap from also opening the Select an Option popup
+	var mShareIconClicked = false; // using that we can control single click and share icon click
 
 	var mImageClosed = false;	// Indicates whether the image is removed or not while updating
 	var mFileClosed = false;	// Indicates whether the File is removed or not while updating
@@ -280,11 +79,7 @@ var CategoryScript = (function () {
 	var INDEX = {
 		CATEGORY_ID : value++,		// 1
 		NAME : value++,		// 2
-// old code
-// 		INSTITUTION_ID : value++,		// 3		// 3
-// updated
 		ORGANIZATION_ID : value++,		// 3
-		DESCRIPTION : value++,		// 4		// 4
 	};
 
 	//--------------Summary row index:-----------------
@@ -294,9 +89,6 @@ var CategoryScript = (function () {
 	var SUMMARY_INDEX = {
 		CATEGORY_ID : value++,		// 1
 		NAME : value++,		// 2
-// not used anymore
-// 		INSTITUTION_ID : value++,		// 3		// 3
-// fixed
 		ORGANIZATION_ID : value++,		// 3		// 3
 	};
 
@@ -306,27 +98,15 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "Category",
 		NAME : "Name",
-// old logic
-// 		INSTITUTION_ID : "Institution"
-// updated logic
 		ORGANIZATION_ID : "Organization"
 	};
 
 	//-----------------------------Default values------------------------------------
 	//// TODO: Assign group_lookup_id of Lookup forign keys
-	//// (Final QA note: this TODO predates this QA pass and is
-	//// part of the original codegen scaffolding, not something
-	//// introduced by recent changes. Left unresolved rather
-	//// than guessed at, since implementing it correctly needs
-	//// the intended group_lookup_id convention from the
-	//// original spec/mentor, which isn't available here.)
 	var DEFAULT = {
 
 		CATEGORY_ID : 0,
 		NAME : "",
-// no longer used
-// 		INSTITUTION_ID : ""
-// changed
 		ORGANIZATION_ID : ""
 	};
 
@@ -335,9 +115,6 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : '#category_id',
 		NAME : '#name',
-// kept for reference
-// 		INSTITUTION_ID : '#institution_id',
-// updated
 		ORGANIZATION_ID : '#organization_id',
 		DOCUMENT_DIV : '#file_div',
 		DOCUMENTS_PATH : '#file_id',
@@ -350,11 +127,7 @@ var CategoryScript = (function () {
 
 		LBL_CATEGORY_ID : '#lbl_category_id',
 		LBL_NAME : '#lbl_name',
-// old code
-// 		LBL_INSTITUTION_ID : '#lbl_institution_id'
-// fixed
-		LBL_ORGANIZATION_ID : '#lbl_organization_id',
-		LBL_DESCRIPTION : '#lbl_description'
+		LBL_ORGANIZATION_ID : '#lbl_organization_id'
 	};
 
 	//-----------------------------JSON Key------------------------------------
@@ -362,9 +135,6 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
-// not used anymore
-// 		INSTITUTION_ID : "institution_id"
-// updated logic
 		ORGANIZATION_ID : "organization_id"
 	};
 
@@ -373,9 +143,6 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
-// old logic
-// 		INSTITUTION_ID : "institution_id"
-// changed
 		ORGANIZATION_ID : "organization_id"
 	};
 
@@ -384,9 +151,6 @@ var CategoryScript = (function () {
 
 		CATEGORY_ID : "category_id",
 		NAME : "name",
-// no longer used
-// 		INSTITUTION_ID : "institution_id"
-// updated
 		ORGANIZATION_ID : "organization_id"
 	};
 	//------------------------------SESSION OBJECT--------------------------------------
@@ -396,20 +160,12 @@ var CategoryScript = (function () {
 		ADD_EDIT_MODE: "ADD_EDIT_MODE",
 		CATEGORY_DATA: "CATEGORY_DATA",
 		CATEGORY_SUMMARY_DATA: "CATEGORY_SUMMARY_DATA",
-// kept for reference
-// 		INSTITUTION_LIST: "INSTITUTION_LIST",
-// 		INSTITUTION_ID: "INSTITUTION_ID"
-// fixed
 		ORGANIZATION_LIST: "ORGANIZATION_LIST",
 		ORGANIZATION_ID: "ORGANIZATION_ID"
 	}
-// old code
-// 	function setInstitutionListData( institutionList ){
-// updated logic
+
 	function setOrganizationListData( organizationList ){
-// not used anymore
-// 		setStorageData( institutionList, SESSION_OBJECT.INSTITUTION_LIST );
-// changed
+
 		setStorageData( organizationList, SESSION_OBJECT.ORGANIZATION_LIST );
 	}
 
@@ -422,10 +178,7 @@ var CategoryScript = (function () {
 
 		clearSessionStorage( SESSION_OBJECT.CATEGORY_ID );
 
-// old logic
-// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_LIST );
-// 		clearSessionStorage( SESSION_OBJECT.INSTITUTION_ID );
-// updated
+
 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_LIST );
 		clearSessionStorage( SESSION_OBJECT.ORGANIZATION_ID );
 
@@ -466,14 +219,11 @@ var CategoryScript = (function () {
 		var country_code = getOrgCountryCode(); //"+91"; // PUT in the Country code or fetch from DB or server 
 		var noOfDigits = getOrgNoOfDigits();
 		var fv = FormValidation;
-// no longer used
-// 		console.log('Enable the validation for this form');
+
+		console.log('Enable the validation for this form');
 /* Enable as per requirement */
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.CATEGORY_ID), G_ERROR.MSG.empty_error+LABEL.CATEGORY_ID);
 		// bValid = bValid && fv.checkEmpty($(FORM_FIELD.NAME), G_ERROR.MSG.empty_error+LABEL.NAME);
-// kept for reference
-// 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.INSTITUTION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.INSTITUTION_ID);
-// updated logic
 		// bValid = bValid && fv.checkEmptySelect($(FORM_FIELD.ORGANIZATION_ID), G_ERROR.MSG.empty_error_selectbox+LABEL.ORGANIZATION_ID);
 
 		return bValid;
@@ -481,17 +231,10 @@ var CategoryScript = (function () {
 	function setFormDefaults( categoryId ) {
 		$(FORM_FIELD.CATEGORY_ID).val(categoryId);
 		$(FORM_FIELD.NAME).val(DEFAULT.NAME);
-// old code
-// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
-// 		setInstitutionSelection( institutionList );
-// changed
 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
 		setOrganizationSelection( organizationList );
 
-		/**
-		 * BUG FIX - Save button stayed hidden on Add
-		
-		enableSaveButton( true );
+		enableSaveButton( false );
 
 		$( FORM_FIELD.DOCUMENT_DIV ).hide();
 		$( FORM_FIELD.DOCUMENTS_PATH ).text("");
@@ -526,9 +269,6 @@ var CategoryScript = (function () {
 	function populateFromLocalStorage( data ){
 		$( FORM_FIELD.CATEGORY_ID ).val( data[ INDEX.CATEGORY_ID ] );
 		$( FORM_FIELD.NAME ).val( data[ INDEX.NAME ] );
-// not used anymore
-// 		$( FORM_FIELD.INSTITUTION_ID ).val( data[ INDEX.INSTITUTION_ID ] ).change();
-// updated
 		$( FORM_FIELD.ORGANIZATION_ID ).val( data[ INDEX.ORGANIZATION_ID ] ).change();
 
 		setDocsImages( data );
@@ -655,10 +395,6 @@ var CategoryScript = (function () {
 
 		$(FORM_FIELD.CATEGORY_ID).val(data[INDEX.CATEGORY_ID]);
 		$(FORM_FIELD.NAME).val(data[INDEX.NAME]);
-// old logic
-// 		var institutionList = getStorageData(SESSION_OBJECT.INSTITUTION_LIST);
-// 		setInstitutionSelection( institutionList );
-// fixed
 		var organizationList = getStorageData(SESSION_OBJECT.ORGANIZATION_LIST);
 		setOrganizationSelection( organizationList );
 
@@ -703,41 +439,16 @@ var CategoryScript = (function () {
 		var jsonData = {};
 		jsonData[ JSON_KEY.CATEGORY_ID ] = ( $(FORM_FIELD.CATEGORY_ID).val() );
 		jsonData[ JSON_KEY.NAME ] = ( $(FORM_FIELD.NAME).val() );
-// no longer used
-// 		jsonData[ JSON_KEY.INSTITUTION_ID ] = ( $(FORM_FIELD.INSTITUTION_ID).val() );
-// updated logic
 		jsonData[ JSON_KEY.ORGANIZATION_ID ] = ( $(FORM_FIELD.ORGANIZATION_ID).val() );
 
 /*
 		// used for file upload
 		jsonData[ "organization_short_name" ] = getOrgShortName();
 */
-// kept for reference
-//
-// 		if( mode == UPDATE_DATA ) { // Edit/Update
-//
-// 			var data = getSelectedData();
-//
-// 			jsonData[ JSON_KEY.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
-// 			jsonData[ JSON_KEY.NAME ] = data[ INDEX.NAME ];
-// 			jsonData[ JSON_KEY.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
-//
-// 		}
-// changed
-		// --------------------------------------------------------
-		// PROJECT IMPROVEMENTS (Final UX Polish pass - fixed)
-		// --------------------------------------------------------
-		// WHY: this used to re-read every field from
-		// getSelectedData() (the OLD, pre-edit record) and overwrite
-		// what was just read from the form above - so clicking Save
-		// on an Edit silently re-saved the record unchanged, no
-		// matter what the person had typed. This is the actual
-		// cause of "my edits aren't showing up" for Categories.
-		// category_id does not need to be re-read here - it already
-		// comes from the hidden, readonly #category_id field, which
-		// the Edit form population already set from the record
-		// being edited.
-		// --------------------------------------------------------
+
+		// Changed: the Edit form is already populated with the record's real
+		// values (see popUpEditForm/populateFromLocalStorage), so there is no
+		// need to re-read and override them from getSelectedData() here.
 
 		if( mUploadedImage.length > 0 ) {
 
@@ -756,66 +467,11 @@ var CategoryScript = (function () {
 		mUploadedFiles = [];		
 		mFile = null;
 		mFileClosed = false;
-// old code
-// 		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
+
+		console.log( "getFormDataAsJson: " + JSON.stringify( jsonData ) );
 		return jsonData;
 	}
 
-// not used anymore
-// 	function getFormDataAsArray( mode ) {
-//
-// 		var arrayData = [];
-// 		arrayData[ INDEX.CATEGORY_ID ] = ( $( FORM_FIELD.CATEGORY_ID ).val() );
-// 		arrayData[ INDEX.NAME ] = ( $( FORM_FIELD.NAME ).val() );
-// 		arrayData[ INDEX.INSTITUTION_ID ] = ( $( FORM_FIELD.INSTITUTION_ID ).val() );
-//
-// 		if( mode == UPDATE_DATA ) { // Edit/Update
-//
-// 			var data = getSelectedData();
-//
-// 			arrayData[ INDEX.CATEGORY_ID ] = data[ INDEX.CATEGORY_ID ];
-// 			arrayData[ INDEX.NAME ] = data[ INDEX.NAME ];
-// 			arrayData[ INDEX.INSTITUTION_ID ] = data[ INDEX.INSTITUTION_ID ];
-//
-// 		}
-//
-// 		if( mFileList.length > 0 ) {
-//
-// 			arrayData[ INDEX.PHOTO_PATH ] = mFileList[ 0 ];
-// 		}
-//
-// 		mFileList = [];
-//
-// 		mUploadedImage = [];
-// 		mImageClosed = false;
-//
-// 		if( mFile != null ) {
-//
-// 			window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
-//
-// 			function failNative( e ) {
-//
-// 				console.error( 'ResolveNativePath: Error for ' + mFile.uri );
-//
-// 			}
-//
-// 			function successNative( finalPath ) {
-//
-// 				var fileList = [];
-// 				fileList[ 0 ] = finalPath;
-// 				arrayData[ INDEX.DOCUMENT_PATH ] = JSON.stringify( fileList );
-// 			}
-// 		}
-//
-// 		mFile = null;
-//
-// 		mUploadedFiles = [];
-// 		mFileClosed = false;
-//
-//
-// 		console.log( "getFormDataArray: " + arrayData );
-// 		return arrayData;
-// 	}
 	function onConfirmNetworkSaveData() {
 
 		var mode = getAddEditMode();
@@ -840,35 +496,7 @@ var CategoryScript = (function () {
 
 		serverInsertUpdate( url, TYPE, inData, mode, parseInsertUpdateResponse, onErrorInsertUpdate );
 	}
-// old logic
-// 	function onConfirmDbSaveData() {
-//
-// 		var mode = getAddEditMode();
-//
-// 		mJsonData = getFormDataAsArray( mode );
-//
-// 		switch( mode ) {
-// 			case INSERT_DATA:
-//
-// 				var query = getInsertQuery();
-// 				insert( query, mJsonData, mode, parseInsertUpdateResponse );
-// 				break;
-//
-// 			case UPDATE_DATA:
-//
-// 				var query = getUpdateQuery();
-// 				update( query, mJsonData, mode, parseInsertUpdateResponse );
-// 				break;
-//
-// 			default:
-//
-// 				console.log( "Invalid mode passed to saveFormDataInsertDb, mode = " + mode );
-// 				return false;
-// 		}
-// 	}
-//
-//
-	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
+
 	function onErrorInsertUpdate(url, jsonData, description, logData, flag){
 
 		var errorHandlerScript = ErrorHandlerScript.getInstance();
@@ -880,10 +508,8 @@ var CategoryScript = (function () {
 		var message = "Failed to connect to " + APP_NAME + " server.\nPlease check your internet connection and try to save the data again.";
 		showAlertDialog( message, gotoLogin, title, buttonStr );
 	}
-// no longer used
-// 	function saveFormData( buttonIndex ) { //pass create table as additional param
-// changed
-	function saveFormData( buttonIndex ) {
+
+	function saveFormData( buttonIndex ) { //pass create table as additional param
 
 		if( buttonIndex == BUTTON_CANCEL ) { // Cancel alert dialog
 			// To do Something
@@ -894,26 +520,11 @@ var CategoryScript = (function () {
 		}
 	}
 
+	// Changed to use DataService (Google Apps Script backed) instead of the
+	// legacy network/SQLite branches - see onConfirmDbSaveData in the
+	// Cordova version for the logic this replaces.
 	function onConfirmSaveFormData() {
-// kept for reference
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-// updated
-		// --------------------------------------------------
-		// WHY: Previously, this function branched between the
-		// old SQLite path (getFormDataAsArray, onConfirmDbSaveData,
-		// insert/update) and a raw-network path (saveNetworkFormData),
-		// both of which called functions that no longer exist in
-		// this PWA. DataService now decides on its own whether the
-		// record goes to Google Apps Script, IndexedDB, or the
-		// offline queue, so there is only one path left.
-		// WHAT: builds the record from the form and asks
-		// DataService to add or update it, depending on mode.
-		// WHEN: runs when the user confirms Save on the
-		// Add/Edit Category form.
-		// --------------------------------------------------
-// old code
-// 			saveNetworkFormData();
-// fixed
+
 		var mode = getAddEditMode();
 
 		mJsonData = getFormDataAsJson( mode );
@@ -963,51 +574,11 @@ var CategoryScript = (function () {
 			);
 		}
 		else {
-// not used anymore
-// 			saveDbFormData();
-// updated logic
 			CommonUtils.logError( "Category.script.js (onConfirmSaveFormData)", "Invalid mode passed, mode = " + mode );
 			return false;
 		}
 	}
-// old logic
-// 	function saveDbFormData() {
-// no longer used
-// 		showLoader( "Please wait...", "Fetching data.." );
-//
-// 		onConfirmDbSaveData();
-// 	}
-// 	function saveNetworkFormData() {
-//
-// 		if( mFileList.length == 0 && mFile == null ) {
-//
-// 			showLoader( "Please wait...", "Fetching data..." );
-// 			onConfirmNetworkSaveData();
-// 		}
-// 		else {
-//
-// 			if( mFileList.length > 0 ) { // File selected
-//
-// 				var fileName = "IMG_" + new Date().getTime() + ".jpg";
-// 				var mediaType = "image/jpeg";
-//
-// 				var imageUri = mFileList[0]; // First image data
-//
-// 				uploadFile( fileName, mediaType, imageUri, onFileUploadSuccess, TYPE_UPLOAD_IMAGE );		
-// 			}
-// 			else {
-//
-// 				uploadDocuments();
-// 			}
-//
-// 		}
-// 	}
-// updated
-	// NOTE: uploadDocuments() below still calls uploadFile(), which does
-	// not exist in this PWA. Left untouched (not migrated) because
-	// CategoryHTML.script.js's onFileUploadSuccess() still calls it
-	// directly, and it is still listed in this file's public API object
-	// further down - removing it breaks that caller.
+
 	function uploadDocuments(){
 
 		window.FilePath.resolveNativePath( mFile.uri, successNative, failNative );
@@ -1017,77 +588,34 @@ var CategoryScript = (function () {
 		}
 	
 		function successNative( finalPath ) {
-	// kept for reference
-// 		  console.log( finalPath );
+	          console.log( finalPath );
 		  uploadFile( mFile.name, mFile.mediaType, finalPath, onFileUploadSuccess, TYPE_UPLOAD_FILES );
 		}
 	}
+
+	// Changed to use DataService.deleteRecord() instead of the legacy
+	// network DELETE / SQLite "IN (...)" branches - deletes each selected
+	// Category one at a time, then hands off to parseDeleteResponse() the
+	// same way the Cordova version did.
 	function deleteRows( deleteDataArray ) {
-// old code
-// 		if( getAppMode() == MODE_NETWORK_DB ){
-// updated logic
-		// --------------------------------------------------
-		// WHY: Previously, this function branched between a
-		// network DELETE call and a raw SQLite DELETE query,
-		// neither of which exist in this PWA anymore. Deletes
-		// run one at a time so that if one fails, we stop
-		// immediately instead of showing a separate alert for
-		// every failed delete.
-		// WHAT: deletes each selected Category through
-		// DataService, one after another, then refreshes the
-		// list once every delete has finished.
-		// WHEN: runs after the user confirms a single or
-		// multi-select delete.
-		// --------------------------------------------------
-// not used anymore
-// 			var deleteIds = deleteDataArray.join();
-// 			var jsonData = {
-// 				"category_id": deleteIds // ADD ANY OTHER CONDITION (IF ANY)
-// 			};
-// changed
+
 		deleteNextRow( 0 );
-// old logic
-// 			var inData = JSON.stringify( jsonData );
-//
-// 			console.log( "deleteRows: " + inData );
-// updated
+
 		function deleteNextRow( numIndex ) {
-// no longer used
-// 			var url = getServerUrl() + ROOT_URL + URL;
-// fixed
+
 			if( numIndex >= deleteDataArray.length ) {
-// kept for reference
-// 			var type = "DELETE";
-// updated logic
-				parseDeleteResponse( deleteDataArray.length, null, null );
+
+				parseDeleteResponse( deleteDataArray.length, 200, null );
 				return;
 			}
-// old code
-// 			onDelete( url, type, inData, parseDeleteResponse, onErrorDeleteData );
-// 		}
-// 		else{
-// changed
+
 			DataService.deleteRecord(
-// not used anymore
-// 			var query = "DELETE FROM " + TABLE_NAME + " WHERE " + DB_FIELD.CATEGORY_ID;
-//
-// 			var idStr = "";
-// 			for( var i = 0; i < deleteDataArray.length; i++ ) {
-// updated
+
 				AppConfig.STORES.CATEGORY,
-// old logic
-// 				if( i == 0 ) {
-// fixed
 				deleteDataArray[ numIndex ],
-// no longer used
-// 					idStr = "?";
-// 				} 
-// 				else {
-// updated logic
+
 				function() {
-// kept for reference
-// 					idStr += ", ?";
-// changed
+
 					deleteNextRow( numIndex + 1 );
 				},
 
@@ -1096,68 +624,17 @@ var CategoryScript = (function () {
 					CommonUtils.logError( "Category.script.js (deleteNextRow)", objError );
 					hideLoader();
 					CommonUtils.showAlert( "Unable to delete Category." );
-					return;
-// old code
-// 			}
-//
-// 			query += " IN (" + idStr + ")";
-//
-// 			removeItem( query, deleteDataArray, parseDeleteResponse );
-// updated				}
+				}
 			);
 		}
 	}
-// not used anymore
-// 	function onErrorDeleteData( url, jsonData, description, logData, flag ){
 
-
-// old logic
-// 		var errorHandlerScript = ErrorHandlerScript.getInstance();
-// 		errorHandlerScript.saveErrorData( "Category", url, jsonData, description, logData, flag, null );
-// 	}
-//
-// 	function parseDbFormDataResponse( response ) {
-//
-// 		var dataList = [];
-//
-// 		var i = 0;
-//
-// 		var data = [];
-// 		data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
-// 		data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
-// 		data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
-// 		dataList[ i ] = data;
-//
-// 		parseFormDataResponse( dataList );
-// 	}
-//
-//
-// updated logic
-	// --------------------------------------------------
-	// WHY: categoryList here is [ objCategory ], a plain
-	// DataService object like { category_id, name,
-	// organization_id }. getSelectedData() (and setPreview()/
-	// the Edit form population below) reads this back out
-	// using INDEX.CATEGORY_ID/NAME/ORGANIZATION_ID as ARRAY
-	// POSITIONS (0/1/2) - the same array-row shape
-	// parseListResponse() already bridges CATEGORY_SUMMARY_DATA
-	// into. CATEGORY_DATA was never given the same bridge, so
-	// obj[0]/obj[1]/obj[2] on a plain object was always
-	// undefined and getSelectedData() could never actually find
-	// the record - this is why the Info popup and Edit form
-	// silently showed blank/undefined fields.
-	// WHAT: convert the single object into the same
-	// [ category_id, name, organization_id ] row shape used by
-	// the summary list, before storing it, so getSelectedData()
-	// can find and return it exactly like it already does for
-	// CATEGORY_SUMMARY_DATA.
-	// WHEN: runs every time a Category record is loaded for the
-	// Edit form.
-	// --------------------------------------------------
+	// Changed: DataService returns a single plain object (e.g.
+	// { category_id, name, organization_id }) rather than a SQLite result
+	// set, so this bridges it into the same [ category_id, name,
+	// organization_id ] array-row shape getSelectedData() already expects.
 	function parseFormDataResponse( categoryList ) {
-// no longer used
-// 		setStorageData( categoryList, SESSION_OBJECT.CATEGORY_DATA );
-// changed
+
 		var arrCategoryRows = [];
 
 		for( var i = 0; i < categoryList.length; i++ ) {
@@ -1168,7 +645,6 @@ var CategoryScript = (function () {
 			arrRow[ INDEX.CATEGORY_ID ] = objCategory.category_id;
 			arrRow[ INDEX.NAME ] = objCategory.name;
 			arrRow[ INDEX.ORGANIZATION_ID ] = objCategory.organization_id;
-			arrRow[ INDEX.DESCRIPTION ] = objCategory.description;
 
 			arrCategoryRows.push( arrRow );
 		}
@@ -1179,70 +655,27 @@ var CategoryScript = (function () {
 
 		popUpEditForm();
 	}
-// kept for reference
-// 	// fetch data using 'summary' API and is used for Edit
-// 	function fetchNetworkListData( option ) {
-//
-// 		var sessionId = getSessionId();
-//
-// 		var organizationId = getOrganizationId();
-//
-// 		var appMode = MODE_CORDOVA_APP; // mode = 2 : CordovaApp, mode = 1 : webapp
-//
-// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /*URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
-//
-// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
-// 	}
-//
-//
-// 	// fetch data using 'select' API and is used for Edit
-// 	function fetchNetworkData( option ) {
-//
-// 		var sessionId = getSessionId();
-//
-// 		var organizationId = getOrganizationId();
-//
-// 		var id = getSelectedId();
-//
-// 		var url = getServerUrl() + ROOT_URL + URL + URL_SELECT + "?organization_id=" + organizationId + "&category_id="+ id +"&s_id=" + sessionId;
-//
-// 		fetchDataFromServer( url, option.callback, onErrorFetchData );
-// 	}
-// 	function setInstitutionSelection( institutionList ) {
-// updated
 
-	// BUG FIX - Add New Category modal's Save/Close/X buttons did nothing
-	
 	function setOrganizationSelection( organizationList ) {
 
 		var mode = getAddEditMode();
-// old code
-// 		var selectedId = DEFAULT.INSTITUTION_ID;
-// fixed
+
 		var selectedId = DEFAULT.ORGANIZATION_ID;
 		if( mode == UPDATE_DATA ) { // Edit
 
 			var data = getSelectedData();	
-// not used anymore
-// 			selectedId = data[ INDEX.INSTITUTION_ID ];
-// updated logic
 			selectedId = data[ INDEX.ORGANIZATION_ID ];
 		}
 		else if( mode == INSERT_DATA ) {
 
 			// Fetch id from the localstorage which previously selected
-// old logic
-// 			selectedId = DEFAULT.INSTITUTION_ID; //getSelectedDropdownId( LOCAL_OBJECT.INSTITUTION_ID );
-// changed
 			selectedId = DEFAULT.ORGANIZATION_ID; //getSelectedDropdownId( LOCAL_OBJECT.ORGANIZATION_ID );
 		}
 
-// no longer used
-// 		var institutionScript = InstitutionScript.getInstance();
-// 		institutionScript.populateSelection( institutionList, FORM_FIELD.INSTITUTION_ID, selectedId );
-// updated
 		var organizationScript = OrganizationScript.getInstance();
 		organizationScript.populateSelection( organizationList, FORM_FIELD.ORGANIZATION_ID, selectedId );
+		// BUG FIX: explicitly set the value too, since populateSelection()'s
+		// own .val().change() can be skipped depending on option ordering.
 		$( FORM_FIELD.ORGANIZATION_ID ).val( selectedId );
 		enableSaveButton( false );
 	}
@@ -1257,53 +690,14 @@ var CategoryScript = (function () {
 
 		return selectedId;
 	}
-// kept for reference
-// 	// fetch data from local db and is used for Edit
-// 	function fetchDbListData( option ) {
-//
-// 		var query = "SELECT * FROM " + TABLE_NAME;
-// 		select( query, option.callback );
-// 	}
-//
-// 	// fetch data from local db and is used for Edit
-// 	function fetchDbData( option ) {
-//
-// 		var query = "SELECT * FROM " + TABLE_NAME + " WHERE " + DB_FIELD.CATEGORY_ID + "=" + getSelectedId();
-// 		select( query, option.callback );
-// 	}
-// fixed
-	// --------------------------------------------------
-	// WHY: Previously, this function fetched the record over
-	// the network or from SQLite, relying on functions that
-	// no longer exist in this PWA. getData() itself only had
-	// this one caller.
-	// WHAT: getData() now asks DataService for the single
-	// Category being edited, the same way getListData()
-	// asks for the full list.
-	// WHEN: runs when the Edit form is opened for a
-	// specific Category.
-	// --------------------------------------------------
 
-	// get data for Edit
+	// Changed to ask DataService for the single Category being edited
+	// instead of the legacy network/SQLite fetch.
 	function getData() {
-// old code
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-// updated logic
+
 		DataService.getRecordById(
-// not used anymore
-// 			fetchNetworkData({
-// 				callback: parseFormDataResponse
-// 			});
-// 		}
-// 		else {
-// changed
+
 			AppConfig.STORES.CATEGORY,
-// old logic
-// 			fetchDbData({
-// 				callback: parseDbFormDataResponse
-// 			});
-// 		}
-// updated
 			getSelectedId(),
 
 			function( objCategory ) {
@@ -1323,56 +717,15 @@ var CategoryScript = (function () {
 		);
 	}
 
-	// --------------------------------------------------
-	// WHY: Previously, this function branched between a
-	// network summary fetch and a local SQLite query -
-	// neither exists in this PWA. DataService now decides on
-	// its own whether the list comes from Google Apps Script,
-	// IndexedDB, or the offline cache.
-	// WHAT: asks DataService for every Category and hands the
-	// result to parseListResponse().
-	// WHEN: runs when the Category list page loads.
-	// --------------------------------------------------
-
-	// get Summary Data for List
-// no longer used
-// 	function getListData() {
-// fixed
+	// Changed to ask DataService for one page of Categories at a time
+	// (Google Apps Script backed) instead of the legacy network summary /
+	// local SQLite fetch. Pass iRequestedPage to jump to a specific page.
 	function getListData( iRequestedPage ) {
-// kept for reference
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-// updated logic
-		// --------------------------------------------------
-		// WHY: nothing told the user a fetch was in progress,
-		// so a slow/failed Google Apps Script call just
-		// looked like the page had frozen.
-		// WHAT: onListDocumentReady() already shows the loading
-		// overlay before this runs - this just hides it once
-		// the DataService callback (success or error) fires,
-		// so a failed fetch does not leave it stuck on screen.
-		// WHEN: runs every time the Category list is
-		// (re)loaded - now for exactly one page at a time
-		// (Performance Optimization Phase), not the whole table.
-		// --------------------------------------------------
-// old code
-// 			fetchNetworkListData({
-// 				callback: parseListResponse
-// 			});
-// changed
+
 		if( iRequestedPage ) {
 
 			mCurrentPage = iRequestedPage;
 		}
-// not used anymore
-// 		else {
-
-
-// old logic
-// 			fetchDbListData({
-// 				callback: parseDbListResponse
-// 			});						
-// 		}
-// fixed
 
 		DataService.getRecordsPage(
 
@@ -1499,10 +852,6 @@ var CategoryScript = (function () {
 
 			(async () => {
 				mFile = await chooser.getFile();
-// no longer used
-// 				// console.log(file ? file.name : 'canceled');
-// 				// console.log(file ? file.uri : 'canceled');
-// 				// console.log(file ? file.mediaType : 'canceled');
 
 				$( FORM_FIELD.DOCUMENT_DIV ).show();
 				enableSaveButton( true );
@@ -1658,16 +1007,8 @@ var CategoryScript = (function () {
 
 		showLoader( "Please wait..." );
 
-		// --------------------------------------------------
-		// SKELETON LOADING (UI Modernization pass, this pass):
-		// show shimmering placeholder cards immediately instead
-		// of leaving #list_id empty while the first page of Categories
-		// is still in flight - getListData()/parseListResponse()
-		// below replace this with the real cards (which already
-		// fade in on insert - see common.css's appCardFadeIn) the
-		// moment the backend responds.
-		// --------------------------------------------------
-
+		// Show shimmering placeholder cards immediately instead of leaving
+		// #list_id empty while the first page of Categories is in flight.
 		setListToView( CommonUtils.getSkeletonCardsHtml( 6 ) );
 
 		// Fetching the fields like City, State, Country, Role, Organization and Lookup list data to populate it in the Filter and other selections. 
@@ -1688,13 +1029,10 @@ var CategoryScript = (function () {
 
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.ADD_CATEGORY ) == true ) {
 
-			// FIX: #btn_add wraps an <a href="#"> - without
-			// preventDefault() that anchor's default action changes
-			// the URL hash and pushes a history entry, which
-			// onBackPress()'s popstate listener (see
-			// CategoryHTML.script.js) misreads as a Back press and
-			// force-navigates to the Dashboard the instant "+" is
-			// tapped. Same fix already applied in Student.script.js.
+			// FIX: #btn_add is an <a href="#"> - without preventDefault()
+			// the default action changes the URL hash and pushes a history
+			// entry, which onBackPress()'s popstate listener misreads as a
+			// Back press and force-navigates to the Dashboard.
 			$( "#btn_add" ).off().on( "click", function( objEvent ) {
 
 				objEvent.preventDefault();
@@ -1707,10 +1045,7 @@ var CategoryScript = (function () {
 			$( "#btn_add" ).hide();
 		}
 
-		// FIX: same href="#" / popstate issue as #btn_add above -
-		// preventDefault() stops the click from being misread as a
-		// Back press that would navigate to the Dashboard instead
-		// of just refreshing this list.
+		// Same href="#" / popstate fix as #btn_add above.
 		$( "#btn_refresh" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
@@ -1718,9 +1053,7 @@ var CategoryScript = (function () {
 			onClickRefresh();
 		});
 
-		// FIX: #btn_share_page (top AppBar Share) had no click
-		// handler at all - same pattern as Student.script.js's/
-		// Result.script.js's #btn_share_page binding.
+		// FIX: #btn_share_page (top AppBar Share) had no click handler at all.
 		$( "#btn_share_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
@@ -1728,16 +1061,9 @@ var CategoryScript = (function () {
 			CommonUtils.shareContent( "Category List", "Category List - Student Management System", window.location.href );
 		});
 
-		// --------------------------------------------------
-		// FIX: the floating down-arrow button (#btn_float_next_page,
-		// categoryList.html) must not trigger Export/Download - that
-		// belongs solely to a dedicated Export control. Its actual
-		// intent (a "down arrow" floating action button) is to
-		// scroll the page down, so it now smooth-scrolls the list
-		// container to the bottom instead. exportCategoryList()
-		// itself is left in place further below, ready to be wired
-		// to a dedicated Export button in future.
-		// --------------------------------------------------
+		// The floating down-arrow button smooth-scrolls the list to the
+		// bottom; it is not wired to Export (see exportCategoryList() below,
+		// ready to be attached to a dedicated Export button in future).
 		$( "#btn_float_next_page" ).off().on( "click", function( objEvent ) {
 
 			objEvent.preventDefault();
@@ -1761,16 +1087,8 @@ var CategoryScript = (function () {
 			doFilterCategoryList();
 		});
 
-		// --------------------------------------------------
-		// PRIORITY 5 FIX (Filter): the Organization dropdown inside
-		// the Filter modal previously only took effect once the
-		// separate "Apply" button (#btn_filter, still wired above
-		// for anyone who prefers it) was clicked. Binding the same
-		// doFilterCategoryList() to the select's own "change" event
-		// makes the list redraw the instant the filter is changed,
-		// per the brief. No new filtering logic was written - both
-		// paths call the exact same function.
-		// --------------------------------------------------
+		// Filter re-applies as soon as the Organization dropdown changes,
+		// not only when the separate Apply button is pressed.
 		$( '#filter_organization_id' ).off( "change" ).on( "change", function() {
 
 			doFilterCategoryList();
@@ -1789,28 +1107,14 @@ var CategoryScript = (function () {
 		});
 	}
 
+	// Changed: loads the Category list itself (DataService is the only data
+	// source in the PWA); the Organization filter list is then built from
+	// the loaded rows inside parseListResponse()/loadOrganizationList().
 	function onLoadCacheManager() {
-// kept for reference
-// 		loadInstitutionList();
-// changed
-		// --------------------------------------------------
-		// WHY: this used to load cached lookup lists (like
-		// Organizations) before the Category list itself was
-		// fetched, because the old Cordova flow fetched the
-		// list from somewhere else first.
-		// WHAT: in the PWA, DataService is the one place that
-		// fetches data, so this now calls getListData() to
-		// actually load the Category list when the page opens.
-		// Once the list arrives, parseListResponse() below
-		// builds the Organization filter list from it, so
-		// there is no longer a separate call to
-		// loadOrganizationList() here before any data exists.
-		// WHEN: runs once, right when the Category list page
-		// finishes loading.
-		// --------------------------------------------------
 
 		getListData();
 	}
+
 	// parse one page of the list response from server
 	function parseListResponse( objPageResult ) {
 
@@ -1827,24 +1131,8 @@ var CategoryScript = (function () {
 		mTotalPages = objPageResult.totalPages || 1;
 		mTotalRecords = objPageResult.totalRecords || arrCategories.length;
 
-		// --------------------------------------------------
-		// WHY: DataService.getRecordsPage() returns plain
-		// objects, e.g. { category_id, name, organization_id }.
-		// The rest of this file (createHtmlListItem(),
-		// onSingleClickListener(), etc.) was written for the old
-		// SQLite row format, where each Category was a plain
-		// array like [ categoryId, categoryName, organizationId ],
-		// read using SUMMARY_INDEX.CATEGORY_ID / NAME /
-		// ORGANIZATION_ID as array positions.
-		// WHAT: convert each DataService object into that same
-		// array-row shape, in this one place only, so every
-		// function below this point keeps working exactly as
-		// it already did - nothing past this bridge needs to
-		// change.
-		// WHEN: runs every time a page of the Category list is
-		// loaded, refreshed, searched, or paged through.
-		// --------------------------------------------------
-
+		// Bridge each DataService object into the [ category_id, name,
+		// organization_id ] array-row shape the rest of this file expects.
 		var arrCategoryRows = [];
 
 		for( var i = 0; i < arrCategories.length; i++ ) {
@@ -1860,39 +1148,15 @@ var CategoryScript = (function () {
 			arrCategoryRows.push( arrRow );
 		}
 
-		// --------------------------------------------------
-		// Performance Optimization Phase: this used to call
-		// doFilterCategoryList() -> showFilteredList(), which
-		// filtered/rendered against the FULL table already
-		// sitting in sessionStorage (SESSION_OBJECT.
-		// CATEGORY_SUMMARY_DATA). There is no full table in
-		// memory anymore - only the current page - so this
-		// renders that page directly instead. The Organization
-		// filter modal's dropdown (built from every Category's
-		// organization) is a known, accepted limitation of
-		// real pagination: it can only reflect organizations
-		// seen on already-loaded pages, not the whole table.
-		// --------------------------------------------------
-
+		// Renders the current page directly (there is no full table kept in
+		// memory to filter against anymore - see doFilterCategoryList()).
 		renderCurrentPage( arrCategoryRows );
 
-		// UI FIX (this pass): loadOrganizationList() already existed
-		// and already de-dupes by name, but was never actually
-		// called anywhere, so the Filter modal's Organization
-		// dropdown always stayed empty. Calling it here means it
-		// reflects the Organizations seen on whichever page(s) have
-		// been loaded so far - the same accepted, documented
-		// pagination limitation noted above for filtering itself.
+		// Reflects the Organizations seen on whichever page(s) have been
+		// loaded so far - an accepted limitation of real pagination.
 		loadOrganizationList( arrCategoryRows );
 
-		// --------------------------------------------------
-		// DASHBOARD QUICK ADD (Priority 2): same mechanism as
-		// Student.script.js/parseListResponse() - see the WHY/
-		// WHAT/WHEN comment there for the full explanation.
-		// Reuses the existing onClickAdd()/Add Category workflow
-		// as-is.
-		// --------------------------------------------------
-
+		// Dashboard "Quick Add" - reuses the existing Add Category workflow.
 		if( sessionStorage.getItem( "DASHBOARD_QUICK_ADD_ACTION" ) == "category" ) {
 
 			sessionStorage.removeItem( "DASHBOARD_QUICK_ADD_ACTION" );
@@ -1903,23 +1167,11 @@ var CategoryScript = (function () {
 			}
 		}
 	}
-// old code
-// 	function loadInstitutionList() {
-// updated
-	// --------------------------------------------------
-	// Renders exactly one already-fetched page of Categories -
-	// the real-pagination replacement for showFilteredList(),
-	// which used to render against the entire table. Builds the
-	// same per-card HTML (createHtmlListItem is unchanged), then
-	// appends a Prev/Next pagination bar below the list so this
-	// stays a single self-contained change (no categoryList.html
-	// edits needed).
-	// --------------------------------------------------
+
+	// Renders exactly one already-fetched page of Categories, then appends
+	// a Prev/Next pagination bar below the list.
 	function renderCurrentPage( arrCategoryRows ) {
-// not used anymore
-// 		var cacheManagerScript = CacheManagerScript.getInstance();
-// 		cacheManagerScript.loadCacheMangerList( CacheManagerScript.LOAD_MODE.INSTITUTION_LIST, loadInstitutionList );
-// fixed
+
 		mSearchList = arrCategoryRows;
 		mSelectedDataList = arrCategoryRows; // Initializing the Selected data array
 		mMultiSelectedList = []; // Initializing the Selected data array
@@ -1951,29 +1203,14 @@ var CategoryScript = (function () {
 
 		bindPaginationBarListeners();
 	}
-// old logic
-// 	// parse summary list response from server
-// 	function parseListResponse( response, status ) {
 
-// no longer used
-// 		if( response == null || status < 0 ) {
-// changed
-
-	// --------------------------------------------------
-	// Small, self-contained Prev/Next bar - plain HTML/inline
-	// styling so it works without any new CSS file, matching
-	// this app's existing pattern (see CommonUtils.
-	// getEmptyStateHtml for the same approach).
-	// --------------------------------------------------
+	// Small, self-contained Prev/Next bar - plain HTML/inline styling so it
+	// works without any new CSS file.
 	function buildPaginationBarHtml() {
-// kept for reference
-// 			response = [];
-// updated
+
 		var strPrevDisabled = ( mCurrentPage <= 1 ) ? "disabled" : "";
 		var strNextDisabled = ( mCurrentPage >= mTotalPages ) ? "disabled" : "";
-// old code
-// 			console.log( "parseListResponse Error: " + status );
-// fixed
+
 		return (
 			'<div id="pagination_bar" class="pagination-area">' +
 				'<button type="button" id="btn_page_prev" class="btn-page-nav" ' + strPrevDisabled + '>Prev</button>' +
@@ -2004,21 +1241,10 @@ var CategoryScript = (function () {
 		});
 	}
 
-
-	// --------------------------------------------------
-	// WHY: this used to ask the server for a separate list of
-	// Organizations. There is no Organization entity or
-	// backend endpoint anywhere in this project -
-	// "organization" is just a free-text field already stored
-	// on every Category.
-	// WHAT: builds the Organization filter list from the
-	// Category rows already loaded above (no extra network
-	// request), then saves it using setOrganizationListData(),
-	// which already existed in this file.
-	// WHEN: runs every time the Category list is loaded or
-	// refreshed, right after parseListResponse() bridges the
-	// data.
-	// --------------------------------------------------
+	// Changed: there is no Organization entity or backend endpoint anywhere
+	// in this project - "organization" is just a free-text field already
+	// stored on every Category, so the filter list is built from the rows
+	// already loaded above instead of a separate network request.
 	function loadOrganizationList( arrCategoryRows ) {
 
 		var arrOrganizationNames = [];
@@ -2032,15 +1258,7 @@ var CategoryScript = (function () {
 				arrOrganizationNames.push( strOrganization );
 			}
 		}
-// not used anymore
-//
-// 			hideLoader();
-//
-// 		setStorageData( response, SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
 
-// old logic
-// 		doFilterCategoryList();
-// changed
 		setOrganizationListData( arrOrganizationNames );
 	}
 	// parse summary list response from the storage
@@ -2087,7 +1305,7 @@ var CategoryScript = (function () {
 		var id = selectedData[ SUMMARY_INDEX.CATEGORY_ID ];
 		sessionStorage.setItem( SESSION_OBJECT.CATEGORY_ID, id );
 	
-		if( mInfoIconClicked == false && mEditIconClicked == false && mShareIconClicked == false ) { // CHANGED: also check the new Share flag
+		if( mInfoIconClicked == false && mEditIconClicked == false && mShareIconClicked == false ) {
 
 			openSelectMenu();
 		}	
@@ -2103,24 +1321,14 @@ var CategoryScript = (function () {
 	function enableSearch( mode ) {
 
 			if( mode == MODE_SEARCH_ON_KEYUP ) { // Search list onKeyup
-// no longer used
-// 				$("#search").keyup( function (e) {
-// updated
-				// --------------------------------------------------
-				// Universal Search: bound via the native "input" event
-				// instead of jQuery's keyup() - input fires for every
-				// value change (typing, paste, autofill, mobile
-				// keyboard predictions/backspace-hold), whereas keyup
-				// can miss some of those. Matches the same fix already
-				// applied to the Student List search box. The
-				// search_icon click binding right below is unchanged.
-				// --------------------------------------------------
+
+				// Bound via the native "input" event instead of jQuery's
+				// keyup() - input fires for every value change (typing,
+				// paste, autofill, mobile keyboard predictions/backspace-
+				// hold), whereas keyup can miss some of those.
 				document.getElementById( "search" ).oninput = function() {
 
 					searchList();
-// kept for reference
-// 				});
-// fixed
 				};
 			} else if( mode == MODE_SEARCH_ON_ICON_CLICK ) { // Search list onClick Search ICON
 
@@ -2137,9 +1345,7 @@ var CategoryScript = (function () {
 		resetMultiSelection();
 
 		resetFilterInfo();
-// old code
-// 		getListData();
-// updated logic
+
 		mCurrentPage = 1;
 
 		getListData( 1 );
@@ -2196,93 +1402,35 @@ var CategoryScript = (function () {
 	function onClickDelete() {
 
 		closeSelectMenu();
-// not used anymore
-// 		showConfirmationAlert( "Do you want to delete selected Category?", onConfirmDelete, "Message", buttonLabels );
-// changed
 		showConfirmationAlert( "Do you want to delete selected Category?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
-	// --------------------------------------------------
-	// Performance Optimization Phase, Priority 3 ("Debounce
-	// Search"): this used to filter/hide the already-rendered
-	// <ul> elements on every single keystroke, against whatever
-	// page was currently in memory - so it could only ever
-	// search the current page, not the whole table. Now waits
-	// 250ms after typing stops, then asks the backend to search
-	// every matching row (searchCategories), resetting to page 1
-	// - see DataService.getRecordsPage()'s "blnIsSearch" branch
-	// for how that result gets paginated.
-	// --------------------------------------------------
+	// Changed: waits 250ms after typing stops, then asks the backend to
+	// search every matching row (resetting to page 1) instead of
+	// filtering/hiding only the already-rendered <ul> elements of the
+	// current page.
 	function searchList() {
-// old logic
-// 		var list = document.getElementById("list_id");
-// 		var listItems = list.getElementsByTagName("ul");
-// updated
+
 		if( mSearchDebounceTimer ) {
-// no longer used
-// 		var input = document.getElementById("search");
-// 		var filter = input.value.toUpperCase();
-//
-// 		for( var i = 0; i < listItems.length; i++ ) {
-//
-// 			var name = listItems[ i ].getElementsByTagName("li")[ 0 ];
-//
-// 			if( name != null ) {
-//
-// 				if( name.innerHTML.toUpperCase().indexOf( filter ) > -1 ) {
-//
-// 					var categoryData = mSelectedDataList;
-//
-// 					var index = mSearchList.length;
-// 					mSearchList[index] = categoryData[ i ];
-//
-// 					listItems[i].style.display = "";
-// 				} else {
-//
-// 					listItems[i].style.display = "none";
-// 				}
-// 			}
-// fixed
+
 			clearTimeout( mSearchDebounceTimer );
 		}
-// kept for reference
-// 		// Displaying No. of Records
-// 		var totalRecordsLength = listItems.length;
-// 		var searchRecordsLength = $( "ul:visible" ).length - 1;
-// 		var searchRecords = "Total: " + searchRecordsLength + "/" + totalRecordsLength + "(filtered)";
-// 		var totalRecords = "Total: " + totalRecordsLength;
-// 		var searchInput = document.getElementById( "search" ).value;
-// updated logic
+
 		mSearchDebounceTimer = setTimeout( function() {
-// old code
-// 		if( searchInput == "" ) {
-// changed
+
 			mCurrentSearchKeyword = document.getElementById( "search" ).value.trim();
 			mCurrentPage = 1;
-// not used anymore
-// 			document.getElementById( "records" ).innerText = totalRecords;
-// 		}
-// 		else {
-// updated
+
 			showLoader( "Searching..." );
 			getListData( 1 );
-// old logic
-// 			document.getElementById( "records" ).innerText = searchRecords;
-// 		}
-// fixed
+
 		}, 250 );
 	}
 
-	// --------------------------------------------------
-	// WHY: the floating download button (#btn_float_next_page,
-	// categoryList.html) needs a real export to call - no export
-	// feature existed anywhere in this file. Same pattern as
-	// Student.script.js's exportStudentList(): builds a CSV from
-	// mSelectedDataList (the same array already rendering the
-	// on-screen cards, so Export always matches the current
-	// filter/search), dedupes by Category ID as a safety net, and
-	// downloads it through a temporary <a> link.
-	// --------------------------------------------------
+	// Builds a CSV export from mSelectedDataList (the same array already
+	// rendering the on-screen cards, so Export always matches the current
+	// page/search), dedupes by Category ID as a safety net, and downloads
+	// it through a temporary <a> link.
 	function exportCategoryList() {
 
 		var arrRows = mSelectedDataList;
@@ -2395,15 +1543,9 @@ var CategoryScript = (function () {
 
 			closeFilterMenu();
 		} 
-// no longer used
-// 		else if( $('#modal_share_question').hasClass('show')) {
-// updated logic
-		// Final QA fix: this used to check the nonexistent
-		// '#modal_share_question' element (always false, so the
-		// Back button never detected the Share modal was open).
-		// The real share modal's id is 'modal_share' - corrected
-		// below so Back now properly closes it instead of falling
-		// through to the double-back-press exit logic.
+		// FIX: the real share modal's id is "modal_share", not
+		// "modal_share_question" - Back now properly closes it instead of
+		// falling through to the double-back-press exit logic.
 		else if( $('#modal_share').hasClass('show')) {
 
 			closeShareMenu();
@@ -2468,9 +1610,6 @@ var CategoryScript = (function () {
 			}
 			
 			var result = getAddEditResultArray( response[ JSON_KEY.CATEGORY_ID ] );
-// kept for reference
-// 			message = "Category has been added successfully";
-// changed
 			message = "Category saved successfully.";
 			
 			categoryList.push( result );
@@ -2483,9 +1622,6 @@ var CategoryScript = (function () {
 		else if ( mode == UPDATE_DATA ) {
 
 			var result = getAddEditResultArray( 0 );
-// old code
-// 			message = "Category has been updated successfully";
-// updated
 			message = "Category updated successfully.";
 
 			for ( var i = 0; i < categoryList.length; i++ ) {
@@ -2519,51 +1655,17 @@ var CategoryScript = (function () {
 			deleteRows( deleteDataArray );
 		}
 	}
-// not used anymore
-// 	function parseDbListResponse( response ) {
-//
-// 		var dataList = [];
-//
-// 		for( var i = 0; i < response.rows.length; i++ ) {
-//
-// 			var data = [];
-//
-// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
-// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
-// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
-// 			dataList[ i ] = data;
-// 		}
-//
-// 		parseListResponse( dataList, 0 );
-// 	}
-//
+
 	// create an array from the add/edit jsonData. It can be used to update the list after successful Add/Edit operation
 	// It can reduce the number of calls to the server after Edit/Add
+	// Changed: DataService assigns the real Category ID on Add, so it is
+	// read from the "id" argument instead of always falling back to
+	// mJsonData's placeholder ID; Update passes id as 0 since mJsonData
+	// already holds the correct existing ID.
 	function getAddEditResultArray( id ) {
 
 		var data = [];
 
-		// BUG FIX: this used to always read mJsonData's Category ID,
-		// even right after a successful Add - so the row shown on
-		// screen kept the placeholder ID that was in the form
-		// before saving, instead of the real ID the backend (or
-		// IndexedDB) just assigned. On Update, id is passed as 0
-		// (the existing ID already sits correctly in mJsonData), so
-		// the fallback keeps that path unchanged.
-// old logic
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-//
-// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
-// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
-// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_JSON_KEY.INSTITUTION_ID ];
-// 		}
-// 		else {
-//
-// 			data[ SUMMARY_INDEX.CATEGORY_ID ] = mJsonData[ SUMMARY_INDEX.CATEGORY_ID ];
-// 			data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_INDEX.NAME ];
-// 			data[ SUMMARY_INDEX.INSTITUTION_ID ] = mJsonData[ SUMMARY_INDEX.INSTITUTION_ID ];
-// 		}
-// updated logic
 		data[ SUMMARY_INDEX.CATEGORY_ID ] = id || mJsonData[ SUMMARY_JSON_KEY.CATEGORY_ID ];
 		data[ SUMMARY_INDEX.NAME ] = mJsonData[ SUMMARY_JSON_KEY.NAME ];
 		data[ SUMMARY_INDEX.ORGANIZATION_ID ] = mJsonData[ SUMMARY_JSON_KEY.ORGANIZATION_ID ];
@@ -2630,9 +1732,7 @@ var CategoryScript = (function () {
 			}
 
 			parseListFromStorage();
-// no longer used
-// 			showOperationMessage( "Selected Category(s) has been deleted successfully", "Success", null );
-// changed
+
 			showOperationMessage( "Category deleted successfully.", "Success", null );
 		}
 	}
@@ -2706,8 +1806,6 @@ var CategoryScript = (function () {
 	function onTapHold( thisObj ) {
 
 		var index = thisObj.index();
-// kept for reference
-// 		console.log(index);
 		thisObj.css('backgroundColor', MULTI_SELECT_LIST_ITEM_COLOR);
 
 		$('#btn_add').hide();
@@ -2751,8 +1849,6 @@ var CategoryScript = (function () {
 	function openMultiSelectOptions() {
 
 		var selectedData = getMultiSelectData();
-// old code
-// 		console.log( selectedData );
 
 		addMultiSelectModal();
 		openMultiSelectMenu();
@@ -2775,13 +1871,9 @@ var CategoryScript = (function () {
 	// reset all the multiple selected rows
 
 	function resetMultiSelection() {
-// not used anymore
-// 		if( $( '#modal_share_category' ).hasClass( 'show' )) {
-// updated logic
-		// Final QA fix: this used to check a nonexistent element
-		// ('#modal_share_category', always false) instead of the real
-		// share modal's id, 'modal_share'. Corrected so this
-		// function properly recognizes the share modal is open.
+
+		// FIX: the real share modal's id is "modal_share", not
+		// "modal_share_category".
 		if( $( '#modal_share' ).hasClass( 'show' )) {
 
 			closeShareMenu();
@@ -2821,9 +1913,7 @@ var CategoryScript = (function () {
 	function onClickMultiRowDelete() {
 
 		closeMultiSelectMenu();
-// old logic
-// 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", buttonLabels );
-// changed
+
 		showConfirmationAlert( "Do you want to delete selected Rows?", onConfirmDelete, "Message", [ "Delete", "Cancel" ] );
 	}
 
@@ -2831,18 +1921,14 @@ var CategoryScript = (function () {
 	function onClickMultiOption1() {
 
 		closeMultiSelectMenu();
-// no longer used
-// 		console.log( "Multiple selection option 1: TBD" );
-// updated
+
 		// TODO: Multiple-select option 1 is not implemented yet.
 	}
 
 	function onClickMultiOption2() {
 
 		closeMultiSelectMenu();
-// kept for reference
-// 		console.log( "Multiple selection option 2: TBD" );
-// fixed
+
 		// TODO: Multiple-select option 2 is not implemented yet.
 	}
 
@@ -2851,18 +1937,10 @@ var CategoryScript = (function () {
 		$( '#modal_single_select' ).modal( 'show' );
 	}
 
-	// FIX: this used to hide #modal_single_select and, in the very
-	// same synchronous tick, show #edit_details right after it
-	// (see the #category_add/#category_edit handlers below). Since
-	// Bootstrap 4's modal('hide') doesn't finish removing its own
-	// backdrop until its CSS fade-out transition completes,
-	// opening a second modal before that finishes state left a
-	// stray .modal-backdrop sitting on top of the Add/Edit modal -
-	// its contents were visible, but the backdrop intercepted every
-	// click, including the X and Close buttons. Now takes an
-	// optional callback and only runs it once #modal_single_select
-	// has actually finished closing (its own "hidden.bs.modal"
-	// event), so the Add/Edit modal never opens mid-transition.
+	// Takes an optional callback that only runs once #modal_single_select
+	// has actually finished closing (its "hidden.bs.modal" event), so a
+	// second modal (e.g. Add/Edit) never opens mid fade-out transition and
+	// gets left behind a stray backdrop that blocks clicks.
 	function closeSelectMenu( fnCallback ) {
 
 		if( fnCallback ) {
@@ -2927,7 +2005,7 @@ var CategoryScript = (function () {
 		$( '#edit_details' ).modal( 'hide' );
 		mEditIconClicked = false;
 		mInfoIconClicked = false;
-		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
+		mShareIconClicked = false;
 	}
 
 	function scrollEditDetailsPopup() {
@@ -2988,88 +2066,36 @@ var CategoryScript = (function () {
 	}
 */
 
+	// Changed: SUMMARY_INDEX has no FIRST_FILL_IN/_FILL_IN keys (unfinished
+	// codegen placeholders) - the card's title/subtitle now use this
+	// entity's real Name/Organization fields. Icons also gained
+	// role/tabindex/aria-label for accessibility, a Share icon, and a
+	// stopPropagation-guarded Edit icon (see onClickEditIcon) instead of
+	// plain onclick spans.
 	function createHtmlListItem( data, index ) {
-// old code
-// 		var name = data[ SUMMARY_INDEX.FIRST_FILL_IN ];
-// 		var fillInData = data[ SUMMARY_INDEX._FILL_IN ];
-// 		var seqNumber = index + 1 +') ';
-// updated logic
-		// --------------------------------------------------
-		// WHY: this originally read data[ SUMMARY_INDEX.FIRST_FILL_IN ]
-		// and data[ SUMMARY_INDEX._FILL_IN ] - neither of those keys
-		// exists in SUMMARY_INDEX (only CATEGORY_ID, NAME, and
-		// ORGANIZATION_ID do). This looks like an unfinished
-		// code-generation placeholder that was never filled in.
-		// WHAT: point the card's title and subtitle at the two
-		// fields that already exist for a Category - its Name and
-		// its Organization.
-		// WHEN: runs once per Category card, every time the list is
-		// drawn.
-		// --------------------------------------------------
-// not used anymore
-// 		var infoIconHtml = '<i onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');" class="fa fa-info-circle text-info" aria-hidden="true" style=""></i>';
-// changed
+
 		var name = data[ SUMMARY_INDEX.NAME ];
 		var fillInData = data[ SUMMARY_INDEX.ORGANIZATION_ID ];
-		// PAGINATION FIX: seqNumber is the DISPLAYED row number and must
-		// keep counting across pages (page 2 starts at 101, not 1 again).
-		// "index" itself stays as the page-local array position, since
-		// click handlers above use it to look the row up inside this
-		// page's own cached array.
+
+		// The displayed row number keeps counting across pages (page 2
+		// starts at 101, not 1 again); "index" itself stays the page-local
+		// array position used by the click handlers below.
 		var seqNumber = ( ( mCurrentPage - 1 ) * mPageSize ) + index + 1 + ') ';
 
-		// ACCESSIBILITY FIX (this pass): see Student.script.js's
-		// createHtmlListItem() for the full WHY - same fix, same
-		// role/tabindex/aria-label pattern, same shared keydown
-		// handler in common.js.
 		var infoIconHtml = '<span class="icon-btn icon-btn-info" role="button" tabindex="0" aria-label="View category details" onclick="CategoryScript.getInstance().onClickInfoIcon('+ index +');"><i class="fa fa-info-circle" aria-hidden="true"></i></span>';
 		var editIconHtml = '';
-// old logic
-// 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_INSTITUTION ) == true ) {
-// updated
 		if( checkRolePermission( SOFTWARE_FEATURE_CONST.EDIT_CATEGORY ) == true ) {
-// no longer used
-// 			editIconHtml = '<i onclick="CategoryScript.getInstance().onClickEditIcon('+ index +');" class="fas fa-edit text-info" style="margin-top: 10px;float: right;margin-right: 10px;"></i>';
-// fixed
 
 			editIconHtml = '<span class="icon-btn icon-btn-edit" role="button" tabindex="0" aria-label="Edit category" onclick="CategoryScript.getInstance().onClickEditIcon('+ index +', event);"><i class="fas fa-edit"></i></span>';
 		}
-// kept for reference
-// 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="box-shadow:2px 3px 3px 1px rgba(0,0,0,0.5);margin-bottom: 5px;">' +
-// updated logic
-		// FIX (per-card Share icon): this card never had a Share
-		// button at all - only Student.script.js/Result.script.js
-		// did. Added the same icon-btn-share pattern, wired to a
-		// new onClickShareIcon() below (same shape as
-		// Student.script.js's).
+
 		var shareIconHtml = '<span class="icon-btn icon-btn-share" role="button" tabindex="0" aria-label="Share category" onclick="CategoryScript.getInstance().onClickShareIcon('+ index +', event);"><i class="fa-solid fa-share-nodes"></i></span>';
 
-		// UI BRIEF (this pass): Edit/Share used to be two separate
-		// position:absolute spans at different "right" offsets.
-		// Wrapping both in one fixed-position flex row (see
-		// .card-icon-actions in common.css) removes any stacking
-		// ambiguity between the two icons themselves and matches
-		// the exact top:16px/right:16px/gap:8px/z-index:10 layout
-		// requested for every list page's cards.
 		var cardIconActionsHtml = '<div class="card-icon-actions">' + shareIconHtml + editIconHtml + '</div>';
 
-		// --------------------------------------------------
-		// WHY: the outer <ul id="list_card"> used to carry a hard
-		// inline box-shadow straight on the <ul> (not the styled
-		// .list-item div inside it) - an inline style always wins
-		// over a class, so every card looked flat no matter what
-		// common.css said. Removed it and switched to the same
-		// .icon-btn / .list-card-title / .list-card-subtitle
-		// classes Student.script.js's createHtmlListItem() uses,
-		// so every list page now shares one consistent card look.
-		// --------------------------------------------------
 		var htmlListItem =  '<ul class="list-dis" id="list_card" onselectstart="return false" style="position:relative;">' +
 							cardIconActionsHtml +
 							'<div id="list_item" class="list-item">' +
-// old code
-// 							'<li style="font-size: 20px;">'+ seqNumber + name + '</li>' +
-// 							'<li style="font-size: 14px;padding-top: 6px; font-weight: 700;">' + infoIconHtml + " " + fillInData + '</li>' +									
-// changed
 							'<li class="list-card-title">'+ seqNumber + name + '</li>' +
 							'<li class="list-card-subtitle">' + infoIconHtml + '<span>' + fillInData + '</span></li>' +
 							'</div>' +
@@ -3121,9 +2147,6 @@ var CategoryScript = (function () {
 		var query = 'CREATE TABLE IF NOT EXISTS ' + TABLE_NAME + ' (' +
 			DB_FIELD.CATEGORY_ID + ' INTEGER PRIMARY KEY ,' +
 			DB_FIELD.NAME + ' TEXT ,' +
-// not used anymore
-// 			DB_FIELD.INSTITUTION_ID + ' TEXT' +
-// updated
 			DB_FIELD.ORGANIZATION_ID + ' TEXT' +
 			')';
 
@@ -3137,9 +2160,6 @@ var CategoryScript = (function () {
 
 			DB_FIELD.CATEGORY_ID + ',' +
 			DB_FIELD.NAME + ',' +
-// old logic
-// 			DB_FIELD.INSTITUTION_ID +
-// fixed
 			DB_FIELD.ORGANIZATION_ID +
 			') VALUES (?, ?, ?)';
 		return query;
@@ -3150,61 +2170,11 @@ var CategoryScript = (function () {
 		var query = 'UPDATE ' + TABLE_NAME + ' SET ' +
 			DB_FIELD.CATEGORY_ID + '=?, ' +
 			DB_FIELD.NAME + '=?, ' +
-// no longer used
-// 			DB_FIELD.INSTITUTION_ID +' =? WHERE ' +
-// updated logic
 			DB_FIELD.ORGANIZATION_ID +' =? WHERE ' +
 			DB_FIELD.CATEGORY_ID + '=' + getSelectedId();
 
 		return query;
 	}
-// kept for reference
-//
-// 	function getListFromServer( onSuccess, callback ) {
-//
-// 		var mode = getAppMode();
-//
-// 		if( mode == MODE_NETWORK_DB ) { 
-//
-// 			var sessionId = getSessionId();
-// 			var organizationId = getOrganizationId();
-//
-// 			// mode = 2 : CordovaApp, mode = 1 : webapp
-// 			var appMode = MODE_CORDOVA_APP;
-//
-// 			var url = getServerUrl() + ROOT_URL + URL + URL_SELECT /* OR URL_SUMMARY*/ + "?organization_id=" + organizationId + "&mode="+ appMode +"&s_id=" + sessionId;
-//
-// 			fetchDataFromServer( url, onSuccess, onErrorFetchData, callback );
-// 		}
-// 		else {
-//
-// 			var query = "SELECT * FROM " + TABLE_NAME;
-// 			selectList( query, parseLocalData, onSuccess, callback );
-// 		}
-// 	}
-// 	function parseLocalData(response, onSuccess, callback) {
-// 		var dataList = [];
-// 		if( response.rows.length == 0 ) {
-//
-// 			onSuccess( dataList, callback );
-// 		}
-//
-// 		for( var i = 0; i < response.rows.length; i++ ) {
-// 			var data = [];
-//
-// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
-//
-// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
-//
-// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
-// 			dataList[ i ] = data;
-//
-// 			if( i == ( response.rows.length - 1 ) ) {
-//
-// 				onSuccess( dataList, callback );
-// 			}
-// 		}
-// 	}
 
 	function onErrorFetchData( url, description, logData, flag ){
 
@@ -3212,38 +2182,15 @@ var CategoryScript = (function () {
 		errorHandlerScript.saveErrorData( "Category", url, "", description, logData, flag, null );
 	}
 
-	// --------------------------------------------------
-	// WHY: Previously, this function fetched the preview
-	// record over the network or from SQLite - neither exists
-	// in this PWA. This mirrors getData()/parseFormDataResponse()
-	// above, which use the same DataService.getRecordById() call
-	// for the Edit form.
-	// WHAT: asks DataService for the single Category being
-	// previewed and hands it to parsePreviewResponse().
-	// WHEN: runs when the user opens the Info/Preview popup
-	// for a specific Category.
-	// --------------------------------------------------
-
+	// Changed to ask DataService for the single Category being previewed
+	// instead of the legacy network/SQLite fetch (mirrors getData() above).
 	function onInfoViewDocumentReady() {
 
 		DataService.getRecordById(
-// old code
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-// updated
+
 			AppConfig.STORES.CATEGORY,
-// not used anymore
-// 			fetchNetworkData({
-// 				callback: parsePreviewResponse
-// 			});
-// 		}
-// 		else {
-// fixed
 			getSelectedId(),
-// old logic
-// 			fetchDbData({
-// 				callback: parsePreviewResponse
-// 			});
-// updated logic
+
 			function( objCategory ) {
 
 				if( objCategory ) {
@@ -3261,11 +2208,9 @@ var CategoryScript = (function () {
 		);
 	}
 
-	// WHY/WHAT: same object -> array-row bridge as
-	// parseFormDataResponse() above, so the Info popup's
-	// setPreview() (which also reads CATEGORY_DATA through
-	// INDEX.* array positions) can actually find the record
-	// instead of getting [] and rendering blank fields.
+	// Same object -> array-row bridge as parseFormDataResponse() above, so
+	// setPreview() (which reads CATEGORY_DATA through INDEX.* array
+	// positions) can find the record.
 	function parsePreviewResponse( arrCategory ) {
 
 		var arrCategoryRows = [];
@@ -3278,36 +2223,10 @@ var CategoryScript = (function () {
 			arrRow[ INDEX.CATEGORY_ID ] = objCategory.category_id;
 			arrRow[ INDEX.NAME ] = objCategory.name;
 			arrRow[ INDEX.ORGANIZATION_ID ] = objCategory.organization_id;
-			arrRow[ INDEX.DESCRIPTION ] = objCategory.description;
 
 			arrCategoryRows.push( arrRow );
 		}
-// no longer used
-// 	}
-//
-// 	function parsePreviewResponse( response, statusCode ) {
-//
-// 		if( getAppMode() == MODE_NETWORK_DB ) {
-//
-// 			setStorageData( response, SESSION_OBJECT.INSTITUTION_DATA );
-// 		}
-// 		else {
-//
-// 			var i = 0;
-//
-// 			var data = [];			
-//
-// 			data[ INDEX.CATEGORY_ID ] = response.rows.item( i )[ DB_FIELD.CATEGORY_ID ];
-//
-// 			data[ INDEX.NAME ] = response.rows.item( i )[ DB_FIELD.NAME ];
-//
-// 			data[ INDEX.INSTITUTION_ID ] = response.rows.item( i )[ DB_FIELD.INSTITUTION_ID ];
-// 			var dataList = [];
-// 			dataList.push(data);
-//
-// 			setStorageData( dataList, SESSION_OBJECT.CATEGORY_DATA );
-// 		}
-// changed
+
 		setStorageData( arrCategoryRows, SESSION_OBJECT.CATEGORY_DATA );
 
 		setPreview();
@@ -3320,38 +2239,15 @@ var CategoryScript = (function () {
 
 		mInfoIconClicked = false;
 		mEditIconClicked = false;
-		mShareIconClicked = false; // ADDED: keep the new flag in sync with the other two
+		mShareIconClicked = false;
 		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( data[INDEX.CATEGORY_ID] );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
-// kept for reference
-// 		$(FORM_FIELD_INFO.LBL_INSTITUTION_ID).text( data[INDEX.INSTITUTION_ID] );
-// updated
 		$(FORM_FIELD_INFO.LBL_ORGANIZATION_ID).text( data[INDEX.ORGANIZATION_ID] );
 
-		$(FORM_FIELD_INFO.LBL_DESCRIPTION).text( data[INDEX.DESCRIPTION] || 'No description provided.' );
-
-		// --------------------------------------------------
-		// WHY: Category has no photo/document fields, so
-		// INDEX.PHOTO_PATH / INDEX.DOCUMENT_PATH are not
-		// defined at all (only CATEGORY_ID/NAME/ORGANIZATION_ID
-		// are) - data[undefined] is always undefined here.
-		// Calling .length straight on that undefined docPath
-		// threw "Cannot read properties of undefined (reading
-		// 'length')" every single time the Info popup opened,
-		// which is what was actually behind the "Unable to load
-		// Category." alert (the thrown error was caught further
-		// up the DataService promise chain and treated like a
-		// failed fetch).
-		// WHAT: only try photoPath/docPath at all when they are
-		// actually defined, so Category (and any other entity
-		// with no photo/document field) just shows nothing for
-		// those sections instead of crashing.
-		// WHEN: runs every time the Info popup is populated.
-		// --------------------------------------------------
+		// Category has no photo/document fields (INDEX.PHOTO_PATH /
+		// INDEX.DOCUMENT_PATH are not defined), so guard against undefined
+		// before reading .length instead of assuming they exist.
 		var photoPath = data[ INDEX.PHOTO_PATH ];
-// old code
-// 		if( photoPath !== "" && photoPath !== null ) {
-// fixed
 		if( photoPath !== undefined && photoPath !== "" && photoPath !== null ) {
 
 			$( '#preview_image_div' ).show();
@@ -3364,10 +2260,6 @@ var CategoryScript = (function () {
 		}
 
 		var docPath = data[ INDEX.DOCUMENT_PATH ];
-// not used anymore
-// 		if( docPath.length > 0 && docPath !== null && docPath !== '' ) {
-// updated logic
-		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 		if( docPath !== undefined && docPath.length > 0 && docPath !== null && docPath !== '' ) {
 
 			var fileList = JSON.parse( docPath );
@@ -3383,112 +2275,21 @@ var CategoryScript = (function () {
 		}
 
 	}
+
+	// Changed: real pagination means the full Category table no longer
+	// lives in memory (only the current page does), so filtering by
+	// Organization across the whole table isn't possible without
+	// re-fetching everything - which real pagination is meant to avoid.
+	// Points the user at Search instead of silently showing wrong results.
 	function doFilterCategoryList() {
-// old logic
-// 		clearSearch();
-//
-// 		var list = getStorageData( SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
-// changed
-		// --------------------------------------------------
-		// Performance Optimization Phase: this used to filter
-		// against the full Category table kept in
-		// SESSION_OBJECT.CATEGORY_SUMMARY_DATA. Real pagination
-		// means that full table no longer lives in memory (only
-		// the current page does), so filtering by Organization
-		// across the whole table isn't something this page can
-		// do anymore without fetching everything again - which
-		// is exactly what this phase is meant to stop doing.
-		// Closing the modal with a note instead of silently
-		// showing wrong/empty results.
-		// --------------------------------------------------
-// no longer used
-// 		var institutionId = parseInt( $('#filter_institution_id').val() );
-// 		var institutionName = $( "#filter_institution_id option:selected" ).text();
-// updated
+
 		CommonUtils.showAlert( "Filtering by Organization isn't available with paginated lists yet - try Search instead." );
-// kept for reference
-//
-// 		// Set selected Ids to Session storage
-// 		sessionStorage.setItem( SESSION_OBJECT.INSTITUTION_ID, institutionId );
-//
-// 		if( list == null || list.length <= 0 ){
-//
-// 			showFilteredList( "" );
-// 		}
-// 		else if(  institutionId == 0 ){
-//
-// 			showFilteredList( list );
-// 		}
-// 		else {
-//
-// 			var data = [];
-//
-// 			data = list.filter( item =>  
-// 				( (institutionId > 0)? item[SUMMARY_INDEX.INSTITUTION_ID] == institutionId : ( item[SUMMARY_INDEX.INSTITUTION_ID] != institutionId || item[SUMMARY_INDEX.INSTITUTION_ID] == 0 ) )
-// 			);
-//
-// 			showFilteredList( data );
-// 		}
-//
-//
-//
-// 		showFilterInfo( institutionName );
-// 		closeFilterMenu();					
-// fixed
+
 		closeFilterMenu();
 	}
-	function showFilteredList( response ) {
-
-		if( response == null || response === "" ) {
-
-			response = []; // an empty array
-		}
-		mSearchList = response;
-
-		mSelectedDataList = response; // Initializing the Selected data array
-
-		mMultiSelectedList = []; // Initializing the Selected data array
-
-		var htmlContent = "";
-
-		if( response.length === 0 ) {
-
-			// UI MODERNIZATION PASS 2 (added): shared empty-state
-			// block instead of leaving the list area blank.
-			htmlContent = CommonUtils.getEmptyStateHtml( "Categories", "fa-solid fa-list" );
-		}
-
-		for( var i = 0; i < response.length; i++ ) {
-
-			var data = response[ i ];
-
-			htmlContent += createHtmlListItem( data, i );
-		}
-
-		var list = getStorageData( SESSION_OBJECT.CATEGORY_SUMMARY_DATA );
-		var totalCount = list ? list.length : 0;
-
-
-		// Displaying No. of Records
-		var totalRecords = response.length;
-
-		var records = "Total: " + totalRecords;
-		if( totalRecords < totalCount ) {
-
-			records += "/" + totalCount;
-		}
-		
-		document.getElementById( "records" ).innerText = records;
-
-		setListToView( htmlContent );
-	}
-
 
 	function showFilter() {
-// old code
-// 		var institutionList = getStorageData( SESSION_OBJECT.INSTITUTION_LIST );
-// 		setInstitutionFilterSelection( institutionList );
-// updated logic
+
 		var organizationList = getStorageData( SESSION_OBJECT.ORGANIZATION_LIST );
 
 		setOrganizationFilterSelection( organizationList );
@@ -3496,18 +2297,9 @@ var CategoryScript = (function () {
 		openFilterMenu();
 	}
 
-	// not used anymore
-// 	function setInstitutionFilterSelection( institutionList ) {
-// changed
 	function setOrganizationFilterSelection( organizationList ) {
-// old logic
-// 		var selectedId = getFilterSelectionIds( SESSION_OBJECT.INSTITUTION_ID );
-// updated
+
 		if( organizationList == null ) {
-// no longer used
-// 		var institutionScript = InstitutionScript.getInstance();
-// 		institutionScript.populateSelection( institutionList, '#filter_institution_id', selectedId );
-// fixed
 
 			organizationList = [];
 		}
@@ -3533,33 +2325,19 @@ var CategoryScript = (function () {
 			}
 		}
 	}
-// kept for reference
-// 	function showFilterInfo( institutionName ) {
-// updated logic
+
 	function showFilterInfo( organizationName ) {
 
 		$( '#show_all_div' ).show();
-// old code
-// 		var institutionText = '';
-// 		$( '#institution_name_div' ).hide();
-// 		if( institutionName !== "Select All" && institutionName != null ){
-// changed
 		var organizationText = '';
 		$( '#organization_name_div' ).hide();
 		if( organizationName !== "Select All" && organizationName != null ){
-// not used anymore
-// 			institutionText = institutionName;
-// updated
+
 			organizationText = organizationName;
 			$( '#show_all_div' ).hide();
-// old logic
-// 			$( '#institution_name_div' ).show();
-// fixed
 			$( '#organization_name_div' ).show();
 		}
-// no longer used
-// 		$( "#institution_name" ).text( institutionText );
-// updated logic
+
 		$( "#organization_name" ).text( organizationText );
 	}
 
@@ -3578,10 +2356,7 @@ var CategoryScript = (function () {
 
 	function resetFilterInfo(){
 		// Reset filter info
-// kept for reference
-// 		sessionStorage.removeItem( SESSION_OBJECT.INSTITUTION_ID );
-// 		$( '#filter_institution_id' ).val( 0 );
-// changed
+
 		sessionStorage.removeItem( SESSION_OBJECT.ORGANIZATION_ID );
 		$( '#filter_organization_id' ).val( 0 );
 
@@ -3605,12 +2380,9 @@ var CategoryScript = (function () {
 		$(formField).append( newOption );
 		$(formField).trigger( "chosen:updated" );
 
-		// UI FIX (this pass): the filter dropdown was showing every
-		// row's name verbatim, so any duplicate Category rows (or
-		// rows that share the same display name) rendered as
-		// repeated, identical-looking options. Track names already
-		// added and skip repeats so the dropdown only ever shows
-		// each unique value once, keeping the first row's id.
+		// Skip repeated option values so duplicate Category rows (or rows
+		// sharing the same display name) don't render as identical-looking
+		// repeats in the dropdown - keeps the first row's id.
 		var arrSeenNames = [];
 
 		for( var index = 0; index < listData.length; index++ ) {
@@ -3654,12 +2426,9 @@ var CategoryScript = (function () {
 	// Open Edit Category on click of edit icon in the list item
 	function onClickEditIcon( index, objEvent ) {
 
-		// FIX: stop this click from bubbling up to the card's own
-		// delegated click handler ($("#list_id").on("click","ul",...)
-		// in onListDocumentReady()), which was opening the "Select
-		// an Option" popup right behind this click and made the
-		// Edit icon look unclickable / made the icon appear to
-		// disappear. Same fix already applied in Student.script.js.
+		// Stop this click from bubbling up to the card's own delegated
+		// click handler, which would otherwise open the "Select an Option"
+		// popup right behind this click.
 		if( objEvent ) {
 
 			objEvent.stopPropagation();
@@ -3678,10 +2447,7 @@ var CategoryScript = (function () {
 		onAddEditDocumentReady();
 	}
 
-	// FIX (per-card Share icon): this page never had a per-card
-	// Share button - only the icon existed as dead markup on
-	// Student/Result. Same pattern as
-	// Student.script.js's/Result.script.js's onClickShareIcon().
+	// Per-card Share icon.
 	function onClickShareIcon( index, objEvent ) {
 
 		if( objEvent ) {
@@ -3781,38 +2547,22 @@ var CategoryScript = (function () {
 		return resultText;
 	}
 
+	// Filled in with this entity's own real Name/Organization fields
+	// (Category has no mobile/email of its own).
 	function getFormattedData( seqNumber, selectedData ) {
 
-		// PHASE 12 (code quality) - CODE QUALITY / BUG FIX (this
-		// pass): same commented-out stub bug as Student.script.js's
-		// getFormattedData() - always returned "", so the Share
-		// menu item silently sent a blank email/WhatsApp message.
-		// Filled in using this entity's own real SUMMARY_INDEX
-		// fields (Category has no mobile/email of its own).
 		var resultText = "";
-// old code
-// /*	Write your code in here
-// 		var name = selectedData[SUMMARY_INDEX.FIRST_NAME] + " " + selectedData[SUMMARY_INDEX.LAST_NAME];
-//
-// 		var mobileNumber = selectedData[SUMMARY_INDEX.MOBILE_NUMBER];
-//
-// updated
+
 		var strName = selectedData[ SUMMARY_INDEX.NAME ] || "";
 		var strOrganization = selectedData[ SUMMARY_INDEX.ORGANIZATION_ID ] || "";
 
 		if( mShareMode == MODE_SHARE_EMAIL ){ // Share by EMAIL
-// not used anymore
-// 			resultText += seqNumber +") " + name + "<br>";
-// 			resultText += mobileNumber + "<br><br>";
-// fixed
+
 			resultText += seqNumber + ") " + strName + "<br>";
 			resultText += "Organization: " + strOrganization + "<br><br>";
 		}
 		else { // Share by WhatsApp
-// old logic
-// 			resultText += "_*" + seqNumber +") " + name + "*_\n";
-// 			resultText += "*" + mobileNumber + "*\n\n";
-// updated logic
+
 			resultText += "_*" + seqNumber + ") " + strName + "*_\n";
 			resultText += "Organization: " + strOrganization + "\n\n";
 		}
@@ -3832,8 +2582,6 @@ var CategoryScript = (function () {
 			onConfirmNetworkSaveData: onConfirmNetworkSaveData,
 			bindFormEventHandlers: bindFormEventHandlers,
 			enableSaveButton:enableSaveButton,
-// kept for reference
-// 			getListFromServer:getListFromServer,
 			populateSelection:populateSelection,
 			onClickInfoIcon: onClickInfoIcon,
 			onClickEditIcon: onClickEditIcon,
