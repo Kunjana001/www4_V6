@@ -80,6 +80,7 @@ var CategoryScript = (function () {
 		CATEGORY_ID : value++,		// 1
 		NAME : value++,		// 2
 		ORGANIZATION_ID : value++,		// 3
+		DESCRIPTION : value++,		// 4
 	};
 
 	//--------------Summary row index:-----------------
@@ -127,7 +128,8 @@ var CategoryScript = (function () {
 
 		LBL_CATEGORY_ID : '#lbl_category_id',
 		LBL_NAME : '#lbl_name',
-		LBL_ORGANIZATION_ID : '#lbl_organization_id'
+		LBL_ORGANIZATION_ID : '#lbl_organization_id',
+		LBL_DESCRIPTION : '#lbl_description'
 	};
 
 	//-----------------------------JSON Key------------------------------------
@@ -645,6 +647,7 @@ var CategoryScript = (function () {
 			arrRow[ INDEX.CATEGORY_ID ] = objCategory.category_id;
 			arrRow[ INDEX.NAME ] = objCategory.name;
 			arrRow[ INDEX.ORGANIZATION_ID ] = objCategory.organization_id;
+			arrRow[ INDEX.DESCRIPTION ] = objCategory.description;
 
 			arrCategoryRows.push( arrRow );
 		}
@@ -1069,6 +1072,14 @@ var CategoryScript = (function () {
 			objEvent.preventDefault();
 
 			$( "html, body" ).animate( { scrollTop: $( document ).height() }, 300 );
+		});
+
+		// FIX: the Export button existed in the UI but was never wired to
+		$( "#btn_export" ).off().on( "click", function( objEvent ) {
+
+			objEvent.preventDefault();
+
+			exportCategoryList();
 		});
 
 		//--------- START - FILTER --------------
@@ -2223,6 +2234,7 @@ var CategoryScript = (function () {
 			arrRow[ INDEX.CATEGORY_ID ] = objCategory.category_id;
 			arrRow[ INDEX.NAME ] = objCategory.name;
 			arrRow[ INDEX.ORGANIZATION_ID ] = objCategory.organization_id;
+			arrRow[ INDEX.DESCRIPTION ] = objCategory.description;
 
 			arrCategoryRows.push( arrRow );
 		}
@@ -2243,6 +2255,7 @@ var CategoryScript = (function () {
 		$(FORM_FIELD_INFO.LBL_CATEGORY_ID).text( data[INDEX.CATEGORY_ID] );
 		$(FORM_FIELD_INFO.LBL_NAME).text( data[INDEX.NAME] );
 		$(FORM_FIELD_INFO.LBL_ORGANIZATION_ID).text( data[INDEX.ORGANIZATION_ID] );
+		$(FORM_FIELD_INFO.LBL_DESCRIPTION).text( data[INDEX.DESCRIPTION] || 'No description provided.' );
 
 		// Category has no photo/document fields (INDEX.PHOTO_PATH /
 		// INDEX.DOCUMENT_PATH are not defined), so guard against undefined
@@ -2591,7 +2604,8 @@ var CategoryScript = (function () {
 			closeFileButton: closeFileButton,
 			uploadDocuments: uploadDocuments,
 			createTableCategory: createTableCategory,
-			getInsertQuery: getInsertQuery
+			getInsertQuery: getInsertQuery,
+			exportCategoryList: exportCategoryList
 		};
 	}
 
